@@ -169,3 +169,7 @@ A interface usa tokens centralizados em `src/tokens.css` e CSS consolidado em `s
 As permissões, regras, Authentication, configuração Firebase, seed, coleções, datas e cálculos existentes foram preservados. Não há migração. Novas ações da interface utilizam as operações cliente e regras atuais. A duplicação cria uma cópia privada com novos IDs, sem modificar a origem. O documento pai precisa existir antes de gravar os programas, conforme as regras atuais; se houver falha na segunda etapa, a interface informa o ID da cópia para conferência, sem apagar dados. Limite de 498 programas por duplicação; programas fora do período precisam ser corrigidos antes.
 
 Componentes de domínio ficam em `src/components/trip/`, componentes de UI em `src/components/ui/`, e formulários separados em `TripForm.tsx` e `EventForm.tsx`. A antiga sidebar de indicadores foi removida.
+
+## Roteiro da Brasília da Mel
+
+A rota `/#/admin/seed-mel` também permite cadastrar os 12 programas na viagem existente. A ação exige administrador autenticado no projeto `rumos-bsb`, preserva documentos existentes e não muda a privacidade da viagem. Veja [instruções, garantias e fontes dos links](SEED-ROTEIRO-MEL.md). A gravação só ocorre após clicar em **Cadastrar roteiro Brasília da Mel**.

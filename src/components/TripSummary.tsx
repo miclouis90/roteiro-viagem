@@ -1,5 +1,6 @@
 import type { Trip, TripEvent } from "../types";
 import { cost, money } from "../utils/money";
+import { hasUndefinedPrice } from "../utils/eventPrice";
 import { formatDate } from "../utils/dates";
 import { dayCountLabel } from "../utils/labels";
 import { categoryOf } from "../data/categories";
@@ -33,6 +34,12 @@ export function TripSummary({
       <section className="summary-section">
         <span className="eyebrow">Gastos estimados</span>
         <p className="summary-amount">{money(total, trip.currency)}</p>
+        {active.some(hasUndefinedPrice) && (
+          <p className="muted">
+            Estimativa parcial: {active.filter(hasUndefinedPrice).length}{" "}
+            programa(s) com valor a definir.
+          </p>
+        )}
         {total === 0 && (
           <p className="muted">Ainda não há estimativas de gastos.</p>
         )}

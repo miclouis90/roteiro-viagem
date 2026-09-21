@@ -75,7 +75,10 @@ export function Programs({
               aria-label="Agenda"
               aria-pressed={view === "agenda"}
               className={view === "agenda" ? "active" : ""}
-              onClick={() => setView("agenda")}
+              onClick={() => {
+                setView("agenda");
+                setFilters((current) => ({ ...current, date: "" }));
+              }}
             >
               <List size={18} />
             </button>

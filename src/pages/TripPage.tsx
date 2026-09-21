@@ -162,11 +162,12 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
         value={tab}
         onChange={(value) => {
           setTab(value);
-          requestAnimationFrame(() =>
-            document
-              .getElementById("trip-section")
-              ?.scrollIntoView({ block: "start", behavior: "instant" }),
-          );
+          requestAnimationFrame(() => {
+            const target = window.matchMedia("(max-width: 600px)").matches
+              ? document.getElementById("trip-section")
+              : document.querySelector(".trip-tabs");
+            target?.scrollIntoView({ block: "start", behavior: "instant" });
+          });
         }}
       />
       <div className="trip-content" id="trip-section" key={tab}>

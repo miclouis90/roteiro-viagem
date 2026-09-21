@@ -2017,3 +2017,27 @@ textarea:focus {
     padding-bottom: 28px;
   }
 }
+.seed-page {
+  max-width: 820px;
+}
+.seed-page > h1 {
+  margin-top: 16px;
+}
+.seed-page .primary {
+  white-space: normal;
+}
+.seed-preview {
+  padding-left: 24px;
+}
+.seed-preview li {
+  padding: 16px 0;
+}
+.seed-preview p {
+  margin: 8px 0;
+}
+.seed-result {
+  margin-top: 24px;
+}
+.seed-result li {
+  margin: 8px 0;
+}

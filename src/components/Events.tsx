@@ -1,6 +1,7 @@
 import { MapPin, ArrowUpRight, Star, Pencil, Trash2 } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
-import { cost, money, safeUrl } from "../utils/money";
+import { money, safeUrl } from "../utils/money";
+import { eventPriceLabel, hasUndefinedPrice } from "../utils/eventPrice";
 import { formatDate } from "../utils/dates";
 import { eventLabels, priorityLabels } from "../utils/labels";
 import { CategoryChip } from "./ui/Primitives";
@@ -37,12 +38,11 @@ export function EventCard({
         </span>
         <span className="location">{event.location || "Local a definir"}</span>
         <span className="event-mobile-meta">
-          {event.isFree ? "Grátis" : money(cost(event), currency)} ·{" "}
-          {eventLabels[event.status]}
+          {eventPriceLabel(event, currency)} · {eventLabels[event.status]}
         </span>
       </span>
       <span className="event-price">
-        {event.isFree ? "Grátis" : money(cost(event), currency)}
+        {eventPriceLabel(event, currency)}
         <small>{eventLabels[event.status]}</small>
       </span>
       <ArrowUpRight size={17} className="event-arrow" />
@@ -96,8 +96,8 @@ export function EventDetails({
         {event.description && <p>{event.description}</p>}
         <section className="detail-cost">
           <span className="muted">Gasto estimado</span>
-          <h3>{event.isFree ? "Grátis" : money(cost(event), trip.currency)}</h3>
-          {!event.isFree && (
+          <h3>{eventPriceLabel(event, trip.currency)}</h3>
+          {!event.isFree && !hasUndefinedPrice(event) && (
             <p>
               {money(event.pricePerPerson, trip.currency)} por pessoa ·{" "}
               {event.peopleCount} pessoa(s)

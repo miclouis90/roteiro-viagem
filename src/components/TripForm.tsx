@@ -1,5 +1,5 @@
 import { Disclosure, revealInvalidField } from "./ui/Disclosure";
-import { tripLabels } from "../utils/labels";
+import { dayCountLabel, tripLabels } from "../utils/labels";
 import { useState, type FormEvent } from "react";
 import type { Trip, TripInput } from "../types";
 
@@ -121,8 +121,8 @@ export function TripForm({
           />
         </label>
         <p className="wide muted">
-          {Math.max(0, daysBetween(start, end))} dias de descobertas · chegada e
-          saída incluídas
+          {dayCountLabel(Math.max(0, daysBetween(start, end)))} de descobertas ·
+          chegada e saída incluídas
         </p>
         <div className="wide">
           <Disclosure

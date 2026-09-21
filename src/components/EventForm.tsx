@@ -211,6 +211,11 @@ export function EventForm({
             />
           </label>
         </Disclosure>
+        {!free && (
+          <p className="muted">
+            Preço zero em um programa pago significa “Valor a definir”.
+          </p>
+        )}
         <Disclosure title="Links" description="Mapa, site e Instagram">
           {[
             ["websiteUrl", "Site oficial"],
