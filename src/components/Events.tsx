@@ -5,6 +5,7 @@ import { eventPriceLabel, hasUndefinedPrice } from "../utils/eventPrice";
 import { formatDate } from "../utils/dates";
 import { eventLabels, priorityLabels } from "../utils/labels";
 import { CategoryChip } from "./ui/Primitives";
+import { categoryOf } from "../data/categories";
 import { Modal } from "./Modal";
 export function EventCard({
   event,
@@ -17,7 +18,7 @@ export function EventCard({
 }) {
   return (
     <button
-      className={`event-row ${event.status === "cancelado" ? "cancelled" : ""}`}
+      className={`event-row tone-${categoryOf(event.category).tone} ${event.status === "cancelado" ? "cancelled" : ""}`}
       onClick={onClick}
     >
       <span className="event-time">

@@ -1,12 +1,8 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
-import {
-  Compass,
-  CalendarDays,
-  MapPin,
-  Sun,
-  ChartNoAxesColumnIncreasing,
-} from "lucide-react";
+import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import { Compass, CalendarDays, MapPin, WalletCards } from "lucide-react";
 import { categoryOf } from "../../data/categories";
+import type { TripTab } from "../../utils/tripView";
+export type { TripTab } from "../../utils/tripView";
 export function Button({
   variant = "primary",
   className = "",
@@ -15,6 +11,70 @@ export function Button({
   variant?: "primary" | "secondary" | "ghost" | "danger";
 }) {
   return <button className={`${variant} ${className}`} {...props} />;
+}
+export function IconButton({
+  label,
+  className = "",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className={`icon-button ${className}`}
+      {...props}
+    />
+  );
+}
+export function Chip({
+  variant = "neutral",
+  status,
+  children,
+}: {
+  variant?: "neutral" | "brand" | "status";
+  status?: string;
+  children: ReactNode;
+}) {
+  return (
+    <span
+      className={
+        variant === "status"
+          ? `status-chip status-${status}`
+          : `ui-chip chip-${variant}`
+      }
+    >
+      {children}
+    </span>
+  );
+}
+export function Card({
+  variant = "default",
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  variant?: "default" | "interactive" | "tonal";
+}) {
+  return <div className={`ui-card card-${variant} ${className}`} {...props} />;
+}
+export function SectionHeader({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="section-heading">
+      <div>
+        <h2>{title}</h2>
+        {description && <p className="muted">{description}</p>}
+      </div>
+      {action}
+    </div>
+  );
 }
 export function CategoryChip({
   name,
@@ -54,13 +114,13 @@ export function EmptyState({
     </div>
   );
 }
-export type TripTab = "hoje" | "roteiro" | "lugares" | "resumo";
 const tabs = [
-  { id: "hoje", label: "Hoje", icon: Sun },
+  { id: "geral", label: "Visão geral", icon: Compass },
   { id: "roteiro", label: "Roteiro", icon: CalendarDays },
   { id: "lugares", label: "Lugares", icon: MapPin },
-  { id: "resumo", label: "Resumo", icon: ChartNoAxesColumnIncreasing },
+  { id: "gastos", label: "Gastos", icon: WalletCards },
 ] as const;
+// One accessible navigation: segmented control on desktop, bottom nav on mobile.
 export function TripNavigation({
   value,
   onChange,

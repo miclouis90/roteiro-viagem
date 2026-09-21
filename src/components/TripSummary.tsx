@@ -1,115 +1,98 @@
 import type { Trip, TripEvent } from "../types";
-import { cost, money } from "../utils/money";
-import { hasUndefinedPrice } from "../utils/eventPrice";
+import { money } from "../utils/money";
+import { spending, spendingLabel } from "../utils/spending";
 import { formatDate } from "../utils/dates";
-import { dayCountLabel } from "../utils/labels";
-import { categoryOf } from "../data/categories";
-const groups = [
-  ["food", "Comer"],
-  ["night", "Beber"],
-  ["culture", "Cultura"],
-  ["outdoor", "Passear"],
-  ["other", "Outros"],
-];
+import { categoryOf, categoryGroups } from "../data/categories";
 export function TripSummary({
   trip,
-  active,
+  events,
   days,
-  total,
   count,
 }: {
   trip: Trip;
-  active: TripEvent[];
+  events: TripEvent[];
   days: string[];
-  total: number;
   count: number;
 }) {
+  const estimate = spending(events);
+  const active = events.filter((event) => event.status !== "cancelado");
   return (
     <section className="trip-summary">
-      <div className="summary-intro">
-        <span>{active.length} programas</span>
-        <span>{dayCountLabel(count)}</span>
-        <span>{money(total, trip.currency)} estimados</span>
-      </div>
-      <section className="summary-section">
-        <span className="eyebrow">Gastos estimados</span>
-        <p className="summary-amount">{money(total, trip.currency)}</p>
-        {active.some(hasUndefinedPrice) && (
-          <p className="muted">
-            Estimativa parcial: {active.filter(hasUndefinedPrice).length}{" "}
-            programa(s) com valor a definir.
+      <section className="summary-section expense-total">
+        <span className="eyebrow">
+          {estimate.undefinedCount ? "Estimativa parcial" : "Gastos estimados"}
+        </span>
+        <p className="summary-amount">
+          {estimate.total > 0
+            ? money(estimate.total, trip.currency)
+            : spendingLabel(events, trip.currency)}
+        </p>
+        {estimate.undefinedCount > 0 && (
+          <p className="undefined-note">
+            {estimate.undefinedCount} programa(s) ainda sem valor. O total
+            considera apenas as estimativas conhecidas.
           </p>
         )}
-        {total === 0 && (
-          <p className="muted">Ainda não há estimativas de gastos.</p>
+        {estimate.total > 0 && (
+          <p className="muted">
+            {money(estimate.total / Math.max(1, count), trip.currency)} por dia
+            {estimate.undefinedCount > 0 ? " · média parcial" : ""}
+          </p>
         )}
         <p className="muted">
-          {money(total / count, trip.currency)} por dia ·{" "}
-          {active.filter((e) => e.isFree).length} grátis ·{" "}
-          {active.filter((e) => !e.isFree).length} pagos
+          {estimate.freeCount} grátis · {estimate.count - estimate.freeCount}{" "}
+          pagos
         </p>
         <div className="summary-breakdown">
-          {groups.map(([group, label]) => {
+          {categoryGroups.map(({ id, label, tone, icon: Icon }) => {
             const values = active.filter(
-              (e) => categoryOf(e.category).group === group,
+              (event) => categoryOf(event.category).group === id,
             );
+            if (!values.length) return null;
+            const group = spending(values);
             return (
-              <div className="summary-line" key={group}>
-                <span>{label}</span>
-                <strong>
-                  {money(
-                    values.reduce((sum, e) => sum + cost(e), 0),
-                    trip.currency,
-                  )}
-                </strong>
+              <div className={`expense-group tone-${tone}`} key={id}>
+                <div className="summary-line">
+                  <span className="expense-label">
+                    <span className="section-icon">
+                      <Icon size={18} />
+                    </span>
+                    {label}
+                  </span>
+                  <strong>{spendingLabel(values, trip.currency)}</strong>
+                </div>
+                {group.total > 0 && (
+                  <div className="expense-track" aria-hidden="true">
+                    <span
+                      style={{
+                        width: `${(group.total / estimate.total) * 100}%`,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       </section>
-      <section className="summary-section">
-        <h3>Tipos de programa</h3>
-        {groups.map(([group, label]) => (
-          <div className="summary-line" key={group}>
-            <span>{label}</span>
-            <span>
-              {
-                active.filter((e) => categoryOf(e.category).group === group)
-                  .length
-              }
-            </span>
-          </div>
-        ))}
-      </section>
       <details className="summary-section expandable">
         <summary>Gastos por dia</summary>
-        {days.map((d) => (
-          <div className="summary-line" key={d}>
-            <span>{formatDate(d)}</span>
+        {days.map((day) => (
+          <div className="summary-line" key={day}>
+            <span>{formatDate(day)}</span>
             <span>
-              {money(
-                active
-                  .filter((e) => e.date === d)
-                  .reduce((s, e) => s + cost(e), 0),
+              {spendingLabel(
+                active.filter((event) => event.date === day),
                 trip.currency,
               )}
             </span>
           </div>
         ))}
       </details>
-      {(trip.description || trip.notes) && (
-        <details className="summary-section expandable">
-          <summary>Sobre a viagem</summary>
-          <p>{trip.description}</p>
-          <p className="muted">{trip.notes}</p>
-          <p className="muted">
-            {trip.travelerName} · {trip.country}
-          </p>
-        </details>
-      )}
       <p className="footnote">
         Valores estimados para todas as pessoas informadas. Programas cancelados
-        não entram nos totais.
+        não entram nos totais. Atualize os preços em cada programa para
+        completar a estimativa.
       </p>
     </section>
   );

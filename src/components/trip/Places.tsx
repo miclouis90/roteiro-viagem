@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { Trip, TripEvent } from "../../types";
-import { categoryOf } from "../../data/categories";
+import { categoryOf, categoryGroups } from "../../data/categories";
 import { safeUrl } from "../../utils/money";
 import { CategoryChip, EmptyState } from "../ui/Primitives";
-const groups = [
-  ["", "Todos"],
-  ["food", "Comer"],
-  ["night", "Beber"],
-  ["culture", "Cultura"],
-  ["outdoor", "Passear"],
-];
+const groups = [{ id: "", label: "Todos", tone: "other" }, ...categoryGroups];
 export function Places({
   trip,
   events,
@@ -27,10 +21,10 @@ export function Places({
   return (
     <>
       <div className="chip-scroll" aria-label="Tipos de lugar">
-        {groups.map(([value, label]) => (
+        {groups.map(({ id: value, label, tone }) => (
           <button
             key={value}
-            className={`filter-chip ${group === value ? "active" : ""}`}
+            className={`filter-chip tone-${tone} ${group === value ? "active" : ""}`}
             aria-pressed={group === value}
             onClick={() => setGroup(value)}
           >

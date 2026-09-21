@@ -15,12 +15,29 @@ import {
   ShoppingBag,
   Sparkles,
   MapPin,
+  Plane,
+  PlaneLanding,
+  CarFront,
+  CarTaxiFront,
+  Car,
+  BusFront,
+  TrainFront,
+  Train,
   type LucideIcon,
 } from "lucide-react";
+export const categoryGroups = [
+  { id: "food", label: "Comer", tone: "food", icon: Utensils },
+  { id: "night", label: "Beber", tone: "night", icon: Wine },
+  { id: "culture", label: "Cultura", tone: "culture", icon: Landmark },
+  { id: "outdoor", label: "Passear", tone: "outdoor", icon: Trees },
+  { id: "transport", label: "Transporte", tone: "transport", icon: Plane },
+  { id: "other", label: "Outros", tone: "other", icon: Compass },
+] as const;
+export type CategoryGroup = (typeof categoryGroups)[number]["id"];
 export interface Category {
   name: string;
   icon: LucideIcon;
-  group: string;
+  group: CategoryGroup;
   tone: string;
 }
 export const categories: Category[] = [
@@ -45,7 +62,25 @@ export const categories: Category[] = [
     tone: "outdoor",
   },
   { name: "Compras", icon: ShoppingBag, group: "other", tone: "shopping" },
-  { name: "Experiência", icon: Sparkles, group: "other", tone: "experience" },
+  { name: "Experiência", icon: Sparkles, group: "outdoor", tone: "experience" },
+  { name: "Voo", icon: Plane, group: "transport", tone: "flight" },
+  { name: "Transfer", icon: CarFront, group: "transport", tone: "transport" },
+  { name: "Carro", icon: Car, group: "transport", tone: "car" },
+  {
+    name: "Táxi / app",
+    icon: CarTaxiFront,
+    group: "transport",
+    tone: "transport",
+  },
+  { name: "Ônibus", icon: BusFront, group: "transport", tone: "rail" },
+  { name: "Metrô", icon: TrainFront, group: "transport", tone: "rail" },
+  { name: "Trem", icon: Train, group: "transport", tone: "rail" },
+  {
+    name: "Aeroporto",
+    icon: PlaneLanding,
+    group: "transport",
+    tone: "airport",
+  },
   { name: "Outro", icon: MapPin, group: "other", tone: "other" },
 ];
 export const categoryOf = (name: string) =>

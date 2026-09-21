@@ -1,13 +1,16 @@
 import { useEffect, useRef } from "react";
-import { localDate, formatDate } from "../../utils/dates";
+import { localDate, formatDate, dateKey } from "../../utils/dates";
+import type { TripEvent } from "../../types";
 export function DayPicker({
   days,
   selected,
   onChange,
+  events,
 }: {
   days: string[];
   selected: string;
   onChange: (d: string) => void;
+  events: TripEvent[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -28,12 +31,19 @@ export function DayPicker({
             month: "long",
           })}
           aria-pressed={selected === d}
-          className={selected === d ? "active" : ""}
+          className={`${selected === d ? "active" : ""} ${d === dateKey() ? "is-today" : ""}`}
           onClick={() => onChange(d)}
         >
           <small>{formatDate(d, { weekday: "short" }).replace(".", "")}</small>
           <strong>{localDate(d).getDate()}</strong>
           <small>{formatDate(d, { month: "short" }).replace(".", "")}</small>
+          <span className="day-indicator">
+            {d === dateKey()
+              ? "Hoje"
+              : events.some((e) => e.date === d && e.status !== "cancelado")
+                ? "•"
+                : "Livre"}
+          </span>
         </button>
       ))}
     </div>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight, ArrowRight, LockKeyhole, MapPin } from "lucide-react";
 import type { Trip } from "../types";
-import { daysBetween, formatDate } from "../utils/dates";
+import { dateKey, daysBetween, formatDate } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
 export function TripCard({
   trip,
@@ -30,7 +30,15 @@ export function TripCard({
         <ArrowUpRight size={40} strokeWidth={1} />
       </div>
       <div className="trip-card-body">
-        {featured && <span className="eyebrow">Sua próxima viagem</span>}
+        {featured && (
+          <span className="eyebrow">
+            {trip.startDate > dateKey()
+              ? "Próxima viagem"
+              : trip.endDate >= dateKey()
+                ? "Sua viagem está acontecendo"
+                : "Uma história para lembrar"}
+          </span>
+        )}
         <div className="card-title">
           <h2>{trip.title}</h2>
           {!trip.isPublic && (

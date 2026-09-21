@@ -1,5 +1,5 @@
 import type { Trip, TripEvent } from "../types";
-import { cost, money } from "../utils/money";
+import { spendingLabel } from "../utils/spending";
 import { formatDate, localDate } from "../utils/dates";
 import { CategoryChip } from "./ui/Primitives";
 export function TripCalendar({
@@ -31,10 +31,8 @@ export function TripCalendar({
               </button>
             ))}
           <small>
-            {money(
-              filtered
-                .filter((e) => e.date === d)
-                .reduce((s, e) => s + cost(e), 0),
+            {spendingLabel(
+              filtered.filter((e) => e.date === d),
               trip.currency,
             )}
           </small>

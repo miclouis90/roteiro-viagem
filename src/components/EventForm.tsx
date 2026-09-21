@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { Trip, TripEvent, EventInput } from "../types";
-import { categories } from "../data/categories";
+import { CategoryPicker } from "./ui/CategoryPicker";
 import { saveEvent } from "../services/repository";
 import { useToast } from "../hooks/useToast";
 import { Modal } from "./Modal";
@@ -18,6 +18,7 @@ export function EventForm({
   onClose: () => void;
 }) {
   const [free, setFree] = useState(event?.isFree ?? false);
+  const [category, setCategory] = useState(event?.category ?? "Café");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const toast = useToast();
@@ -91,14 +92,7 @@ export function EventForm({
               placeholder="O que vamos fazer?"
             />
           </label>
-          <label className="wide">
-            Categoria
-            <select name="category" defaultValue={event?.category ?? "Café"}>
-              {categories.map((c) => (
-                <option key={c.name}>{c.name}</option>
-              ))}
-            </select>
-          </label>
+          <CategoryPicker value={category} onChange={setCategory} />
           <label>
             Data
             <input

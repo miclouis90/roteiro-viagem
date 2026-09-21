@@ -1,29 +1,68 @@
 :root {
   --color-bg: #f7f8f6;
   --color-surface: #ffffff;
-  --color-surface-secondary: #f1f3f1;
-  --color-text: #18221f;
-  --color-muted: #66726d;
+  --color-surface-subtle: #f1f3f1;
+  --color-surface-secondary: var(--color-surface-subtle);
+  --color-text-primary: #18221f;
+  --color-text-secondary: #66726d;
+  --color-text: var(--color-text-primary);
+  --color-muted: var(--color-text-secondary);
   --color-border: #e5e9e6;
-  --color-brand: #28584f;
-  --color-brand-light: #e8f1ee;
-  --color-blue: #4f7bf7;
-  --color-blue-light: #edf2ff;
-  --color-orange: #f29b63;
-  --color-orange-light: #fff1e7;
-  --color-purple: #8b72d9;
-  --color-purple-light: #f2eeff;
-  --color-yellow: #d9a441;
-  --color-yellow-light: #fff7dd;
+  --brand-700: #234f46;
+  --brand-600: #2d6458;
+  --brand-500: #3d7769;
+  --brand-100: #e7f1ee;
+  --brand-50: #f3f8f6;
+  --color-brand: var(--brand-600);
+  --color-brand-hover: var(--brand-700);
+  --color-brand-light: var(--brand-100);
+  --color-blue: #4776e6;
+  --color-blue-light: #eaf0ff;
+  --color-cyan: #369bb3;
+  --color-cyan-light: #e7f7fa;
+  --color-purple: #8367d8;
+  --color-purple-light: #f0ecff;
+  --color-coral: #e57a64;
+  --color-coral-light: #fff0ec;
+  --color-orange: #e9984a;
+  --color-orange-light: #fff3e6;
+  --color-yellow: #d8a532;
+  --color-yellow-light: #fff7dc;
+  --color-rose: #ce6885;
+  --color-rose-light: #fcecf2;
   --color-red: #d76464;
   --color-red-light: #fdecec;
-  --color-mint: #69a98f;
-  --color-mint-light: #eaf6f1;
+  --color-mint: #55a887;
+  --color-mint-light: #e8f6f0;
+  --color-slate: #687873;
+  --color-slate-light: #edf1ef;
+  --color-food: var(--color-coral);
+  --color-food-ink: #994c2d;
+  --color-food-bg: var(--color-orange-light);
+  --color-drink: var(--color-purple);
+  --color-drink-ink: #6845a5;
+  --color-drink-bg: var(--color-purple-light);
+  --color-culture: var(--color-blue);
+  --color-culture-ink: #355fb6;
+  --color-culture-bg: var(--color-blue-light);
+  --color-outdoor: var(--color-mint);
+  --color-outdoor-ink: #306b50;
+  --color-outdoor-bg: var(--color-mint-light);
+  --color-transport: var(--color-cyan);
+  --color-transport-ink: #24697d;
+  --color-transport-bg: var(--color-cyan-light);
+  --color-other: var(--color-slate);
+  --color-other-ink: #52615a;
+  --color-other-bg: var(--color-slate-light);
+  --color-focus: #4776e670;
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 18px;
-  --radius-modal: 22px;
-  --shadow-card: 0 4px 20px rgba(20, 35, 30, 0.06);
+  --radius-xl: 24px;
+  --radius-modal: var(--radius-xl);
+  --shadow-sm: 0 1px 3px rgba(20, 40, 35, 0.05);
+  --shadow-md: 0 8px 28px rgba(20, 40, 35, 0.07);
+  --shadow-card: var(--shadow-md);
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -34,14 +73,27 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  --font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --text-small: 0.8125rem;
+  --text-body: 1rem;
+  --text-title: clamp(2.125rem, 3.5vw, 2.5rem);
+  --motion-fast: 140ms;
+  --motion-normal: 180ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --z-floating: 9;
+  --z-navigation: 10;
+  --z-menu: 20;
+  --z-toast: 100;
+  --control-height: 44px;
+  --nav-height: 72px;
+  --page-width: 1180px;
+  /* Reference tokens: media queries use the same literal values (CSS variables
+     cannot be used in media-query conditions). */
+  --breakpoint-mobile: 600px;
+  --breakpoint-tablet: 900px;
+  font-family: var(--font-family);
   color: var(--color-text);
   background: var(--color-bg);
   font-synthesis: none;

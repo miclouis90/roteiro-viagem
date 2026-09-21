@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { ArrowLeft, Share2, LockKeyhole } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
 import { useAuth } from "../hooks/useAuth";
@@ -10,7 +15,8 @@ import { duplicateTrip } from "../services/duplicateTrip";
 import { tripInput } from "../utils/inputs";
 import { datesBetween, daysBetween, formatDate } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
-import { cost } from "../utils/money";
+import { tripTabFromSearch } from "../utils/tripView";
+import { TripOverview } from "../components/trip/TripOverview";
 import {
   TripNavigation,
   EmptyState,
@@ -52,10 +58,29 @@ export function TripPage() {
   return <TripWorkspace key={id} trip={data.trip} events={data.events} />;
 }
 function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
-  const { admin, user } = useAuth();
+  const { admin } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<TripTab>("roteiro");
+  const [params, setParams] = useSearchParams();
+  const tab = tripTabFromSearch(params);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+  function changeTab(value: TripTab, date?: string, highlights = false) {
+    const next: Record<string, string> =
+      value === "geral" ? {} : { tab: value };
+    if (date) next.day = date;
+    if (highlights) next.priority = "imperdível";
+    setParams(next);
+    requestAnimationFrame(() => {
+      const target = window.matchMedia("(max-width: 600px)").matches
+        ? document.getElementById("trip-section")
+        : document.querySelector(".trip-tabs");
+      target?.scrollIntoView({ block: "start", behavior: "instant" });
+    });
+  }
   const [editTrip, setEditTrip] = useState(false);
   const [editEvent, setEditEvent] = useState<TripEvent | "new" | null>(null);
   const [newDate, setNewDate] = useState(trip.startDate);
@@ -68,8 +93,6 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
   const [actionError, setActionError] = useState("");
   const days = datesBetween(trip.startDate, trip.endDate);
   const count = daysBetween(trip.startDate, trip.endDate);
-  const active = events.filter((e) => e.status !== "cancelado");
-  const total = active.reduce((s, e) => s + cost(e), 0);
   function ask(value: typeof confirm) {
     setActionError("");
     setConfirm(value);
@@ -158,40 +181,51 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
       {!admin && tab === "roteiro" && trip.description && (
         <p className="public-description">{trip.description}</p>
       )}
-      <TripNavigation
-        value={tab}
-        onChange={(value) => {
-          setTab(value);
-          requestAnimationFrame(() => {
-            const target = window.matchMedia("(max-width: 600px)").matches
-              ? document.getElementById("trip-section")
-              : document.querySelector(".trip-tabs");
-            target?.scrollIntoView({ block: "start", behavior: "instant" });
-          });
-        }}
-      />
+      <TripNavigation value={tab} onChange={(value) => changeTab(value)} />
       <div className="trip-content" id="trip-section" key={tab}>
-        {tab === "resumo" ? (
+        {tab === "geral" ? (
+          <TripOverview
+            trip={trip}
+            events={events}
+            now={now}
+            admin={admin}
+            onDay={(date) => changeTab("roteiro", date)}
+            onHighlights={() => changeTab("lugares", undefined, true)}
+            onExpenses={() => changeTab("gastos")}
+            onSelect={setSelected}
+            onAdd={() => {
+              setNewDate(trip.startDate);
+              setEditEvent("new");
+            }}
+          />
+        ) : tab === "gastos" ? (
           <>
             <div className="section-heading">
-              <h2>Resumo da viagem</h2>
+              <h2>Gastos da viagem</h2>
             </div>
             <TripSummary
               trip={trip}
-              active={active}
+              events={events}
               days={days}
-              total={total}
               count={count}
             />
           </>
         ) : (
           <Programs
-            key={tab}
+            key={`${tab}-${params.get("priority") || ""}`}
             trip={trip}
             events={events}
             tab={tab}
             admin={admin}
-            userName={user?.displayName?.split(" ")[0]}
+            selectedDate={params.get("day") || ""}
+            onDayChange={(date) => {
+              const next = new URLSearchParams(params);
+              next.set("day", date);
+              setParams(next, { replace: true });
+            }}
+            initialPriority={
+              params.get("priority") === "imperdível" ? "imperdível" : ""
+            }
             onAdd={(date) => {
               setNewDate(date);
               setEditEvent("new");

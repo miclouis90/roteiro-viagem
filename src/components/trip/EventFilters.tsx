@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { categories } from "../../data/categories";
+import { categories, categoryGroups } from "../../data/categories";
 import { eventLabels, priorityLabels } from "../../utils/labels";
 import { formatDate } from "../../utils/dates";
 export interface Filters {
@@ -83,8 +83,14 @@ export function EventFilters({
               onChange={(e) => set("category", e.target.value)}
             >
               <option value="">Todas</option>
-              {categories.map((c) => (
-                <option key={c.name}>{c.name}</option>
+              {categoryGroups.map((group) => (
+                <optgroup key={group.id} label={group.label}>
+                  {categories
+                    .filter((c) => c.group === group.id)
+                    .map((c) => (
+                      <option key={c.name}>{c.name}</option>
+                    ))}
+                </optgroup>
               ))}
             </select>
           </label>
