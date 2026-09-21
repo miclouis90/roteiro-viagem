@@ -50,7 +50,7 @@ describe("Preservação de dados na nova interface", () => {
     expect(e.pricePerPerson).toBe(demoEvents[0].pricePerPerson);
     expect(e.peopleCount).toBe(demoEvents[0].peopleCount);
   });
-  it("mantém os valores do banco e todas as 18 categorias", () => {
+  it("mantém os valores do banco e todas as categorias", () => {
     expect(Object.keys(tripLabels)).toEqual([
       "planejamento",
       "confirmada",
@@ -64,8 +64,8 @@ describe("Preservação de dados na nova interface", () => {
       "cancelado",
     ]);
     expect(eventLabels.realizado).toBe("Feito");
-    expect(categories).toHaveLength(18);
-    expect(new Set(categories.map((c) => c.name)).size).toBe(18);
+    expect(categories).toHaveLength(26);
+    expect(new Set(categories.map((c) => c.name)).size).toBe(26);
     expect(categories.every((c) => !!c.icon && !!c.tone)).toBe(true);
   });
 });
