@@ -1,55 +1,240 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function admin() {
-      return request.auth != null && request.auth.token.email_verified == true
-        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()))
-        && get(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())).data.enabled == true;
+      return request.auth != null
+        && exists(
+          /databases/$(database)/documents/platformAdmins/$(request.auth.uid)
+        )
+        && get(
+          /databases/$(database)/documents/platformAdmins/$(request.auth.uid)
+        ).data.active == true;
     }
-    function date(v) { return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
-    function text(v) { return v is string && v.size() <= 10000; }
-    function url(v) { return v is string && v.size() <= 2048 && (v == '' || v.matches('^https?://.*')); }
+
+    function date(v) {
+      return v is string
+        && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function text(v) {
+      return v is string && v.size() <= 10000;
+    }
+
+    function url(v) {
+      return v is string
+        && v.size() <= 2048
+        && (v == '' || v.matches('^https?://.*'));
+    }
+
     function validTrip(d) {
-      return d.keys().hasAll(['title','destinationCity','destinationState','country','startDate','endDate','travelerName','description','notes','status','isPublic','currency','createdAt','updatedAt'])
-        && d.keys().hasOnly(['title','destinationCity','destinationState','country','startDate','endDate','travelerName','description','notes','status','isPublic','currency','createdAt','updatedAt'])
-        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
-        && text(d.destinationCity) && d.destinationCity.size() > 0 && text(d.destinationState)
-        && text(d.country) && d.country.size() > 0 && text(d.travelerName) && text(d.description) && text(d.notes)
-        && date(d.startDate) && date(d.endDate) && d.endDate >= d.startDate
-        && d.status in ['planejamento','confirmada','concluída'] && d.isPublic is bool
-        && d.currency in ['BRL','USD','EUR','GBP','ARS','CLP','JPY','CAD','AUD','CHF','MXN','UYU','COP','PEN']
-        && d.createdAt is timestamp && d.updatedAt == request.time;
+      return d.keys().hasAll([
+          'title',
+          'destinationCity',
+          'destinationState',
+          'country',
+          'startDate',
+          'endDate',
+          'travelerName',
+          'description',
+          'notes',
+          'status',
+          'isPublic',
+          'currency',
+          'createdAt',
+          'updatedAt'
+        ])
+        && d.keys().hasOnly([
+          'title',
+          'destinationCity',
+          'destinationState',
+          'country',
+          'startDate',
+          'endDate',
+          'travelerName',
+          'description',
+          'notes',
+          'status',
+          'isPublic',
+          'currency',
+          'createdAt',
+          'updatedAt'
+        ])
+        && d.title is string
+        && d.title.size() > 0
+        && d.title.size() <= 120
+        && text(d.destinationCity)
+        && d.destinationCity.size() > 0
+        && text(d.destinationState)
+        && text(d.country)
+        && d.country.size() > 0
+        && text(d.travelerName)
+        && text(d.description)
+        && text(d.notes)
+        && date(d.startDate)
+        && date(d.endDate)
+        && d.endDate >= d.startDate
+        && d.status in ['planejamento', 'confirmada', 'concluída']
+        && d.isPublic is bool
+        && d.currency in [
+          'BRL',
+          'USD',
+          'EUR',
+          'GBP',
+          'ARS',
+          'CLP',
+          'JPY',
+          'CAD',
+          'AUD',
+          'CHF',
+          'MXN',
+          'UYU',
+          'COP',
+          'PEN'
+        ]
+        && d.createdAt is timestamp
+        && d.updatedAt == request.time;
     }
+
     function validEvent(d, tripId) {
-      let trip = get(/databases/$(database)/documents/trips/$(tripId)).data;
-      return d.keys().hasAll(['title','description','date','startTime','endTime','location','category','websiteUrl','instagramUrl','mapsUrl','genericUrl','pricePerPerson','peopleCount','isFree','notes','status','priority','createdAt','updatedAt'])
-        && d.keys().hasOnly(['title','description','date','startTime','endTime','location','category','websiteUrl','instagramUrl','mapsUrl','genericUrl','pricePerPerson','peopleCount','isFree','notes','status','priority','createdAt','updatedAt'])
-        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
-        && text(d.description) && text(d.location) && text(d.category) && text(d.notes)
-        && date(d.date) && d.date >= trip.startDate && d.date <= trip.endDate
-        && d.startTime is string && d.startTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
-        && d.endTime is string && (d.endTime == '' || (d.endTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$') && d.endTime >= d.startTime))
-        && url(d.websiteUrl) && url(d.instagramUrl) && url(d.mapsUrl) && url(d.genericUrl)
-        && d.pricePerPerson is number && d.pricePerPerson >= 0 && d.pricePerPerson <= 10000000
-        && d.peopleCount is int && d.peopleCount >= 1 && d.peopleCount <= 10000
-        && d.isFree is bool && (!d.isFree || d.pricePerPerson == 0)
-        && d.status in ['ideia','reservado','confirmado','realizado','cancelado']
-        && d.priority in ['imperdível','gostaria de ir','opcional']
-        && d.createdAt is timestamp && d.updatedAt == request.time;
+      let trip = get(
+        /databases/$(database)/documents/trips/$(tripId)
+      ).data;
+
+      return d.keys().hasAll([
+          'title',
+          'description',
+          'date',
+          'startTime',
+          'endTime',
+          'location',
+          'category',
+          'websiteUrl',
+          'instagramUrl',
+          'mapsUrl',
+          'genericUrl',
+          'pricePerPerson',
+          'peopleCount',
+          'isFree',
+          'notes',
+          'status',
+          'priority',
+          'createdAt',
+          'updatedAt'
+        ])
+        && d.keys().hasOnly([
+          'title',
+          'description',
+          'date',
+          'startTime',
+          'endTime',
+          'location',
+          'category',
+          'websiteUrl',
+          'instagramUrl',
+          'mapsUrl',
+          'genericUrl',
+          'pricePerPerson',
+          'peopleCount',
+          'isFree',
+          'notes',
+          'status',
+          'priority',
+          'createdAt',
+          'updatedAt'
+        ])
+        && d.title is string
+        && d.title.size() > 0
+        && d.title.size() <= 120
+        && text(d.description)
+        && text(d.location)
+        && text(d.category)
+        && text(d.notes)
+        && date(d.date)
+        && d.date >= trip.startDate
+        && d.date <= trip.endDate
+        && d.startTime is string
+        && d.startTime.matches(
+          '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        )
+        && d.endTime is string
+        && (
+          d.endTime == ''
+          || (
+            d.endTime.matches(
+              '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+            )
+            && d.endTime >= d.startTime
+          )
+        )
+        && url(d.websiteUrl)
+        && url(d.instagramUrl)
+        && url(d.mapsUrl)
+        && url(d.genericUrl)
+        && d.pricePerPerson is number
+        && d.pricePerPerson >= 0
+        && d.pricePerPerson <= 10000000
+        && d.peopleCount is int
+        && d.peopleCount >= 1
+        && d.peopleCount <= 10000
+        && d.isFree is bool
+        && (!d.isFree || d.pricePerPerson == 0)
+        && d.status in [
+          'ideia',
+          'reservado',
+          'confirmado',
+          'realizado',
+          'cancelado'
+        ]
+        && d.priority in [
+          'imperdível',
+          'gostaria de ir',
+          'opcional'
+        ]
+        && d.createdAt is timestamp
+        && d.updatedAt == request.time;
     }
-    match /admins/{email} {
-      allow get: if request.auth != null && request.auth.token.email_verified == true && request.auth.token.email.lower() == email;
-      allow list, write: if false;
+
+    // Cada usuário autenticado pode consultar apenas
+    // seu próprio status de administrador.
+    match /platformAdmins/{uid} {
+      allow get: if request.auth != null
+        && request.auth.uid == uid;
+
+      allow list, create, update, delete: if false;
     }
+
     match /trips/{tripId} {
-      allow read: if admin() || resource.data.isPublic == true;
-      allow create: if admin() && validTrip(request.resource.data) && request.resource.data.createdAt == request.time;
-      allow update: if admin() && validTrip(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow read: if admin()
+        || resource.data.isPublic == true;
+
+      allow create: if admin()
+        && validTrip(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if admin()
+        && validTrip(request.resource.data)
+        && request.resource.data.createdAt
+          == resource.data.createdAt;
+
       allow delete: if admin();
+
       match /events/{eventId} {
-        allow read: if admin() || get(/databases/$(database)/documents/trips/$(tripId)).data.isPublic == true;
-        allow create: if admin() && validEvent(request.resource.data,tripId) && request.resource.data.createdAt == request.time;
-        allow update: if admin() && validEvent(request.resource.data,tripId) && request.resource.data.createdAt == resource.data.createdAt;
+        allow read: if admin()
+          || get(
+            /databases/$(database)/documents/trips/$(tripId)
+          ).data.isPublic == true;
+
+        allow create: if admin()
+          && validEvent(request.resource.data, tripId)
+          && request.resource.data.createdAt == request.time;
+
+        allow update: if admin()
+          && validEvent(request.resource.data, tripId)
+          && request.resource.data.createdAt
+            == resource.data.createdAt;
+
         allow delete: if admin();
       }
     }

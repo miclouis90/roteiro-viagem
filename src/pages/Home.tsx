@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowUpRight, Plus, MapPin, Compass } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { watchTrips } from "../services/repository";
-import { TripForm } from "../components/Forms";
+import { TripCard } from "../components/TripCard";
+import { EmptyState } from "../components/ui/Primitives";
 import type { Trip } from "../types";
-import { formatDate, daysBetween } from "../utils/dates";
-export function Home() {
+export function Home({ onCreate }: { onCreate: () => void }) {
   const { admin, loading: authLoading } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [create, setCreate] = useState(false);
   useEffect(() => {
     if (authLoading) return;
+    setLoading(true);
+    setTrips([]);
     return watchTrips(
       admin,
       (t) => {
@@ -23,95 +23,59 @@ export function Home() {
       },
       () => {
         setError(
-          "Não foi possível carregar as viagens. Verifique a configuração e sua conexão.",
+          "Não foi possível carregar as viagens. Verifique sua conexão.",
         );
         setLoading(false);
       },
     );
   }, [admin, authLoading]);
   return (
-    <main>
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">A PRÓXIMA BOA HISTÓRIA</span>
-          <h1>Para onde vamos?</h1>
-          <p className="muted">
-            Um lugar para todos os seus próximos dias favoritos.
-          </p>
-        </div>
-        {admin && (
-          <button className="primary" onClick={() => setCreate(true)}>
-            <Plus size={18} />
-            Nova viagem
-          </button>
-        )}
-      </div>
+    <main className="home">
+      <section className="home-intro">
+        <span className="eyebrow">Sua próxima história</span>
+        <h1>Para onde vamos?</h1>
+        <p>Organize lugares, momentos e boas ideias em um só lugar.</p>
+      </section>
       {loading ? (
-        <p role="status" className="empty">
+        <div className="loading-state" role="status">
           Preparando suas viagens…
-        </p>
+        </div>
       ) : error ? (
         <p className="error" role="alert">
           {error}
         </p>
       ) : trips.length === 0 ? (
-        <div className="empty">
-          <Compass size={42} />
-          <h2>O próximo destino está em aberto.</h2>
-          <p>
-            {admin
-              ? "Crie uma viagem e comece a imaginar seus dias."
-              : "Nenhuma viagem pública disponível por aqui."}
-          </p>
+        <EmptyState
+          title="Sua próxima história começa aqui."
+          description={
+            admin
+              ? "Escolha um destino. O resto a gente organiza pelo caminho."
+              : "Nenhuma viagem pública por enquanto."
+          }
+        >
           {admin && (
-            <button className="primary" onClick={() => setCreate(true)}>
+            <button className="primary" onClick={onCreate}>
+              <Plus size={18} />
               Criar viagem
             </button>
           )}
-        </div>
+        </EmptyState>
+      ) : trips.length === 1 ? (
+        <TripCard trip={trips[0]} featured admin={admin} />
       ) : (
-        <div className="trip-grid">
-          {trips.map((t) => (
-            <Link className="trip-card" key={t.id} to={`/viagem/${t.id}`}>
-              <div className="trip-cover">
-                <Compass size={74} strokeWidth={1} />
-                <span className="destination-word">{t.destinationCity}</span>
-                <span className="cover-label">
-                  {t.isPublic ? "Roteiro público" : "Viagem privada"}
-                </span>
-              </div>
-              <div className="trip-card-body">
-                <span className="eyebrow">
-                  {formatDate(t.startDate)} — {formatDate(t.endDate)} ·{" "}
-                  {daysBetween(t.startDate, t.endDate)} DIAS
-                </span>
-                <h2>
-                  {t.title}
-                  <ArrowUpRight size={22} />
-                </h2>
-                <p>
-                  <MapPin size={15} />
-                  {t.destinationCity}
-                  {t.destinationState && `, ${t.destinationState}`} ·{" "}
-                  {t.country}
-                </p>
-                <p className="muted">{t.description}</p>
-                <div className="trip-card-footer">
-                  <span>{t.travelerName || "Seu próximo roteiro"}</span>
-                  <span className="badge">{t.status}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-      {create && admin && (
-        <TripForm
-          onClose={() => setCreate(false)}
-          onSaved={(id) => {
-            window.location.hash = `/viagem/${id}`;
-          }}
-        />
+        <section>
+          <div className="section-heading">
+            <h2>Suas viagens</h2>
+            <span className="muted">{trips.length} destinos para viver</span>
+          </div>
+          <div className="trip-grid">
+            {[...trips]
+              .sort((a, b) => a.startDate.localeCompare(b.startDate))
+              .map((t) => (
+                <TripCard key={t.id} trip={t} admin={admin} />
+              ))}
+          </div>
+        </section>
       )}
     </main>
   );

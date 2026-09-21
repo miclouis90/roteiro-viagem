@@ -1,8 +1,9 @@
-import { MapPin, ArrowUpRight } from "lucide-react";
+import { MapPin, ArrowUpRight, Star, Pencil, Trash2 } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
-import { categoryOf } from "../data/categories";
 import { cost, money, safeUrl } from "../utils/money";
 import { formatDate } from "../utils/dates";
+import { eventLabels, priorityLabels } from "../utils/labels";
+import { CategoryChip } from "./ui/Primitives";
 import { Modal } from "./Modal";
 export function EventCard({
   event,
@@ -13,35 +14,38 @@ export function EventCard({
   currency: string;
   onClick: () => void;
 }) {
-  const c = categoryOf(event.category);
   return (
     <button
-      className={`event-card ${event.status === "cancelado" ? "cancelled" : ""}`}
+      className={`event-row ${event.status === "cancelado" ? "cancelled" : ""}`}
       onClick={onClick}
     >
       <span className="event-time">
         {event.startTime}
         <small>{event.endTime}</small>
       </span>
-      <span className={`category-icon ${c.group}`}>{c.icon}</span>
+      <span className="timeline-dot" />
       <span className="event-main">
+        <strong>{event.title}</strong>
         <span className="event-meta">
-          {event.category}
+          <CategoryChip name={event.category} />
           {event.priority === "imperdível" && (
-            <span className="must">★ Imperdível</span>
+            <span className="priority-label">
+              <Star size={13} />
+              Imperdível
+            </span>
           )}
         </span>
-        <strong>{event.title}</strong>
-        <span className="location">
-          <MapPin size={13} />
-          {event.location || "Local a definir"}
+        <span className="location">{event.location || "Local a definir"}</span>
+        <span className="event-mobile-meta">
+          {event.isFree ? "Grátis" : money(cost(event), currency)} ·{" "}
+          {eventLabels[event.status]}
         </span>
       </span>
       <span className="event-price">
-        {event.isFree ? "Gratuito" : money(cost(event), currency)}
-        <small>{event.status}</small>
+        {event.isFree ? "Grátis" : money(cost(event), currency)}
+        <small>{eventLabels[event.status]}</small>
       </span>
-      <ArrowUpRight className="event-arrow" size={18} />
+      <ArrowUpRight size={17} className="event-arrow" />
     </button>
   );
 }
@@ -60,52 +64,63 @@ export function EventDetails({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const c = categoryOf(event.category);
   const maps =
     safeUrl(event.mapsUrl) ||
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location + " " + trip.destinationCity)}`;
+    (event.location
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location + " " + trip.destinationCity)}`
+      : undefined);
   return (
     <Modal title={event.title} onClose={onClose}>
-      <div className="details">
-        <span className={`category-icon ${c.group}`}>{c.icon}</span>
-        <div className="badges">
-          <span>{event.category}</span>
-          <span>{event.status}</span>
-          <span>{event.priority}</span>
+      <div className="event-details">
+        <div className="detail-chips">
+          <CategoryChip name={event.category} />
+          <span className={`status-chip status-${event.status}`}>
+            {eventLabels[event.status]}
+          </span>
+          <span className="subtle-chip">{priorityLabels[event.priority]}</span>
         </div>
         <p>
           {formatDate(event.date, {
             weekday: "long",
             day: "numeric",
             month: "long",
-          })}{" "}
-          · {event.startTime}
+          })}
+          <br />
+          {event.startTime}
           {event.endTime && ` — ${event.endTime}`}
         </p>
-        <p>
-          <MapPin size={16} /> {event.location || "Local a definir"}
+        <p className="inline-icon">
+          <MapPin size={17} />
+          {event.location || "Local a definir"}
         </p>
-        <p>{event.description || "Sem descrição adicional."}</p>
-        <div className="cost-box">
-          <small>Custo estimado</small>
-          <h2>
-            {event.isFree ? "Gratuito" : money(cost(event), trip.currency)}
-          </h2>
+        {event.description && <p>{event.description}</p>}
+        <section className="detail-cost">
+          <span className="muted">Gasto estimado</span>
+          <h3>{event.isFree ? "Grátis" : money(cost(event), trip.currency)}</h3>
           {!event.isFree && (
-            <span>
-              {money(event.pricePerPerson, trip.currency)} × {event.peopleCount}{" "}
-              pessoa(s)
-              {event.status === "cancelado"
-                ? " · cancelado, excluído do total"
-                : ""}
-            </span>
+            <p>
+              {money(event.pricePerPerson, trip.currency)} por pessoa ·{" "}
+              {event.peopleCount} pessoa(s)
+              {event.status === "cancelado" ? " · fora do total" : ""}
+            </p>
           )}
-        </div>
-        {event.notes && <p className="note">{event.notes}</p>}
+        </section>
+        {event.notes && (
+          <section>
+            <h3>Para lembrar</h3>
+            <p className="muted">{event.notes}</p>
+          </section>
+        )}
         <div className="link-row">
-          {event.location && (
-            <a href={maps} target="_blank" rel="noopener noreferrer">
-              Abrir localização ↗
+          {maps && (
+            <a
+              className="secondary"
+              href={maps}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Abrir no mapa
+              <ArrowUpRight size={16} />
             </a>
           )}
           {[
@@ -116,22 +131,26 @@ export function EventDetails({
             ([label, url]) =>
               safeUrl(url) && (
                 <a
+                  className="ghost"
                   key={label}
                   href={safeUrl(url)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {label} ↗
+                  {label}
+                  <ArrowUpRight size={16} />
                 </a>
               ),
           )}
         </div>
         {admin && (
           <div className="form-actions">
-            <button className="danger" onClick={onDelete}>
-              Excluir programa
+            <button className="ghost danger-text" onClick={onDelete}>
+              <Trash2 size={16} />
+              Excluir
             </button>
             <button className="primary" onClick={onEdit}>
+              <Pencil size={16} />
               Editar programa
             </button>
           </div>

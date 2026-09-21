@@ -130,3 +130,42 @@ Verificação recomendada após configurar sua conta Firebase: autenticação Go
 - Executar o deploy e validar o fluxo real nas contas escolhidas.
 
 Nenhum recurso de nuvem é criado automaticamente por instalar este projeto. Fontes Google são opcionais em tempo de execução; o CSS tem fallback sans-serif caso estejam indisponíveis.
+
+## Pré-cadastrar “Brasília da Mel” no Firestore real
+
+Na pasta do projeto, com as dependências instaladas, execute:
+
+```sh
+npm run seed:mel
+```
+
+Antes, preencha o `.env` com a configuração Web do projeto **rumos-bsb** e defina `VITE_DEMO_MODE=false`. O `.env` local entregue inicialmente está vazio e com demonstração ativa. Não use dados de outro projeto. O comando valida os valores efetivos do Vite (incluindo eventuais `.env.local` e variáveis do terminal); em caso de divergência, interrompe sem gravar. A configuração não é obtida de `.firebaserc`, nem de credenciais de outro aplicativo.
+
+O comando abre uma tela local em `/#/admin/seed-mel`. Entre pelo botão **Entrar com Google** e clique em **Cadastrar viagem privada no Firestore**. É necessário um administrador já autorizado nas regras atuais: `platformAdmins/SEU_UID`, com `active: true`, exclusivamente em **rumos-bsb**. Autorize `127.0.0.1` no Firebase Authentication se esse domínio ainda não estiver habilitado. Nenhuma senha, token de serviço ou credencial administrativa precisa ser colocada no código. Ctrl+C encerra o servidor depois do cadastro.
+
+O mecanismo utiliza o SDK cliente com o login da aplicação; as regras Firestore continuam sendo aplicadas. Não usa Admin SDK e não altera regras, administradores ou permissões.
+
+Destino: banco padrão `(default)` do projeto `rumos-bsb`, documento **`trips/brasilia-da-mel-2026`**. Será gravada somente a viagem privada de Mel, de 29/10/2026 a 02/11/2026, com os dados solicitados e timestamps do servidor. A aplicação calcula **5 dias**; esse número não é persistido. Nenhum evento é criado.
+
+Antes de escrever, consulta no servidor viagens com o título exato `Brasília da Mel` e compara a data `2026-10-29`. Se encontrar uma, inclusive com outro ID, informa que já existe e oferece o link desse documento, sem modificar nem mesmo sua visibilidade. Se o ID previsto estiver ocupado por outra viagem, interrompe sem sobrescrever. Uma transação protege o ID fixo contra repetições e execuções simultâneas deste cadastro. Falhas de rede ou permissão abortam a operação. Não há exclusões.
+
+Essa proteção não cria uma restrição global de unicidade para o formulário comum: evite cadastrar manualmente a mesma viagem ao mesmo tempo que executa o seed. Execuções repetidas do seed são idempotentes.
+
+Após a confirmação, clique em **Abrir viagem**. Ela aparecerá normalmente para os administradores; visitantes não verão a nova viagem privada. Continue adicionando programas pela interface habitual. O comando prepara e abre o fluxo autenticado; somente iniciar o servidor não insere dados. Os testes automatizados validam a lógica com simulações, sem escrever em nenhum projeto remoto.
+
+**Nota sobre a configuração administrativa atual:** neste checkout as regras e o hook de autenticação já usam `platformAdmins/{uid}` com `active: true`. Essa configuração substitui as instruções antigas sobre `admins/{email}` nas seções anteriores; ela foi preservada nesta alteração.
+## Interface simplificada (refatoração UI/UX)
+
+A interface usa tokens centralizados em `src/tokens.css` e CSS consolidado em `src/styles.css`, com fontes nativas, cores suaves por categoria e ícones Lucide já presentes no projeto. Nenhuma dependência foi adicionada.
+
+- Home editorial com apresentação ampliada quando existe uma única viagem.
+- Menu contextual para editar, duplicar, mudar a privacidade ou excluir uma viagem.
+- Roteiro com seleção horizontal de dia e timeline; calendário preservado como visualização alternativa.
+- Hoje, Lugares e Resumo com conteúdos separados; navegação inferior no mobile.
+- Formulários em seções progressivas. Campos opcionais permanecem montados e seus valores são preservados mesmo com a seção recolhida. Erros de validação abrem a seção correspondente.
+- Compartilhamento por modal/bottom sheet, copiar link e Web Share API quando disponível.
+- Status têm novos rótulos apenas na interface: os valores persistidos continuam iguais.
+
+As permissões, regras, Authentication, configuração Firebase, seed, coleções, datas e cálculos existentes foram preservados. Não há migração. Novas ações da interface utilizam as operações cliente e regras atuais. A duplicação cria uma cópia privada com novos IDs, sem modificar a origem. O documento pai precisa existir antes de gravar os programas, conforme as regras atuais; se houver falha na segunda etapa, a interface informa o ID da cópia para conferência, sem apagar dados. Limite de 498 programas por duplicação; programas fora do período precisam ser corrigidos antes.
+
+Componentes de domínio ficam em `src/components/trip/`, componentes de UI em `src/components/ui/`, e formulários separados em `TripForm.tsx` e `EventForm.tsx`. A antiga sidebar de indicadores foi removida.
