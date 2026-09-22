@@ -5,13 +5,29 @@ import { safeUrl } from "../utils/money";
 export function EventSpecificDetails({
   details,
   admin,
+  part = "all",
 }: {
   details?: EventDetailsData;
   admin: boolean;
+  part?: "all" | "info" | "reservation" | "links" | "notes";
 }) {
-  const entries = visibleDetails(details, admin);
+  const entries = visibleDetails(details, admin).filter((entry) => {
+    if (part === "all") return true;
+    const group =
+      entry.key === "notes"
+        ? "notes"
+        : entry.input === "url"
+          ? "links"
+          : /^(reservation|bookingReference|seat|table|ticketCode|ticket$|confirmation|phone)/.test(
+                entry.key,
+              )
+            ? "reservation"
+            : "info";
+    return group === part;
+  });
   if (!entries.length || !details) return null;
-  const flight = details.type === "flight";
+  const flight =
+    details.type === "flight" && (part === "info" || part === "all");
   const routeKeys = [
     "originAirport",
     "destinationAirport",
@@ -22,14 +38,24 @@ export function EventSpecificDetails({
   ];
   return (
     <section className={`specific-details ${flight ? "flight-details" : ""}`}>
-      <h3>{detailSchemas[details.type].title}</h3>
+      <h3>
+        {part === "reservation"
+          ? "Reserva"
+          : part === "links"
+            ? "Ingresso"
+            : part === "notes"
+              ? "Observações específicas"
+              : detailSchemas[details.type].title}
+      </h3>
       {flight && entries.some((entry) => routeKeys.includes(entry.key)) && (
         <div className="flight-route">
           <div>
             <strong>
               {details.originAirport || details.originCity || "Origem"}
             </strong>
-            {details.originAirport && details.originCity && <small>{details.originCity}</small>}
+            {details.originAirport && details.originCity && (
+              <small>{details.originCity}</small>
+            )}
             <span>{details.departureTime}</span>
           </div>
           <ArrowRight size={24} />
@@ -39,7 +65,9 @@ export function EventSpecificDetails({
                 details.destinationCity ||
                 "Destino"}
             </strong>
-            {details.destinationAirport && details.destinationCity && <small>{details.destinationCity}</small>}
+            {details.destinationAirport && details.destinationCity && (
+              <small>{details.destinationCity}</small>
+            )}
             <span>{details.arrivalTime}</span>
           </div>
         </div>

@@ -26,7 +26,10 @@ export function TripOverview({
     <div className="overview overview-simple">
       <section className="overview-days">
         <SectionHeader title="Roteiro em um olhar" />
-        <div className="day-glance" aria-label="Roteiro por dia">
+        <div
+          className={`day-glance ${view.days.length === 5 ? "five-days" : ""}`}
+          aria-label="Roteiro por dia"
+        >
           {view.days.map(({ date, count, tones }) => (
             <button
               key={date}
@@ -36,12 +39,10 @@ export function TripOverview({
               <small>
                 {formatDate(date, { weekday: "short" }).replace(".", "")}
               </small>
-              <strong>
-                {formatDate(date, { day: "numeric", month: "short" }).replace(
-                  " de ",
-                  " ",
-                )}
-              </strong>
+              <strong>{formatDate(date, { day: "numeric" })}</strong>
+              <small>
+                {formatDate(date, { month: "short" }).replace(".", "")}
+              </small>
               <span>
                 {count
                   ? `${count} programa${count === 1 ? "" : "s"}`

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { CalendarDays, List } from "lucide-react";
+import { CalendarDays, List, ChevronDown } from "lucide-react";
 import type { Trip, TripEvent } from "../../types";
 import { datesBetween, dateKey, formatDate } from "../../utils/dates";
 import { spendingLabel } from "../../utils/spending";
@@ -51,7 +51,10 @@ export function Programs({
     <section className="programs">
       {tab === "roteiro" && (
         <details className="context-menu itinerary-display">
-          <summary>Exibição</summary>
+          <summary aria-label="Formato do roteiro">
+            {view === "agenda" ? "Agenda" : "Calendário"}
+            <ChevronDown size={14} />
+          </summary>
           <div
             className="menu-popover"
             onClick={(e) => {
@@ -80,12 +83,14 @@ export function Programs({
         </details>
       )}
       {tab === "roteiro" && view === "agenda" && (
-        <DayPicker
-          days={days}
-          selected={day}
-          onChange={onDayChange}
-          events={events}
-        />
+        <div className="sticky-days">
+          <DayPicker
+            days={days}
+            selected={day}
+            onChange={onDayChange}
+            events={events}
+          />
+        </div>
       )}
       <EventFilters
         value={filters}

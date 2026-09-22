@@ -50,3 +50,14 @@ npm run build -- --configLoader runner
 ```
 
 O carregador `runner` evita o processo extra de empacotamento da configuração Vite neste ambiente. O build final usa a configuração normal do projeto; a prévia de QA foi compilada separadamente com demonstração local.
+
+## Polimento final — 22/09/2026
+
+- Visão geral com cinco dias inteiros, sem carrossel cortado ou novas seções.
+- Seletor de dias fixo durante a rolagem; controle de formato identifica Agenda ou Calendário.
+- Ficha rápida com Editar, Mapa e menu de ações secundárias. Escape fecha primeiro o menu, preservando a ficha.
+- Fechar com alvo de 44 px, detalhes em blocos simples, cores semânticas discretas e transições de 180 ms com respeito a movimento reduzido.
+- Revisão visual local em 360, 390 e 430 px: cinco dias acessíveis, página sem overflow horizontal, ficha compacta e expansão limitada a 88dvh com rolagem interna.
+- Ficha de visitante verificada sem edição, exclusão ou código privado de reserva.
+- Lint, TypeScript, 78 testes e build aprovados. O build mantém o aviso de tamanho do chunk Firestore (527 kB), sem erro.
+- Nenhuma alteração em Firebase, schema, dados persistidos do projeto ou dependências. QA realizada exclusivamente na demonstração local; sem deploy, commit ou push.

@@ -21,7 +21,7 @@ export function DayPicker({
       ref.current.scrollLeft = node.offsetLeft - ref.current.offsetLeft - 16;
   }, [selected]);
   return (
-    <div className="day-picker" ref={ref} aria-label="Dias da viagem">
+    <div className={`day-picker ${days.length <= 5 ? "short-trip-days" : ""}`} ref={ref} aria-label="Dias da viagem">
       {days.map((d) => (
         <button
           key={d}

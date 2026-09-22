@@ -34,16 +34,16 @@ export function Modal({
         if (!busy) onClose();
       }}
     >
-      <div className="sheet-handle" />
+      <div className="sheet-handle" aria-hidden="true" />
       <div className="modal-head">
         <h2 id={id}>{title}</h2>
         <button
-          className="icon-button"
+          className="icon-button sheet-close"
           disabled={busy}
           onClick={onClose}
           aria-label="Fechar"
         >
-          <X size={20} />
+          <X size={18} strokeWidth={1.6} />
         </button>
       </div>
       {children}

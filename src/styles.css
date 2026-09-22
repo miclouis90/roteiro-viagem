@@ -2810,3 +2810,78 @@ button:not(:disabled):active,
 @media (max-width: 600px) {
  .itinerary-display { top: -66px; }
 }
+
+/* Final navigation polish: quiet controls, readable days, compact sheets. */
+.overview-days .day-glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); overflow: visible; gap: 0; margin-right: 0; }
+.overview-days .day-glance.five-days { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.overview-days .glance-day { min-width: 0; max-width: none; width: 100%; padding: 12px 6px; align-items: center; text-align: center; }
+.overview-days .glance-day strong { font-size: 1.35rem; }
+.overview-days .glance-day > span:not(.day-tones) { font-size: .75rem; line-height: 1.45; }
+.overview-days .day-tones { justify-content: center; }
+.sticky-days { position: sticky; top: 0; z-index: 8; background: var(--surface-base); padding-top: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+.sticky-days .day-picker { padding-bottom: 10px; margin-bottom: 0; scroll-padding-inline: 4px; }
+.sticky-days .day-picker button { min-height: 88px; padding-block: 8px; }
+.itinerary-display > summary { display: flex; gap: 5px; align-items: center; color: var(--text-primary); }
+.itinerary-display .menu-popover button[aria-pressed="true"] { background: var(--surface-brand); color: var(--color-brand); }
+.modal-head { gap: 12px; margin-bottom: 18px; }
+.modal-head h2 { margin-block: 8px 4px; line-height: 1.3; }
+.modal-head .sheet-close { width: 44px; height: 44px; min-width: 44px; min-height: 44px; background: transparent; border: 0; box-shadow: none; color: var(--text-secondary); margin-right: -6px; }
+.modal-head .sheet-close:hover { background: var(--surface-soft); color: var(--text-primary); }
+.modal-head .sheet-close:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+.event-details .detail-chips { margin-bottom: 18px; gap: 8px; }
+.event-details .event-when { margin: 0 0 14px; font-size: .9375rem; line-height: 1.65; color: var(--text-secondary); }
+.event-details .event-location { margin: 0 0 22px; align-items: flex-start; line-height: 1.55; }
+.event-location svg { flex-shrink: 0; margin-top: 3px; }
+.quick-event-actions { display: flex; flex-wrap: nowrap; align-items: center; gap: 10px; margin: 0 0 22px; }
+.quick-event-actions > .primary { flex: 1; min-height: 44px; }
+.quick-event-actions > .secondary { flex: 1; min-height: 44px; }
+.event-menu { flex-shrink: 0; }
+.event-menu > summary { width: 44px; height: 44px; background: transparent; border: 0; }
+.event-menu .menu-popover { z-index: 25; min-width: 176px; }
+.event-menu .danger-text { margin-top: 6px; border-top: 1px solid var(--color-border); border-radius: 0; }
+.event-extra { border: 0; border-top: 1px solid var(--color-border); margin-top: 0; }
+.event-extra > summary { padding: 14px 0; margin: 0; border: 0; border-radius: 6px; background: transparent; font-size: .9375rem; color: var(--text-secondary); box-shadow: none; }
+.event-extra[open] > summary { margin-bottom: 8px; color: var(--text-primary); }
+.event-extra > summary:focus:not(:focus-visible) { outline: none; }
+.event-extra > summary:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 3px; }
+.event-extra-body > section { margin: 0 0 24px; padding: 0; border: 0; background: transparent; border-radius: 0; box-shadow: none; }
+.event-extra-body h3 { font-size: .9375rem; margin: 0 0 10px; }
+.event-extra-body p { font-size: .9375rem; margin: 0 0 10px; white-space: pre-wrap; }
+.event-extra-body .detail-cost h3 { font-size: 1.2rem; margin-top: 6px; }
+.event-extra-body .specific-details dl { gap: 14px 18px; }
+.event-extra-body .flight-route { padding-top: 0; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--color-border); }
+.event-extra-body .link-row { margin: 0; gap: 8px; }
+.tone-coffee { --category-accent: #c08b2d; --category-ink: #79551b; --category-bg: #fff3d6; }
+.tone-flight, .tone-car, .tone-rail, .tone-airport { --category-accent: var(--color-transport); --category-ink: var(--color-transport-ink); --category-bg: var(--color-transport-bg); }
+.day-picker button, .glance-day, .event-row, .itinerary-tabs button, .quick-event-actions button, .quick-event-actions a, summary { transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.day-picker button:hover, .glance-day:hover { background: var(--trip-soft, var(--surface-brand)); }
+.day-picker button.active { box-shadow: inset 0 0 0 1px var(--trip-accent, var(--color-brand)); }
+.event-row:hover { background: var(--surface-raised); }
+.quick-event-actions .primary:active { background: var(--color-brand-hover); }
+dialog[open] { animation: polished-sheet-in 180ms ease-out; }
+.event-extra[open] .event-extra-body { animation: detail-reveal 180ms ease-out; }
+@keyframes polished-sheet-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes detail-reveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@supports (interpolate-size: allow-keywords) {
+ .event-extra { interpolate-size: allow-keywords; }
+ .event-extra::details-content { block-size: 0; overflow: clip; transition: block-size 180ms ease, content-visibility 180ms allow-discrete; }
+ .event-extra[open]::details-content { block-size: auto; }
+}
+@media (max-width: 600px) {
+ dialog { max-height: 88dvh; padding-top: 10px; }
+ .sheet-handle { margin-bottom: 10px; width: 32px; background: #d5ddd8; }
+ .modal-head { margin-bottom: 16px; }
+ .modal-head h2 { font-size: 1.25rem; }
+ .overview-days .glance-day > span:not(.day-tones) { font-size: .6875rem; }
+ .overview-days .glance-day { gap: 5px; }
+ .sticky-days { margin-inline: -4px; padding-inline: 4px; }
+ .itinerary-tabs button { padding-inline: 18px; }
+ .itinerary-display > summary { padding-inline: 6px; font-size: .75rem; }
+ .event-extra-body .specific-details dl { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+ dialog[open], .event-extra[open] .event-extra-body { animation: none; }
+ .event-extra::details-content, .day-picker button, .glance-day, .event-row, .itinerary-tabs button, .quick-event-actions button, .quick-event-actions a, summary { transition: none; }
+}
+.sticky-days .short-trip-days { display: grid; grid-template-columns: repeat(auto-fit,minmax(44px,1fr)); gap: 6px; }
+.sticky-days .short-trip-days button { min-width: 0; width: 100%; padding-inline: 4px; }
