@@ -15,9 +15,10 @@ import { duplicateTrip } from "../services/duplicateTrip";
 import { tripInput } from "../utils/inputs";
 import { datesBetween, daysBetween, formatDate } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
-import { tripTabFromSearch } from "../utils/tripView";
+import { tripTabFromSearch, itineraryViewFromSearch } from "../utils/tripView";
 import { TripOverview } from "../components/trip/TripOverview";
 import { themeStyle } from "../data/themes";
+
 import { JourneyMoment } from "../components/trip/JourneyMoment";
 import {
   TripNavigation,
@@ -65,6 +66,13 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const tab = tripTabFromSearch(params);
+  const itineraryView = itineraryViewFromSearch(params);
+  const [addSheet, setAddSheet] = useState(false);
+  const [addKind, setAddKind] = useState<"program" | "transport" | "place">(
+    "program",
+  );
+  const [expandDetails, setExpandDetails] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const scrollPositions = useRef<Partial<Record<TripTab, number>>>({
     geral: 0,
   });
@@ -73,29 +81,21 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
     const timer = window.setInterval(() => setNow(new Date()), 60000);
     return () => window.clearInterval(timer);
   }, []);
-  function changeTab(value: TripTab, date?: string, highlights = false) {
+  function changeTab(value: TripTab, date?: string) {
     scrollPositions.current[tab] = window.scrollY;
     const next: Record<string, string> =
       value === "geral" ? {} : { tab: value };
     if (date) next.day = date;
-    if (highlights) next.priority = "imperdível";
     setParams(next);
     requestAnimationFrame(() => {
-      if (
-        !date &&
-        !highlights &&
-        scrollPositions.current[value] !== undefined
-      ) {
+      if (!date && scrollPositions.current[value] !== undefined) {
         window.scrollTo({
           top: scrollPositions.current[value],
           behavior: "instant",
         });
         return;
       }
-      const target = window.matchMedia("(max-width: 600px)").matches
-        ? document.getElementById("trip-section")
-        : document.querySelector(".trip-tabs");
-      target?.scrollIntoView({ block: "start", behavior: "instant" });
+      window.scrollTo({ top: 0, behavior: "instant" });
     });
   }
   const [editTrip, setEditTrip] = useState(false);
@@ -112,13 +112,18 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
   const count = daysBetween(trip.startDate, trip.endDate);
   useEffect(() => {
     if (admin && params.get("action") === "add") {
-      setNewDate(trip.startDate);
-      setEditEvent("new");
+      const requestedDay = params.get("day") || trip.startDate;
+      setNewDate(
+        requestedDay >= trip.startDate && requestedDay <= trip.endDate
+          ? requestedDay
+          : trip.startDate,
+      );
+      setAddSheet(true);
       const next = new URLSearchParams(params);
       next.delete("action");
       setParams(next, { replace: true });
     }
-  }, [admin, params, setParams, trip.startDate]);
+  }, [admin, params, setParams, trip.startDate, trip.endDate]);
   function ask(value: typeof confirm) {
     setActionError("");
     setConfirm(value);
@@ -160,65 +165,72 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
       className={`trip-page theme-trip ${admin ? "" : "public-trip"}`}
       style={themeStyle(trip.theme) as React.CSSProperties}
     >
-      <Link className="back" to="/">
-        <ArrowLeft size={17} />
-        Voltar
-      </Link>
-      <header
-        className={`trip-heading ${tab === "geral" ? "trip-hero" : "compact-heading"}`}
-      >
-        <div>
-          <span className="eyebrow">
-            {trip.destinationCity}
-            {trip.destinationState && ` · ${trip.destinationState}`}
-          </span>
-          <h1>{trip.title}</h1>
-          <p className="trip-period">
-            {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
-            <span>·</span>
-            {dayCountLabel(count)}
-            {!admin && ` em ${trip.destinationCity}`}
-          </p>
-          <div className="trip-badges">
-            <span className={`status-chip status-${trip.status}`}>
-              {tripLabels[trip.status]}
-            </span>
-            {!trip.isPublic && (
-              <span className="privacy-label">
-                <LockKeyhole size={13} />
-                Privada
+      {tab === "geral" ? (
+        <>
+          <Link className="back" to="/">
+            <ArrowLeft size={17} />
+            Voltar
+          </Link>
+          <header
+            className={`trip-heading ${tab === "geral" ? "trip-hero" : "compact-heading"}`}
+          >
+            <div>
+              <span className="eyebrow">
+                {trip.destinationCity}
+                {trip.destinationState && ` · ${trip.destinationState}`}
               </span>
-            )}
-          </div>
-          {tab === "geral" && (
-            <JourneyMoment
-              trip={trip}
-              events={events}
-              now={now}
-              onDay={(date) => changeTab("roteiro", date)}
-            />
-          )}
-        </div>
-        <div className="heading-actions">
-          <button className="secondary" onClick={() => setShare(true)}>
-            <Share2 size={17} />
-            Compartilhar
+              <h1>{trip.title}</h1>
+              <p className="trip-period">
+                {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
+                <span>·</span>
+                {dayCountLabel(count)}
+                {!admin && ` em ${trip.destinationCity}`}
+              </p>
+              <div className="trip-badges">
+                <span className={`status-chip status-${trip.status}`}>
+                  {tripLabels[trip.status]}
+                </span>
+                {!trip.isPublic && (
+                  <span className="privacy-label">
+                    <LockKeyhole size={13} />
+                    Privada
+                  </span>
+                )}
+              </div>
+              {tab === "geral" && (
+                <JourneyMoment trip={trip} events={events} now={now} />
+              )}
+            </div>
+            <div className="heading-actions">
+              {!admin && (
+                <button className="secondary" onClick={() => setShare(true)}>
+                  <Share2 size={17} />
+                  Compartilhar
+                </button>
+              )}
+              {admin && (
+                <TripMenu
+                  trip={trip}
+                  onEdit={() => setEditTrip(true)}
+                  onShare={() => setShare(true)}
+                  onDuplicate={() => ask("duplicate")}
+                  onVisibility={() =>
+                    trip.isPublic ? ask("private") : setShare(true)
+                  }
+                  onDelete={() => ask("delete-trip")}
+                />
+              )}
+            </div>
+          </header>
+        </>
+      ) : (
+        <header className="internal-heading">
+          <button className="back" onClick={() => changeTab("geral")}>
+            <ArrowLeft size={17} />
+            {trip.title}
           </button>
-          {admin && (
-            <TripMenu
-              trip={trip}
-              onEdit={() => setEditTrip(true)}
-              onDuplicate={() => ask("duplicate")}
-              onVisibility={() =>
-                trip.isPublic ? ask("private") : setShare(true)
-              }
-              onDelete={() => ask("delete-trip")}
-            />
-          )}
-        </div>
-      </header>
-      {!admin && tab === "roteiro" && trip.description && (
-        <p className="public-description">{trip.description}</p>
+          <h1>{tab === "roteiro" ? "Roteiro" : "Gastos"}</h1>
+        </header>
       )}
       <TripNavigation value={tab} onChange={(value) => changeTab(value)} />
       <div className="trip-content" id="trip-section" key={tab}>
@@ -229,19 +241,13 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
             now={now}
             admin={admin}
             onDay={(date) => changeTab("roteiro", date)}
-            onHighlights={() => changeTab("lugares", undefined, true)}
-            onExpenses={() => changeTab("gastos")}
-            onSelect={setSelected}
-            onAdd={() => {
-              setNewDate(trip.startDate);
-              setEditEvent("new");
+            onSelect={(event) => {
+              setJustSaved(false);
+              setSelected(event);
             }}
           />
         ) : tab === "gastos" ? (
           <>
-            <div className="section-heading">
-              <h2>Gastos da viagem</h2>
-            </div>
             <TripSummary
               trip={trip}
               events={events}
@@ -250,29 +256,75 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
             />
           </>
         ) : (
-          <Programs
-            key={`${tab}-${params.get("priority") || ""}`}
-            trip={trip}
-            events={events}
-            tab={tab}
-            admin={admin}
-            selectedDate={params.get("day") || ""}
-            onDayChange={(date) => {
-              const next = new URLSearchParams(params);
-              next.set("day", date);
-              setParams(next, { replace: true });
-            }}
-            initialPriority={
-              params.get("priority") === "imperdível" ? "imperdível" : ""
-            }
-            onAdd={(date) => {
-              setNewDate(date);
-              setEditEvent("new");
-            }}
-            onSelect={setSelected}
-          />
+          <>
+            <nav className="itinerary-tabs" aria-label="Visões do roteiro">
+              {(["roteiro", "lugares"] as const).map((view) => (
+                <button
+                  key={view}
+                  aria-pressed={itineraryView === view}
+                  className={itineraryView === view ? "active" : ""}
+                  onClick={() => {
+                    const next = new URLSearchParams(params);
+                    next.set("tab", "roteiro");
+                    if (view === "lugares") next.set("view", "lugares");
+                    else next.delete("view");
+                    setParams(next);
+                  }}
+                >
+                  {view === "roteiro" ? "Roteiro" : "Lugares"}
+                </button>
+              ))}
+            </nav>
+            <Programs
+              key={`${itineraryView}-${params.get("priority") || ""}`}
+              trip={trip}
+              events={events}
+              tab={itineraryView}
+              admin={admin}
+              selectedDate={params.get("day") || ""}
+              onDayChange={(date) => {
+                const next = new URLSearchParams(params);
+                next.set("day", date);
+                setParams(next, { replace: true });
+              }}
+              initialPriority={
+                params.get("priority") === "imperdível" ? "imperdível" : ""
+              }
+              onSelect={(event) => {
+                setJustSaved(false);
+                setSelected(event);
+              }}
+            />
+          </>
         )}
       </div>
+      {addSheet && admin && (
+        <Modal title="Adicionar" onClose={() => setAddSheet(false)}>
+          <div className="quick-actions">
+            {(
+              [
+                { id: "program", label: "Programa" },
+                { id: "transport", label: "Transporte" },
+                { id: "place", label: "Lugar para lembrar" },
+              ] as const
+            ).map(({ id, label }) => (
+              <button
+                className="secondary"
+                key={id}
+                onClick={() => {
+                  setAddKind(id);
+                  setExpandDetails(false);
+                  setJustSaved(false);
+                  setAddSheet(false);
+                  setEditEvent("new");
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
       {editTrip && admin && (
         <TripForm
           trip={trip}
@@ -286,16 +338,25 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
           event={editEvent === "new" ? undefined : editEvent}
           defaultDate={newDate}
           firstEvent={events.length === 0}
+          kind={addKind}
+          expandDetails={expandDetails}
+          onSaved={(saved) => {
+            setSelected(saved);
+            setJustSaved(editEvent === "new");
+            setEditEvent(null);
+          }}
           onClose={() => setEditEvent(null)}
         />
       )}{" "}
       {selected && !editEvent && !confirm && (
         <EventDetails
           event={events.find((e) => e.id === selected.id) || selected}
+          justSaved={justSaved}
           trip={trip}
           admin={admin}
           onClose={() => setSelected(null)}
           onEdit={() => {
+            setExpandDetails(justSaved);
             setEditEvent(selected);
             setSelected(null);
           }}

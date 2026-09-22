@@ -173,3 +173,19 @@ Componentes de domínio ficam em `src/components/trip/`, componentes de UI em `s
 ## Roteiro da Brasília da Mel
 
 A rota `/#/admin/seed-mel` também permite cadastrar os 12 programas na viagem existente. A ação exige administrador autenticado no projeto `rumos-bsb`, preserva documentos existentes e não muda a privacidade da viagem. Veja [instruções, garantias e fontes dos links](SEED-ROTEIRO-MEL.md). A gravação só ocorre após clicar em **Cadastrar roteiro Brasília da Mel**.
+
+## Navegação e arquitetura de informação — 22/09/2026
+
+A viagem possui três destinos principais: **Visão geral, Roteiro e Gastos**. **Lugares** continua disponível dentro do Roteiro. Links antigos com `?tab=lugares` abrem essa visão secundária. Agenda e Calendário ficam no controle **Exibição**; busca e filtros continuam disponíveis.
+
+O hero completo e o menu **•••** ficam na Visão geral. As telas internas mostram o nome da viagem como retorno e o título da seção. No menu estão Editar viagem, Compartilhar, Duplicar, Tornar pública/privada e Excluir.
+
+Há uma única ação **Adicionar**, no cabeçalho. Ela oferece Programa, Transporte e Lugar para lembrar. As três opções usam o cadastro existente de programas; Transporte começa em Voo e Lugar para lembrar em Outro, sem novas coleções, entidades ou campos. O lugar continua associado a uma data do roteiro.
+
+O primeiro salvamento pede somente título, grupo/categoria, data, horário e local. Depois, a ficha rápida oferece **Adicionar mais detalhes**. Na edição, esse mesmo controle revela reservas/detalhes específicos, preferências, custos, links e observações. Uma edição essencial preserva os valores opcionais já gravados; se uma categoria com detalhes for trocada, o formulário avisa sobre a substituição antes de salvar.
+
+A ficha rápida mostra categoria, status, data/hora e local, com Mapa, Editar e Compartilhar. Informações adicionais e exclusão ficam em **Detalhes do programa**. O botão flutuante foi retirado para evitar sobreposição e duplicidade com o cabeçalho.
+
+A Visão geral apresenta contexto temporal, dias, um **Próximo passo** e um resumo breve. Antes da viagem, aponta um local pendente ou uma ideia a revisar; durante, mostra o próximo programa, incluindo transporte; depois, oferece rever a viagem. São atalhos calculados dos dados atuais, sem tarefas persistidas.
+
+Esta rodada não altera schema, `firestore.rules`, autenticação, configuração Firebase, seed ou dados reais. As opções e detalhes da rodada anterior foram preservados. Nenhum deploy, commit ou push foi executado.

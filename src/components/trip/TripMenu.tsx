@@ -1,5 +1,6 @@
 import {
   MoreHorizontal,
+  Share2,
   Pencil,
   Copy,
   Globe2,
@@ -10,12 +11,14 @@ import type { Trip } from "../../types";
 export function TripMenu({
   trip,
   onEdit,
+  onShare,
   onDuplicate,
   onVisibility,
   onDelete,
 }: {
   trip: Trip;
   onEdit: () => void;
+  onShare: () => void;
   onDuplicate: () => void;
   onVisibility: () => void;
   onDelete: () => void;
@@ -47,6 +50,10 @@ export function TripMenu({
         <button onClick={onEdit}>
           <Pencil size={17} />
           Editar viagem
+        </button>
+        <button onClick={onShare}>
+          <Share2 size={17} />
+          Compartilhar
         </button>
         <button onClick={onDuplicate}>
           <Copy size={17} />

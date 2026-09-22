@@ -13,7 +13,7 @@ export function CategoryPicker({
   const choices = categories.filter((category) => category.group === group);
   return (
     <fieldset className="category-picker wide">
-      <legend>Categoria</legend>
+      <legend>Grupo e categoria</legend>
       <input type="hidden" name="category" value={value} />
       <div className="category-groups" aria-label="Grupos de categoria">
         {categoryGroups.map(({ id, label, tone, icon: Icon }) => (
@@ -22,7 +22,13 @@ export function CategoryPicker({
             key={id}
             className={`filter-chip tone-${tone} ${id === group ? "active" : ""}`}
             aria-pressed={id === group}
-            onClick={() => setGroup(id)}
+            onClick={() => {
+              setGroup(id);
+              if (categoryOf(value).group !== id)
+                onChange(
+                  categories.find((category) => category.group === id)!.name,
+                );
+            }}
           >
             <Icon size={17} />
             {label}

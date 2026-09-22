@@ -59,6 +59,7 @@ export function EventDetails({
   onEdit,
   onDelete,
   onShare,
+  justSaved = false,
 }: {
   event: TripEvent;
   trip: Trip;
@@ -67,6 +68,7 @@ export function EventDetails({
   onEdit: () => void;
   onDelete: () => void;
   onShare?: () => void;
+  justSaved?: boolean;
 }) {
   const maps =
     safeUrl(event.mapsUrl) ||
@@ -81,7 +83,6 @@ export function EventDetails({
           <span className={`status-chip status-${event.status}`}>
             {eventLabels[event.status]}
           </span>
-          <span className="subtle-chip">{priorityLabels[event.priority]}</span>
         </div>
         <p>
           {formatDate(event.date, {
@@ -97,31 +98,7 @@ export function EventDetails({
           <MapPin size={17} />
           {event.location || "Local a definir"}
         </p>
-        {event.description && <p>{event.description}</p>}
-        <EventSpecificDetails details={event.details} admin={admin} />
-        <section className="detail-cost">
-          <span className="muted">Gasto estimado</span>
-          <h3>{eventPriceLabel(event, trip.currency)}</h3>
-          {!event.isFree && !hasUndefinedPrice(event) && (
-            <p>
-              {money(event.pricePerPerson, trip.currency)} por pessoa ·{" "}
-              {event.peopleCount} pessoa(s)
-              {event.status === "cancelado" ? " · fora do total" : ""}
-            </p>
-          )}
-        </section>
-        {event.notes && (
-          <section>
-            <h3>Para lembrar</h3>
-            <p className="muted">{event.notes}</p>
-          </section>
-        )}
-        <div className="link-row">
-          {onShare && (
-            <button className="secondary" onClick={onShare}>
-              Compartilhar
-            </button>
-          )}
+        <div className="quick-event-actions">
           {maps && (
             <a
               className="secondary"
@@ -129,42 +106,75 @@ export function EventDetails({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Abrir no mapa
+              Mapa
               <ArrowUpRight size={16} />
             </a>
           )}
-          {[
-            ["Site oficial", event.websiteUrl],
-            ["Instagram", event.instagramUrl],
-            ["Outro link", event.genericUrl],
-          ].map(
-            ([label, url]) =>
-              safeUrl(url) && (
-                <a
-                  className="ghost"
-                  key={label}
-                  href={safeUrl(url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {label}
-                  <ArrowUpRight size={16} />
-                </a>
-              ),
+
+          {admin && (
+            <button className="secondary" onClick={onEdit}>
+              <Pencil size={16} />
+              {justSaved ? "Adicionar mais detalhes" : "Editar"}
+            </button>
+          )}
+          {onShare && (
+            <button className="secondary" onClick={onShare}>
+              Compartilhar
+            </button>
           )}
         </div>
-        {admin && (
-          <div className="form-actions">
-            <button className="ghost danger-text" onClick={onDelete}>
-              <Trash2 size={16} />
-              Excluir
-            </button>
-            <button className="primary" onClick={onEdit}>
-              <Pencil size={16} />
-              Editar programa
-            </button>
+        <details className="expandable event-extra">
+          <summary>Detalhes do programa</summary>
+          <p className="muted">{priorityLabels[event.priority]}</p>
+          {event.description && <p>{event.description}</p>}
+          <EventSpecificDetails details={event.details} admin={admin} />
+          <section className="detail-cost">
+            <span className="muted">Gasto estimado</span>
+            <h3>{eventPriceLabel(event, trip.currency)}</h3>
+            {!event.isFree && !hasUndefinedPrice(event) && (
+              <p>
+                {money(event.pricePerPerson, trip.currency)} por pessoa ·{" "}
+                {event.peopleCount} pessoa(s)
+                {event.status === "cancelado" ? " · fora do total" : ""}
+              </p>
+            )}
+          </section>
+          {event.notes && (
+            <section>
+              <h3>Para lembrar</h3>
+              <p className="muted">{event.notes}</p>
+            </section>
+          )}
+          <div className="link-row">
+            {[
+              ["Site oficial", event.websiteUrl],
+              ["Instagram", event.instagramUrl],
+              ["Outro link", event.genericUrl],
+            ].map(
+              ([label, url]) =>
+                safeUrl(url) && (
+                  <a
+                    className="ghost"
+                    key={label}
+                    href={safeUrl(url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {label}
+                    <ArrowUpRight size={16} />
+                  </a>
+                ),
+            )}
           </div>
-        )}
+          {admin && (
+            <div className="form-actions">
+              <button className="ghost danger-text" onClick={onDelete}>
+                <Trash2 size={16} />
+                Excluir
+              </button>
+            </div>
+          )}
+        </details>
       </div>
     </Modal>
   );

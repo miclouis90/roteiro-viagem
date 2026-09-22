@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { AddProgramButton } from "../ui/AddProgramButton";
-import { CalendarDays, List, Plus } from "lucide-react";
+
+import { CalendarDays, List } from "lucide-react";
 import type { Trip, TripEvent } from "../../types";
 import { datesBetween, dateKey, formatDate } from "../../utils/dates";
 import { spendingLabel } from "../../utils/spending";
@@ -8,7 +8,7 @@ import { filterEvents } from "../../utils/filters";
 import { EventCard } from "../Events";
 import { DayPicker } from "./DayPicker";
 import { EventFilters, emptyFilters } from "./EventFilters";
-import { EmptyState, SectionHeader, IconButton } from "../ui/Primitives";
+import { EmptyState } from "../ui/Primitives";
 import { Places } from "./Places";
 import { TripCalendar } from "../TripCalendar";
 export function Programs({
@@ -19,7 +19,6 @@ export function Programs({
   selectedDate,
   onDayChange,
   initialPriority,
-  onAdd,
   onSelect,
 }: {
   trip: Trip;
@@ -29,7 +28,7 @@ export function Programs({
   selectedDate: string;
   onDayChange: (date: string) => void;
   initialPriority: string;
-  onAdd: (date: string) => void;
+
   onSelect: (event: TripEvent) => void;
 }) {
   const days = datesBetween(trip.startDate, trip.endDate);
@@ -50,39 +49,36 @@ export function Programs({
   const hasFilters = Object.values(filters).some(Boolean);
   return (
     <section className="programs">
-      <SectionHeader
-        title={tab === "lugares" ? "Lugares para descobrir" : "Seu roteiro"}
-        description={
-          tab === "lugares"
-            ? "Bons lugares para guardar por perto."
-            : "Um dia de cada vez. Do seu jeito."
-        }
-        action={
-          tab === "roteiro" && (
-            <div className="view-toggle">
-              <IconButton
-                label="Agenda"
-                aria-pressed={view === "agenda"}
-                className={view === "agenda" ? "active" : ""}
-                onClick={() => {
-                  setView("agenda");
-                  setFilters((current) => ({ ...current, date: "" }));
-                }}
-              >
-                <List size={18} />
-              </IconButton>
-              <IconButton
-                label="Calendário"
-                aria-pressed={view === "calendar"}
-                className={view === "calendar" ? "active" : ""}
-                onClick={() => setView("calendar")}
-              >
-                <CalendarDays size={18} />
-              </IconButton>
-            </div>
-          )
-        }
-      />
+      {tab === "roteiro" && (
+        <details className="context-menu itinerary-display">
+          <summary>Exibição</summary>
+          <div
+            className="menu-popover"
+            onClick={(e) => {
+              const menu = e.currentTarget.closest("details");
+              if (menu) menu.open = false;
+            }}
+          >
+            <button
+              aria-pressed={view === "agenda"}
+              onClick={() => {
+                setView("agenda");
+                setFilters((current) => ({ ...current, date: "" }));
+              }}
+            >
+              <List size={18} />
+              Agenda
+            </button>
+            <button
+              aria-pressed={view === "calendar"}
+              onClick={() => setView("calendar")}
+            >
+              <CalendarDays size={18} />
+              Calendário
+            </button>
+          </div>
+        </details>
+      )}
       {tab === "roteiro" && view === "agenda" && (
         <DayPicker
           days={days}
@@ -142,16 +138,7 @@ export function Programs({
                     ? "Adicione cafés, restaurantes, passeios e tudo que você não quer esquecer."
                     : "Um dia livre para descobrir a cidade no seu ritmo."
               }
-            >
-              {admin && !hasFilters && (
-                <button className="secondary" onClick={() => onAdd(day)}>
-                  <Plus size={17} />
-                  {events.length
-                    ? "Adicionar programa"
-                    : "Adicionar primeiro programa"}
-                </button>
-              )}
-            </EmptyState>
+            ></EmptyState>
           )}
         </>
       )}
@@ -170,11 +157,6 @@ export function Programs({
             />
           ))}
         </details>
-      )}
-      {admin && (
-        <AddProgramButton
-          onClick={() => onAdd(tab === "lugares" ? trip.startDate : day)}
-        />
       )}
     </section>
   );

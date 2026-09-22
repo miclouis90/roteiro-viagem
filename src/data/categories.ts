@@ -31,7 +31,7 @@ export const categoryGroups = [
   { id: "culture", label: "Cultura", tone: "culture", icon: Landmark },
   { id: "outdoor", label: "Passear", tone: "outdoor", icon: Trees },
   { id: "transport", label: "Transporte", tone: "transport", icon: Plane },
-  { id: "other", label: "Outros", tone: "other", icon: Compass },
+  { id: "other", label: "Outro", tone: "other", icon: Compass },
 ] as const;
 export type CategoryGroup = (typeof categoryGroups)[number]["id"];
 export interface Category {

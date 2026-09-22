@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
-import { Compass, CalendarDays, MapPin, WalletCards } from "lucide-react";
+import { Compass, CalendarDays, WalletCards } from "lucide-react";
 import { categoryOf } from "../../data/categories";
 import type { TripTab } from "../../utils/tripView";
 export type { TripTab } from "../../utils/tripView";
@@ -69,7 +69,7 @@ export function SectionHeader({
   return (
     <div className="section-heading">
       <div>
-        <h2>{title}</h2>
+        {title && <h2>{title}</h2>}
         {description && <p className="muted">{description}</p>}
       </div>
       {action}
@@ -117,7 +117,6 @@ export function EmptyState({
 const tabs = [
   { id: "geral", label: "Visão geral", icon: Compass },
   { id: "roteiro", label: "Roteiro", icon: CalendarDays },
-  { id: "lugares", label: "Lugares", icon: MapPin },
   { id: "gastos", label: "Gastos", icon: WalletCards },
 ] as const;
 // One accessible navigation: segmented control on desktop, bottom nav on mobile.

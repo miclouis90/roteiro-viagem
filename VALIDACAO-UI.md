@@ -29,3 +29,24 @@ Comparação SHA-256 com a referência anterior ao redesign confirmou conteúdo 
 Tokens e estilos: `src/tokens.css`, `src/styles.css`. Telas: `src/pages/Home.tsx`, `src/pages/TripPage.tsx`. Componentes: `src/components/ui`, `src/components/trip`, `src/components/TripForm.tsx`, `src/components/EventForm.tsx`, `src/components/TripSummary.tsx`. Duplicação: `src/services/duplicateTrip.ts`.
 
 Os ajustes finais estão disponíveis para revisão, commit e push. Nenhum deploy foi executado.
+
+## Simplificação de navegação — 22/09/2026
+
+- Três abas principais; Lugares como visão secundária, com compatibilidade dos links antigos.
+- Uma ação Adicionar, com três escolhas; cadastro essencial seguido de ficha rápida e detalhes opcionais.
+- Cabeçalho compacto nas telas internas; administração concentrada no menu da Visão geral.
+- Verificação local de criação de voo, detalhes adicionais, edição curta preservando companhia/número/reserva e ficha pública sem código de reserva ou botões administrativos.
+- Inspeção em 360, 390, 430, 1280 e 1440 px: Visão geral, Roteiro, Lugares e Gastos; sem overflow horizontal da página. Carrosséis preservam rolagem sem barra visível.
+- Testes de navegação, compatibilidade de URLs, divulgação progressiva e Próximo passo adicionados em `src/utils/navigation.test.tsx`.
+- Ambiente exclusivamente de demonstração local. Nenhum teste escreveu no Firebase real.
+
+Validação reproduzível nesta máquina Windows:
+
+```powershell
+npm run lint
+npm run typecheck
+npm test -- --configLoader runner
+npm run build -- --configLoader runner
+```
+
+O carregador `runner` evita o processo extra de empacotamento da configuração Vite neste ambiente. O build final usa a configuração normal do projeto; a prévia de QA foi compilada separadamente com demonstração local.

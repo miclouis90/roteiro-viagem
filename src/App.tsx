@@ -21,14 +21,14 @@ import { Home } from "./pages/Home";
 import { TripPage } from "./pages/TripPage";
 import { SeedMelPage } from "./pages/SeedMelPage";
 import { TripForm } from "./components/Forms";
-import { Modal } from "./components/Modal";
+
 import { demoMode, configured } from "./lib/firebase";
 function Shell() {
   const { user, admin, loading, error, login, logout, toggleDemo } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [create, setCreate] = useState(false);
-  const [quickActions, setQuickActions] = useState(false);
+
   const location = useLocation();
   const inTrip = /^\/viagem\/[^/]+$/.test(location.pathname);
   const menu = useRef<HTMLDetailsElement>(null);
@@ -44,11 +44,17 @@ function Shell() {
             {admin && (
               <button
                 className="ghost new-trip"
-                aria-label="Adicionar"
-                onClick={() => setQuickActions(true)}
+                aria-label={inTrip ? "Adicionar" : "Criar viagem"}
+                onClick={() => {
+                  if (inTrip) {
+                    const next = new URLSearchParams(location.search);
+                    next.set("action", "add");
+                    navigate(`${location.pathname}?${next}`);
+                  } else setCreate(true);
+                }}
               >
                 <Plus size={18} />
-                <span>Adicionar</span>
+                <span>{inTrip ? "Adicionar" : "Viagem"}</span>
               </button>
             )}
             {!loading &&
@@ -140,36 +146,6 @@ function Shell() {
           }
         />
       </Routes>
-      {quickActions && admin && (
-        <Modal title="Adicionar" onClose={() => setQuickActions(false)}>
-          <div className="quick-actions">
-            {inTrip && (
-              <button
-                className="secondary"
-                onClick={() => {
-                  setQuickActions(false);
-                  const next = new URLSearchParams(location.search);
-                  next.set("action", "add");
-                  navigate(`${location.pathname}?${next}`);
-                }}
-              >
-                <Plus size={20} />
-                Programa<span>Nesta viagem</span>
-              </button>
-            )}
-            <button
-              className="secondary"
-              onClick={() => {
-                setQuickActions(false);
-                setCreate(true);
-              }}
-            >
-              <Compass size={20} />
-              Viagem<span>Uma nova história</span>
-            </button>
-          </div>
-        </Modal>
-      )}
       {create && admin && (
         <TripForm
           onClose={() => setCreate(false)}

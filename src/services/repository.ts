@@ -149,22 +149,25 @@ export async function saveEvent(
       next,
     ];
     write(data);
-    return;
+    return next.id;
   }
   if (!db) throw new Error("Firebase não configurado");
   const events = collection(db, "trips", tripId, "events");
-  if (id)
+  if (id) {
     await updateDoc(doc(events, id), {
       ...input,
       details: input.details ?? deleteField(),
       updatedAt: serverTimestamp(),
     });
-  else
-    await addDoc(events, {
+    return id;
+  } else {
+    const created = await addDoc(events, {
       ...input,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+    return created.id;
+  }
 }
 export async function removeEvent(tripId: string, id: string) {
   if (demoMode) {

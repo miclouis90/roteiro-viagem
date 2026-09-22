@@ -2624,3 +2624,189 @@ button:not(:disabled):active,
   .highlight-card { flex-basis: 200px; }
   .overview { gap: 28px; }
 }
+
+/* Simplified information hierarchy: three destinations, one creation action. */
+.internal-heading {
+  margin-bottom: 24px;
+}
+.internal-heading .back {
+  margin: 0 0 8px;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.internal-heading h1 {
+  font-size: 2rem;
+  margin-bottom: 0;
+}
+.itinerary-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-soft);
+  border-radius: var(--radius-md);
+  width: fit-content;
+  margin-bottom: 24px;
+}
+.itinerary-tabs button {
+  min-height: 44px;
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+}
+.itinerary-tabs button.active {
+  background: white;
+  color: var(--trip-accent);
+  box-shadow: var(--shadow-subtle);
+}
+.overview-simple {
+  gap: 28px;
+}
+.next-step {
+  padding: 24px 0;
+  border-block: 1px solid var(--color-border);
+}
+.next-step h2 {
+  font-size: 1.5rem;
+  margin: 8px 0 12px;
+}
+.next-step p {
+  margin-bottom: 20px;
+}
+.trip-brief {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+.trip-brief p {
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+.quick-event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0;
+}
+.quick-event-actions .secondary {
+  padding: 10px 14px;
+  font-size: 0.875rem;
+}
+.event-extra {
+  margin-top: 16px;
+}
+.event-extra > summary {
+  min-height: 44px;
+}
+.more-details {
+  margin-top: 24px;
+}
+.trip-hero .heading-actions {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  bottom: auto;
+  width: auto;
+}
+.trip-hero > div:first-child {
+  width: 100%;
+  padding-right: 28px;
+}
+.trip-hero .menu-popover {
+  top: 48px;
+  bottom: auto;
+}
+.trip-hero .journey-moment {
+  margin-top: 20px;
+}
+@media (min-width: 901px) {
+  .overview-simple {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    gap: 28px 40px;
+    align-items: start;
+  }
+  .overview-simple .next-step {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    padding: 0 0 0 28px;
+    border-block: 0;
+    border-left: 1px solid var(--color-border);
+  }
+  .overview-simple .trip-brief {
+    grid-column: 1;
+  }
+}
+@media (max-width: 600px) {
+  .internal-heading {
+    margin-bottom: 20px;
+  }
+  .internal-heading h1 {
+    font-size: 1.75rem;
+  }
+  .trip-hero {
+    padding-bottom: 24px;
+  }
+  .trip-hero h1 {
+    font-size: 2rem;
+  }
+  .trip-hero .heading-actions {
+    right: 8px;
+    top: 12px;
+    bottom: auto;
+  }
+  .trip-hero .heading-actions > .secondary {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .trip-hero .menu-popover {
+    top: 48px;
+    bottom: auto;
+  }
+  .itinerary-tabs {
+    margin-bottom: 20px;
+  }
+  .itinerary-tabs button {
+    padding-inline: 22px;
+  }
+  .next-step h2 {
+    font-size: 1.375rem;
+  }
+  .trip-page {
+    padding-bottom: 160px;
+  }
+  .category-groups {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+    mask-image: none;
+    gap: 6px;
+  }
+  .category-groups button {
+    min-width: 0;
+    justify-content: center;
+    padding: 8px 5px;
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+  .category-groups button svg {
+    width: 15px;
+    flex-shrink: 0;
+  }
+}
+.overview-simple .overview-days { order: 0; }
+.site-header .new-trip { background: var(--color-brand); color: white; border-radius: var(--radius-sm); padding: 10px 14px; }
+.site-header .new-trip span { display: inline; }
+@media (max-width: 600px) {
+ .site-header .new-trip { width: auto; font-size: .8125rem; gap: 6px; }
+ .trip-page { padding-bottom: 96px; }
+}
+.programs { position: relative; }
+.itinerary-display { position: absolute; top: -70px; right: 0; }
+.itinerary-display > summary { width: auto; padding: 10px 12px; min-height: 44px; font-size: .8125rem; color: var(--text-secondary); }
+@media (max-width: 600px) {
+ .itinerary-display { top: -66px; }
+}
