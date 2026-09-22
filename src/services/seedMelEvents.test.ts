@@ -84,7 +84,7 @@ describe("dados do roteiro da Mel", () => {
         .matchAll(/'([^']+)'/g),
     ]
       .map((m) => m[1])
-      .filter((key) => !["createdAt", "updatedAt"].includes(key));
+      .filter((key) => !["createdAt", "updatedAt", "details"].includes(key));
     for (const { id, ...event } of melEvents) {
       expect(id).toBeTruthy();
       expect(Object.keys(event).sort()).toEqual(fields.sort());

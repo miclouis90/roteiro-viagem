@@ -1,3 +1,5 @@
+import type { TripTheme } from "./data/themes";
+import type { EventDetailsData } from "./data/eventDetails";
 export type TripStatus = "planejamento" | "confirmada" | "concluída";
 export type EventStatus =
   "ideia" | "reservado" | "confirmado" | "realizado" | "cancelado";
@@ -16,6 +18,7 @@ export interface Trip {
   status: TripStatus;
   isPublic: boolean;
   currency: string;
+  theme?: TripTheme;
 }
 export interface TripEvent {
   id: string;
@@ -36,6 +39,7 @@ export interface TripEvent {
   notes: string;
   status: EventStatus;
   priority: Priority;
+  details?: EventDetailsData;
 }
 export type TripInput = Omit<Trip, "id">;
 export type EventInput = Omit<TripEvent, "id">;

@@ -5,6 +5,8 @@ import { watchTrips } from "../services/repository";
 import { TripCard } from "../components/TripCard";
 import { EmptyState } from "../components/ui/Primitives";
 import type { Trip } from "../types";
+import { homeTrips } from "../utils/homeTrips";
+import { dateKey } from "../utils/dates";
 export function Home({ onCreate }: { onCreate: () => void }) {
   const { admin, loading: authLoading } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -29,12 +31,25 @@ export function Home({ onCreate }: { onCreate: () => void }) {
       },
     );
   }, [admin, authLoading]);
+  const { featured, others } = homeTrips(trips);
   return (
     <main className="home">
       <section className="home-intro">
         <span className="eyebrow">Sua próxima história</span>
-        <h1>Para onde vamos?</h1>
-        <p>Organize lugares, momentos e boas ideias em um só lugar.</p>
+        <h1>
+          {featured
+            ? featured.endDate < dateKey()
+              ? "Histórias para lembrar."
+              : featured.startDate <= dateKey()
+                ? "Sua viagem está acontecendo."
+                : "Sua próxima viagem."
+            : "Para onde vamos?"}
+        </h1>
+        <p>
+          {featured
+            ? "Os lugares, os planos e a vontade de ir."
+            : "Organize lugares, momentos e boas ideias em um só lugar."}
+        </p>
       </section>
       {loading ? (
         <div className="loading-state" role="status">
@@ -60,22 +75,26 @@ export function Home({ onCreate }: { onCreate: () => void }) {
             </button>
           )}
         </EmptyState>
-      ) : trips.length === 1 ? (
-        <TripCard trip={trips[0]} featured admin={admin} />
       ) : (
-        <section>
-          <div className="section-heading">
-            <h2>Suas viagens</h2>
-            <span className="muted">{trips.length} destinos para viver</span>
-          </div>
-          <div className="trip-grid">
-            {[...trips]
-              .sort((a, b) => a.startDate.localeCompare(b.startDate))
-              .map((t) => (
-                <TripCard key={t.id} trip={t} admin={admin} />
-              ))}
-          </div>
-        </section>
+        featured && (
+          <>
+            <TripCard trip={featured} featured admin={admin} />
+            {others.length > 0 && (
+              <section className="other-trips">
+                <div className="section-heading">
+                  <h2>Outras viagens</h2>
+                </div>
+                <div className="trip-grid">
+                  {[...others]
+                    .sort((a, b) => a.startDate.localeCompare(b.startDate))
+                    .map((t) => (
+                      <TripCard key={t.id} trip={t} admin={admin} />
+                    ))}
+                </div>
+              </section>
+            )}
+          </>
+        )
       )}
     </main>
   );

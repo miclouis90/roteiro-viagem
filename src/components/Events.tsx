@@ -7,6 +7,7 @@ import { eventLabels, priorityLabels } from "../utils/labels";
 import { CategoryChip } from "./ui/Primitives";
 import { categoryOf } from "../data/categories";
 import { Modal } from "./Modal";
+import { EventSpecificDetails } from "./EventSpecificDetails";
 export function EventCard({
   event,
   currency,
@@ -57,6 +58,7 @@ export function EventDetails({
   onClose,
   onEdit,
   onDelete,
+  onShare,
 }: {
   event: TripEvent;
   trip: Trip;
@@ -64,6 +66,7 @@ export function EventDetails({
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onShare?: () => void;
 }) {
   const maps =
     safeUrl(event.mapsUrl) ||
@@ -95,6 +98,7 @@ export function EventDetails({
           {event.location || "Local a definir"}
         </p>
         {event.description && <p>{event.description}</p>}
+        <EventSpecificDetails details={event.details} admin={admin} />
         <section className="detail-cost">
           <span className="muted">Gasto estimado</span>
           <h3>{eventPriceLabel(event, trip.currency)}</h3>
@@ -113,6 +117,11 @@ export function EventDetails({
           </section>
         )}
         <div className="link-row">
+          {onShare && (
+            <button className="secondary" onClick={onShare}>
+              Compartilhar
+            </button>
+          )}
           {maps && (
             <a
               className="secondary"

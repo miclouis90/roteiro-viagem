@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDocs,
   onSnapshot,
@@ -10,6 +11,7 @@ import {
   setDoc,
   where,
   writeBatch,
+  updateDoc,
 } from "firebase/firestore";
 import { db, demoMode } from "../lib/firebase";
 import { demoTrip, demoEvents } from "../data/demo";
@@ -152,11 +154,11 @@ export async function saveEvent(
   if (!db) throw new Error("Firebase não configurado");
   const events = collection(db, "trips", tripId, "events");
   if (id)
-    await setDoc(
-      doc(events, id),
-      { ...input, updatedAt: serverTimestamp() },
-      { merge: true },
-    );
+    await updateDoc(doc(events, id), {
+      ...input,
+      details: input.details ?? deleteField(),
+      updatedAt: serverTimestamp(),
+    });
   else
     await addDoc(events, {
       ...input,

@@ -28,6 +28,111 @@ service cloud.firestore {
         && (v == '' || v.matches('^https?://.*'));
     }
 
+    // Optional, bounded maps. Old documents without these keys remain valid.
+    function validTheme(t) {
+      return t is map && t.keys().hasAll(['accent']) && t.keys().hasOnly(['accent'])
+        && t.accent in ['green', 'blue', 'lavender', 'coral', 'gold'];
+    }
+    function detailText(d, key) {
+      return d.get(key, '') is string && d.get(key, '').size() <= 1000;
+    }
+    function details_flight(d) {
+      return d.type == 'flight' && d.keys().hasOnly([
+          'type', 'company', 'flightNumber', 'originAirport', 'originCity', 'destinationAirport', 'destinationCity', 'departureTerminal', 'departureGate', 'arrivalTerminal', 'boardingTime', 'departureTime', 'arrivalTime', 'seat', 'bookingReference', 'baggage', 'notes'])
+        && detailText(d, 'company')
+        && detailText(d, 'flightNumber')
+        && detailText(d, 'originAirport')
+        && detailText(d, 'originCity')
+        && detailText(d, 'destinationAirport')
+        && detailText(d, 'destinationCity')
+        && detailText(d, 'departureTerminal')
+        && detailText(d, 'departureGate')
+        && detailText(d, 'arrivalTerminal')
+        && detailText(d, 'boardingTime') && (d.get('boardingTime', '') == '' || d.get('boardingTime', '').matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'))
+        && detailText(d, 'departureTime') && (d.get('departureTime', '') == '' || d.get('departureTime', '').matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'))
+        && detailText(d, 'arrivalTime') && (d.get('arrivalTime', '') == '' || d.get('arrivalTime', '').matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'))
+        && detailText(d, 'seat')
+        && detailText(d, 'bookingReference')
+        && detailText(d, 'baggage')
+        && detailText(d, 'notes');
+    }
+
+    function details_restaurant(d) {
+      return d.type == 'restaurant' && d.keys().hasOnly(['type', 'reservationTime', 'reservationName', 'reservationCode', 'phone', 'neighborhood', 'recommendedDish', 'notes'])
+        && detailText(d, 'reservationTime') && (d.get('reservationTime', '') == '' || d.get('reservationTime', '').matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'))
+        && detailText(d, 'reservationName')
+        && detailText(d, 'reservationCode')
+        && detailText(d, 'phone')
+        && detailText(d, 'neighborhood')
+        && detailText(d, 'recommendedDish')
+        && detailText(d, 'notes');
+    }
+
+    function details_bar(d) {
+      return d.type == 'bar' && d.keys().hasOnly(['type', 'reservation', 'table', 'happyHour', 'signatureDrink', 'dressCode', 'notes'])
+        && detailText(d, 'reservation')
+        && detailText(d, 'table')
+        && detailText(d, 'happyHour')
+        && detailText(d, 'signatureDrink')
+        && detailText(d, 'dressCode')
+        && detailText(d, 'notes');
+    }
+
+    function details_culture(d) {
+      return d.type == 'culture' && d.keys().hasOnly(['type', 'ticketUrl', 'ticketCode', 'session', 'seat', 'openingHours', 'exhibition', 'artist', 'notes'])
+        && detailText(d, 'ticketUrl') && url(d.get('ticketUrl', ''))
+        && detailText(d, 'ticketCode')
+        && detailText(d, 'session')
+        && detailText(d, 'seat')
+        && detailText(d, 'openingHours')
+        && detailText(d, 'exhibition')
+        && detailText(d, 'artist')
+        && detailText(d, 'notes');
+    }
+
+    function details_outdoor(d) {
+      return d.type == 'outdoor' && d.keys().hasOnly(['type', 'meetingPoint', 'duration', 'whatToBring', 'reservation', 'weatherDependent', 'notes'])
+        && detailText(d, 'meetingPoint')
+        && detailText(d, 'duration')
+        && detailText(d, 'whatToBring')
+        && detailText(d, 'reservation')
+        && d.get('weatherDependent', false) is bool
+        && detailText(d, 'notes');
+    }
+
+    function details_transfer(d) {
+      return d.type == 'transfer' && d.keys().hasOnly(['type', 'pickupLocation', 'dropoffLocation', 'company', 'driver', 'confirmation', 'duration'])
+        && detailText(d, 'pickupLocation')
+        && detailText(d, 'dropoffLocation')
+        && detailText(d, 'company')
+        && detailText(d, 'driver')
+        && detailText(d, 'confirmation')
+        && detailText(d, 'duration');
+    }
+
+    function details_car(d) {
+      return d.type == 'car' && d.keys().hasOnly(['type', 'pickup', 'returnLocation', 'rentalCompany', 'reservation', 'vehicle'])
+        && detailText(d, 'pickup')
+        && detailText(d, 'returnLocation')
+        && detailText(d, 'rentalCompany')
+        && detailText(d, 'reservation')
+        && detailText(d, 'vehicle');
+    }
+
+    function details_rail(d) {
+      return d.type == 'rail' && d.keys().hasOnly(['type', 'origin', 'destination', 'line', 'platform', 'ticket'])
+        && detailText(d, 'origin')
+        && detailText(d, 'destination')
+        && detailText(d, 'line')
+        && detailText(d, 'platform')
+        && detailText(d, 'ticket');
+    }
+
+    function validDetails(d) {
+      return d is map && d.keys().hasAll(['type'])
+        && (d.type == 'flight' ? details_flight(d) : d.type == 'restaurant' ? details_restaurant(d) : d.type == 'bar' ? details_bar(d) : d.type == 'culture' ? details_culture(d) : d.type == 'outdoor' ? details_outdoor(d) : d.type == 'transfer' ? details_transfer(d) : d.type == 'car' ? details_car(d) : d.type == 'rail' ? details_rail(d) : false);
+    }
+
     function validTrip(d) {
       return d.keys().hasAll([
           'title',
@@ -45,7 +150,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt'
         ])
-        && d.keys().hasOnly([
+        && d.keys().hasOnly(['theme',
           'title',
           'destinationCity',
           'destinationState',
@@ -61,6 +166,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt'
         ])
+        && ('theme' in d ? validTheme(d.theme) : true)
         && d.title is string
         && d.title.size() > 0
         && d.title.size() <= 120
@@ -124,6 +230,7 @@ service cloud.firestore {
           'updatedAt'
         ])
         && d.keys().hasOnly([
+          'details',
           'title',
           'description',
           'date',
@@ -144,6 +251,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt'
         ])
+        && ('details' in d ? validDetails(d.details) : true)
         && d.title is string
         && d.title.size() > 0
         && d.title.size() <= 120

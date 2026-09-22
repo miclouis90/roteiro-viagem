@@ -20,7 +20,7 @@ export function TripSummary({
     <section className="trip-summary">
       <section className="summary-section expense-total">
         <span className="eyebrow">
-          {estimate.undefinedCount ? "Estimativa parcial" : "Gastos estimados"}
+          Você já planejou
         </span>
         <p className="summary-amount">
           {estimate.total > 0
@@ -43,7 +43,7 @@ export function TripSummary({
           {estimate.freeCount} grátis · {estimate.count - estimate.freeCount}{" "}
           pagos
         </p>
-        <div className="summary-breakdown">
+        <h3>Onde está indo o dinheiro?</h3><div className="summary-breakdown">
           {categoryGroups.map(({ id, label, tone, icon: Icon }) => {
             const values = active.filter(
               (event) => categoryOf(event.category).group === id,
@@ -76,7 +76,7 @@ export function TripSummary({
         </div>
       </section>
       <details className="summary-section expandable">
-        <summary>Gastos por dia</summary>
+        <summary>Por dia</summary>
         {days.map((day) => (
           <div className="summary-line" key={day}>
             <span>{formatDate(day)}</span>

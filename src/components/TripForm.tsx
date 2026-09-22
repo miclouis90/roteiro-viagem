@@ -7,6 +7,7 @@ import { daysBetween, dateKey } from "../utils/dates";
 import { saveTrip } from "../services/repository";
 import { useToast } from "../hooks/useToast";
 import { Modal } from "./Modal";
+import { tripThemes, type TripTheme } from "../data/themes";
 export function TripForm({
   trip,
   onClose,
@@ -18,6 +19,9 @@ export function TripForm({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [theme, setTheme] = useState<TripTheme["accent"]>(
+    trip?.theme?.accent ?? "green",
+  );
   const toast = useToast();
   const [start, setStart] = useState(trip?.startDate ?? dateKey());
   const [end, setEnd] = useState(trip?.endDate ?? dateKey());
@@ -42,6 +46,7 @@ export function TripForm({
       status: String(f.get("status")) as TripInput["status"],
       isPublic: f.get("public") === "on",
       currency: String(f.get("currency")),
+      ...(theme !== "green" || trip?.theme ? { theme: { accent: theme } } : {}),
     };
     if (!input.title || !input.destinationCity || !input.country) {
       setError("Preencha título, cidade e país.");
@@ -50,7 +55,7 @@ export function TripForm({
     setBusy(true);
     try {
       const id = await saveTrip(input, trip?.id);
-      toast("Viagem salva.");
+      toast(trip ? "Viagem salva." : "Pronto. Agora é começar a imaginar.");
       onSaved(id);
     } catch {
       setError(
@@ -125,6 +130,23 @@ export function TripForm({
           chegada e saída incluídas
         </p>
         <div className="wide">
+          <fieldset className="theme-picker">
+            <legend>Cor da viagem</legend>
+            <div>
+              {tripThemes.map((option) => (
+                <button
+                  type="button"
+                  key={option.id}
+                  aria-pressed={theme === option.id}
+                  onClick={() => setTheme(option.id)}
+                  style={{ "--swatch": option.color } as React.CSSProperties}
+                >
+                  <span />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <Disclosure
             title="Detalhes da viagem"
             description="Status, moeda, descrição e privacidade"

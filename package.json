@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:rules": "node scripts/test-rules.mjs",
     "seed:mel": "node scripts/seed-mel.mjs"
   },
   "dependencies": {

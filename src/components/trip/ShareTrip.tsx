@@ -36,7 +36,7 @@ export function ShareTrip({
       await saveTrip({ ...tripInput(trip), isPublic: true }, trip.id);
       setPublished(true);
       setMessage(
-        "Viagem pública. Agora você pode copiar ou compartilhar o link.",
+        "Agora ela pode acompanhar também. Copie o link para compartilhar.",
       );
     } catch {
       setError("Não foi possível tornar a viagem pública. Tente novamente.");
@@ -72,6 +72,9 @@ export function ShareTrip({
             ? "Quem receber o link poderá ver o roteiro, sem editar."
             : "Somente administradores podem abrir este roteiro. Ao torná-lo público, qualquer pessoa com o link poderá visualizar."}
         </p>
+        {admin && !isPublic && (
+          <p className="field-help">Antes de publicar, revise reservas e informações pessoais. A interface pública oculta esses detalhes, mas os dados da viagem pública podem ser consultados no banco.</p>
+        )}
         {demoMode && (
           <p className="notice">
             Demonstração local: o link não compartilha seus testes entre

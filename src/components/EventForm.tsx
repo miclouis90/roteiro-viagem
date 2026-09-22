@@ -6,19 +6,25 @@ import { useToast } from "../hooks/useToast";
 import { Modal } from "./Modal";
 import { Disclosure, revealInvalidField } from "./ui/Disclosure";
 import { eventLabels, priorityLabels } from "../utils/labels";
+import { detailTypeFor, validDetails, type DetailType, type EventDetailsData } from "../data/eventDetails";
+import { EventSpecificFields } from "./EventSpecificFields";
 export function EventForm({
   defaultDate,
   trip,
   event,
   onClose,
+  firstEvent = false,
 }: {
   trip: Trip;
   defaultDate?: string;
   event?: TripEvent;
   onClose: () => void;
+  firstEvent?: boolean;
 }) {
   const [free, setFree] = useState(event?.isFree ?? false);
   const [category, setCategory] = useState(event?.category ?? "Café");
+  const [details, setDetails] = useState(event?.details);
+  const [detailDrafts, setDetailDrafts] = useState<Partial<Record<DetailType, EventDetailsData>>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const toast = useToast();
@@ -44,9 +50,16 @@ export function EventForm({
       notes: s("notes"),
       status: s("status") as EventInput["status"],
       priority: s("priority") as EventInput["priority"],
+      ...(details ? { details } : {}),
     };
     if (!input.title) {
       setError("Informe o nome do programa.");
+      return;
+    }
+    if (details && !validDetails(details)) {
+      setError(
+        "Confira os detalhes opcionais. Use textos de até 1.000 caracteres e links válidos.",
+      );
       return;
     }
     if (input.endTime && input.endTime < input.startTime) {
@@ -60,7 +73,13 @@ export function EventForm({
     setError("");
     try {
       await saveEvent(trip.id, input, event?.id);
-      toast(event ? "Alterações salvas." : "Programa adicionado ao roteiro.");
+      toast(
+        event
+          ? "Alterações salvas."
+          : firstEvent
+            ? "Seu roteiro começou."
+            : "Programa adicionado ao roteiro.",
+      );
       onClose();
     } catch {
       setError(
@@ -92,7 +111,17 @@ export function EventForm({
               placeholder="O que vamos fazer?"
             />
           </label>
-          <CategoryPicker value={category} onChange={setCategory} />
+          <CategoryPicker
+            value={category}
+            onChange={(next) => {
+              const nextType = detailTypeFor(next);
+              if (nextType !== detailTypeFor(category)) {
+                if (details) setDetailDrafts((drafts) => ({ ...drafts, [details.type]: details }));
+                setDetails(nextType ? detailDrafts[nextType] : undefined);
+              }
+              setCategory(next);
+            }}
+          />
           <label>
             Data
             <input
@@ -113,15 +142,6 @@ export function EventForm({
               defaultValue={event?.startTime ?? "09:00"}
             />
           </label>
-        </div>
-        <p className="optional-hint">
-          O essencial está aqui. Os detalhes podem vir depois.
-        </p>
-        <Disclosure
-          title="Detalhes"
-          description="Local, duração e preferências"
-          initialOpen={!!event?.location}
-        >
           <label className="wide">
             Local / endereço
             <input
@@ -130,6 +150,30 @@ export function EventForm({
               placeholder="Nome do lugar, bairro ou endereço"
             />
           </label>
+        </div>
+        <div className="essential-save">
+          <button className="primary" disabled={busy}>
+            {busy
+              ? "Salvando…"
+              : event
+                ? "Salvar alterações"
+                : "Salvar programa"}
+          </button>
+          <span className="muted">Os detalhes podem vir depois.</span>
+        </div>
+        <div className="optional-heading">Adicionar detalhes</div>
+        {event?.details && event.details.type !== detailTypeFor(category) && (
+          <p className="field-help">Ao salvar esta categoria, os detalhes específicos da categoria anterior serão removidos. Volte à categoria anterior para recuperá-los antes de salvar.</p>
+        )}
+        <EventSpecificFields
+          category={category}
+          value={details}
+          onChange={setDetails}
+        />
+        <Disclosure
+          title="Preferências"
+          description="Duração, status e prioridade"
+        >
           <label>
             Horário final
             <input type="time" name="endTime" defaultValue={event?.endTime} />

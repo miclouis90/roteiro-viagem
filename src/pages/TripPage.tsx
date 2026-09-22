@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Link,
   useNavigate,
@@ -17,6 +17,8 @@ import { datesBetween, daysBetween, formatDate } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
 import { tripTabFromSearch } from "../utils/tripView";
 import { TripOverview } from "../components/trip/TripOverview";
+import { themeStyle } from "../data/themes";
+import { JourneyMoment } from "../components/trip/JourneyMoment";
 import {
   TripNavigation,
   EmptyState,
@@ -63,18 +65,33 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const tab = tripTabFromSearch(params);
+  const scrollPositions = useRef<Partial<Record<TripTab, number>>>({
+    geral: 0,
+  });
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60000);
     return () => window.clearInterval(timer);
   }, []);
   function changeTab(value: TripTab, date?: string, highlights = false) {
+    scrollPositions.current[tab] = window.scrollY;
     const next: Record<string, string> =
       value === "geral" ? {} : { tab: value };
     if (date) next.day = date;
     if (highlights) next.priority = "imperdível";
     setParams(next);
     requestAnimationFrame(() => {
+      if (
+        !date &&
+        !highlights &&
+        scrollPositions.current[value] !== undefined
+      ) {
+        window.scrollTo({
+          top: scrollPositions.current[value],
+          behavior: "instant",
+        });
+        return;
+      }
       const target = window.matchMedia("(max-width: 600px)").matches
         ? document.getElementById("trip-section")
         : document.querySelector(".trip-tabs");
@@ -93,6 +110,15 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
   const [actionError, setActionError] = useState("");
   const days = datesBetween(trip.startDate, trip.endDate);
   const count = daysBetween(trip.startDate, trip.endDate);
+  useEffect(() => {
+    if (admin && params.get("action") === "add") {
+      setNewDate(trip.startDate);
+      setEditEvent("new");
+      const next = new URLSearchParams(params);
+      next.delete("action");
+      setParams(next, { replace: true });
+    }
+  }, [admin, params, setParams, trip.startDate]);
   function ask(value: typeof confirm) {
     setActionError("");
     setConfirm(value);
@@ -130,12 +156,17 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
     }
   }
   return (
-    <main className={`trip-page ${admin ? "" : "public-trip"}`}>
+    <main
+      className={`trip-page theme-trip ${admin ? "" : "public-trip"}`}
+      style={themeStyle(trip.theme) as React.CSSProperties}
+    >
       <Link className="back" to="/">
         <ArrowLeft size={17} />
         Voltar
       </Link>
-      <header className="trip-heading">
+      <header
+        className={`trip-heading ${tab === "geral" ? "trip-hero" : "compact-heading"}`}
+      >
         <div>
           <span className="eyebrow">
             {trip.destinationCity}
@@ -159,6 +190,14 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
               </span>
             )}
           </div>
+          {tab === "geral" && (
+            <JourneyMoment
+              trip={trip}
+              events={events}
+              now={now}
+              onDay={(date) => changeTab("roteiro", date)}
+            />
+          )}
         </div>
         <div className="heading-actions">
           <button className="secondary" onClick={() => setShare(true)}>
@@ -246,6 +285,7 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
           trip={trip}
           event={editEvent === "new" ? undefined : editEvent}
           defaultDate={newDate}
+          firstEvent={events.length === 0}
           onClose={() => setEditEvent(null)}
         />
       )}{" "}
@@ -260,6 +300,10 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
             setSelected(null);
           }}
           onDelete={() => ask("delete-event")}
+          onShare={() => {
+            setSelected(null);
+            setShare(true);
+          }}
         />
       )}{" "}
       {share && (

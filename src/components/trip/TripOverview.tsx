@@ -1,15 +1,8 @@
-import {
-  ArrowRight,
-  Compass,
-  Plane,
-  Sparkles,
-  WalletCards,
-  Plus,
-} from "lucide-react";
+import { ArrowRight, Plane, Sparkles, WalletCards, Plus } from "lucide-react";
 import type { Trip, TripEvent } from "../../types";
-import { tripOverview } from "../../utils/overview";
+import { tripOverview, timeUntilEvent } from "../../utils/overview";
 import { formatDate } from "../../utils/dates";
-import { dayCountLabel } from "../../utils/labels";
+import { categoryOf } from "../../data/categories";
 import { spending, spendingLabel } from "../../utils/spending";
 import { Button, Card, CategoryChip, SectionHeader } from "../ui/Primitives";
 
@@ -56,52 +49,6 @@ export function TripOverview({
   );
   return (
     <div className="overview">
-      <Card variant="tonal" className={`journey-context phase-${view.phase}`}>
-        <div className="context-symbol">
-          <Compass size={28} strokeWidth={1.5} />
-        </div>
-        <div>
-          <span className="eyebrow">
-            {view.phase === "before"
-              ? "A próxima história está chegando"
-              : view.phase === "during"
-                ? "Viva o caminho"
-                : "Memórias para levar"}
-          </span>
-          <h2>
-            {view.phase === "before"
-              ? `Falta${view.remainingDays === 1 ? "" : "m"} ${dayCountLabel(view.remainingDays)}.`
-              : view.phase === "during"
-                ? `Hoje em ${trip.destinationCity}`
-                : "Que viagem boa."}
-          </h2>
-          <p>
-            {view.phase === "before"
-              ? `Seu primeiro dia começa em ${formatDate(trip.startDate, { day: "numeric", month: "long" })}.`
-              : view.phase === "during"
-                ? `${view.todayEvents.length ? `${view.todayEvents.length} programa(s) para aproveitar hoje.` : "Hoje está livre. Aproveite no seu ritmo."}`
-                : `${dayCountLabel(view.days.length)} · ${view.active.length} programas no roteiro.`}
-          </p>
-          <Button
-            variant="secondary"
-            onClick={() =>
-              onDay(view.phase === "during" ? view.today : trip.startDate)
-            }
-          >
-            {view.phase === "before"
-              ? "Ver primeiro dia"
-              : view.phase === "during"
-                ? "Ver dia completo"
-                : "Rever roteiro"}
-            <ArrowRight size={16} />
-          </Button>
-        </div>
-        <div className="context-orbit" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-      </Card>
       <section className="overview-days">
         <SectionHeader
           title="Roteiro em um olhar"
@@ -112,7 +59,7 @@ export function TripOverview({
           }
         />
         <div className="day-glance" aria-label="Roteiro por dia">
-          {view.days.map(({ date, count }) => (
+          {view.days.map(({ date, count, tones }) => (
             <button
               key={date}
               className={`glance-day ${count ? "has-programs" : "free-day"} ${date === view.today ? "is-today" : ""}`}
@@ -128,7 +75,14 @@ export function TripOverview({
                 )}
               </strong>
               <span>
-                {count ? `${count} programa${count === 1 ? "" : "s"}` : "Livre"}
+                {count
+                  ? `${count} programa${count === 1 ? "" : "s"}`
+                  : "Dia livre"}
+              </span>
+              <span className="day-tones" aria-hidden="true">
+                {tones.map((tone) => (
+                  <i key={tone} className={`tone-${tone}`} />
+                ))}
               </span>
               {date === view.today && <em>Hoje</em>}
             </button>
@@ -140,10 +94,27 @@ export function TripOverview({
           {view.next && (
             <section className="overview-section">
               <SectionHeader title="Próximo programa" />
-              {eventLink(view.next)}
+              <button
+                className={`next-moment tone-${categoryOf(view.next.category).tone}`}
+                onClick={() => onSelect(view.next!)}
+              >
+                <span className="next-time">
+                  {view.next.startTime}
+                  <small>{timeUntilEvent(view.next, now)}</small>
+                </span>
+                <span>
+                  <CategoryChip name={view.next.category} />
+                  <strong>{view.next.title}</strong>
+                  <span className="muted">
+                    {view.next.location || "Local a definir"}
+                  </span>
+                  <small>{formatDate(view.next.date)}</small>
+                </span>
+                <ArrowRight size={20} />
+              </button>
             </section>
           )}
-          {view.phase === "during" && view.todayEvents.length > 0 && (
+          {view.phase === "during" && view.todayPreview.length > 0 && (
             <section className="overview-section">
               <SectionHeader
                 title="Hoje"
@@ -154,14 +125,14 @@ export function TripOverview({
                   </Button>
                 }
               />
-              {view.todayEvents.slice(0, 3).map(eventLink)}
+              {view.todayPreview.map(eventLink)}
             </section>
           )}
           {view.highlights.length > 0 && (
             <section className="overview-section">
               <SectionHeader
                 title="Imperdíveis"
-                description={`${view.highlights.length} motivos para sair e descobrir.`}
+                description={`${view.highlights.length} motivo${view.highlights.length === 1 ? "" : "s"} para sair e descobrir.`}
                 action={
                   <Button variant="ghost" onClick={onHighlights}>
                     Ver todos
@@ -173,7 +144,7 @@ export function TripOverview({
                 {view.highlights.slice(0, 4).map((event) => (
                   <button
                     key={event.id}
-                    className="highlight-card ui-card card-interactive"
+                    className={`highlight-card ui-card card-interactive tone-${categoryOf(event.category).tone}`}
                     onClick={() => onSelect(event)}
                   >
                     <CategoryChip name={event.category} iconOnly />

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AddProgramButton } from "../ui/AddProgramButton";
 import { CalendarDays, List, Plus } from "lucide-react";
 import type { Trip, TripEvent } from "../../types";
 import { datesBetween, dateKey, formatDate } from "../../utils/dates";
@@ -171,14 +172,9 @@ export function Programs({
         </details>
       )}
       {admin && (
-        <button
-          className="fab"
-          aria-label="Adicionar programa"
+        <AddProgramButton
           onClick={() => onAdd(tab === "lugares" ? trip.startDate : day)}
-        >
-          <Plus size={22} />
-          <span>Programa</span>
-        </button>
+        />
       )}
     </section>
   );

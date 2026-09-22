@@ -3,6 +3,7 @@ import { ArrowUpRight, ArrowRight, LockKeyhole, MapPin } from "lucide-react";
 import type { Trip } from "../types";
 import { dateKey, daysBetween, formatDate } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
+import { themeStyle } from "../data/themes";
 export function TripCard({
   trip,
   featured = false,
@@ -15,7 +16,8 @@ export function TripCard({
   return (
     <Link
       to={`/viagem/${trip.id}`}
-      className={`trip-card ${featured ? "featured-trip" : ""}`}
+      className={`trip-card theme-trip ${featured ? "featured-trip" : ""}`}
+      style={themeStyle(trip.theme) as React.CSSProperties}
     >
       <div className="trip-cover" aria-hidden="true">
         <div className="cover-caption">
@@ -28,6 +30,11 @@ export function TripCard({
           do seu jeito.
         </span>
         <ArrowUpRight size={40} strokeWidth={1} />
+        <div className="cover-route" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </div>
       </div>
       <div className="trip-card-body">
         {featured && (
@@ -57,6 +64,11 @@ export function TripCard({
           <span>·</span>
           {dayCountLabel(daysBetween(trip.startDate, trip.endDate))}
         </p>
+        {featured && trip.startDate > dateKey() && (
+          <p className="card-countdown">
+            Falta{daysBetween(dateKey(), trip.startDate) === 2 ? "" : "m"} {dayCountLabel(daysBetween(dateKey(), trip.startDate) - 1)}.
+          </p>
+        )}
         <span className={`status-chip status-${trip.status}`}>
           {tripLabels[trip.status]}
         </span>

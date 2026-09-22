@@ -13,6 +13,7 @@ export function tripInput(t: Trip): TripInput {
     status: t.status,
     isPublic: t.isPublic,
     currency: t.currency,
+    ...(t.theme ? { theme: { ...t.theme } } : {}),
   };
 }
 export function eventInput(e: TripEvent): EventInput {
@@ -34,5 +35,6 @@ export function eventInput(e: TripEvent): EventInput {
     notes: e.notes,
     status: e.status,
     priority: e.priority,
+    ...(e.details ? { details: { ...e.details } } : {}),
   };
 }
