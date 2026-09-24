@@ -189,3 +189,7 @@ A ficha rápida mostra categoria, status, data/hora e local, com Mapa, Editar e 
 A Visão geral apresenta contexto temporal, dias, um **Próximo passo** e um resumo breve. Antes da viagem, aponta um local pendente ou uma ideia a revisar; durante, mostra o próximo programa, incluindo transporte; depois, oferece rever a viagem. São atalhos calculados dos dados atuais, sem tarefas persistidas.
 
 Esta rodada não altera schema, `firestore.rules`, autenticação, configuração Firebase, seed ou dados reais. As opções e detalhes da rodada anterior foram preservados. Nenhum deploy, commit ou push foi executado.
+
+## Colaboração por viagem — 24/09/2026
+
+O modelo de acesso evoluiu para proprietário, editores e os modos PRIVATE, SHARED, PUBLIC e PUBLIC_EDIT. As instruções anteriores de escrita exclusiva por administrador e de privacidade no formulário foram substituídas. Veja [schema, matriz de regras, limitações de compatibilidade, testes locais e publicação](COLABORACAO.md). Para ativar Brasília da Mel, use Compartilhar na viagem existente; não execute o seed novamente. Regras e índices desta rodada ainda precisam de revisão e publicação explícita.

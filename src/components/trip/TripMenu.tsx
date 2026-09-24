@@ -3,20 +3,23 @@ import {
   Share2,
   Pencil,
   Copy,
-  Globe2,
   LockKeyhole,
   Trash2,
+  LogOut,
 } from "lucide-react";
-import type { Trip } from "../../types";
 export function TripMenu({
-  trip,
+  owner,
+  canLeave,
+  onLeave,
   onEdit,
   onShare,
   onDuplicate,
   onVisibility,
   onDelete,
 }: {
-  trip: Trip;
+  owner: boolean;
+  canLeave: boolean;
+  onLeave: () => void;
   onEdit: () => void;
   onShare: () => void;
   onDuplicate: () => void;
@@ -43,8 +46,8 @@ export function TripMenu({
       <div
         className="menu-popover"
         onClick={(e) => {
-          const details = e.currentTarget.closest("details");
-          if (details) details.open = false;
+          const d = e.currentTarget.closest("details");
+          if (d) d.open = false;
         }}
       >
         <button onClick={onEdit}>
@@ -55,18 +58,28 @@ export function TripMenu({
           <Share2 size={17} />
           Compartilhar
         </button>
-        <button onClick={onDuplicate}>
-          <Copy size={17} />
-          Duplicar
-        </button>
-        <button onClick={onVisibility}>
-          {trip.isPublic ? <LockKeyhole size={17} /> : <Globe2 size={17} />}
-          Tornar {trip.isPublic ? "privada" : "pública"}
-        </button>
-        <button className="danger-text" onClick={onDelete}>
-          <Trash2 size={17} />
-          Excluir viagem
-        </button>
+        {owner && (
+          <>
+            <button onClick={onVisibility}>
+              <LockKeyhole size={17} />
+              Gerenciar acesso
+            </button>
+            <button onClick={onDuplicate}>
+              <Copy size={17} />
+              Duplicar viagem
+            </button>
+            <button className="danger-text" onClick={onDelete}>
+              <Trash2 size={17} />
+              Excluir viagem
+            </button>
+          </>
+        )}
+        {!owner && canLeave && (
+          <button onClick={onLeave}>
+            <LogOut size={17} />
+            Sair da viagem
+          </button>
+        )}
       </div>
     </details>
   );

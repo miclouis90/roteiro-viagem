@@ -1,119 +1,255 @@
-import { useState } from "react";
-import { Copy, Share2, Globe2, LockKeyhole } from "lucide-react";
-import type { Trip } from "../../types";
+import { useEffect, useState } from "react";
+import { Copy, Share2 } from "lucide-react";
+import type { Trip, TripAccess, TripMember } from "../../types";
 import { Modal } from "../Modal";
 import { demoMode } from "../../lib/firebase";
-import { saveTrip } from "../../services/repository";
-import { tripInput } from "../../utils/inputs";
+import { tripAccess } from "../../utils/access";
+import {
+  claimOwnership,
+  joinTrip,
+  removeMember,
+  setTripAccess,
+  watchMembers,
+} from "../../services/collaboration";
+import { useAuth } from "../../hooks/useAuth";
 export function ShareTrip({
   trip,
-  admin,
+  owner,
+  legacy,
+  editor,
   onClose,
 }: {
   trip: Trip;
-  admin: boolean;
+  owner: boolean;
+  legacy: boolean;
+  editor: boolean;
   onClose: () => void;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [published, setPublished] = useState(false);
-  const isPublic = trip.isPublic || published;
+  const { user, login } = useAuth();
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [message, setMessage] = useState("");
+  const [mode, setMode] = useState<TripAccess>(tripAccess(trip));
+  const [members, setMembers] = useState<TripMember[]>([]);
+  const [removing, setRemoving] = useState<TripMember | null>(null);
   const url = `${window.location.href.split("#")[0]}#/viagem/${trip.id}`;
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(url);
-      setMessage("Link copiado.");
-    } catch {
-      setMessage("Selecione e copie o link abaixo.");
-    }
-  }
-  async function publish() {
-    if (!admin || busy) return;
+  useEffect(() => {
+    setMode(tripAccess(trip));
+  }, [trip]);
+  useEffect(() => {
+    if (!owner) return;
+    return watchMembers(trip.id, setMembers, () =>
+      setError("Não foi possível carregar os colaboradores."),
+    );
+  }, [trip.id, owner]);
+  async function act(action: () => Promise<void>, success: string) {
+    if (busy) return;
     setBusy(true);
     setError("");
+    setMessage("");
     try {
-      await saveTrip({ ...tripInput(trip), isPublic: true }, trip.id);
-      setPublished(true);
-      setMessage(
-        "Agora ela pode acompanhar também. Copie o link para compartilhar.",
+      await action();
+      setMessage(success);
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível concluir. Tente novamente.",
       );
-    } catch {
-      setError("Não foi possível tornar a viagem pública. Tente novamente.");
     } finally {
       setBusy(false);
-    }
-  }
-  async function share() {
-    try {
-      await navigator.share({
-        title: trip.title,
-        text: `${trip.title} · ${trip.destinationCity}`,
-        url,
-      });
-    } catch (e) {
-      if (!(e instanceof Error && e.name === "AbortError"))
-        setError("Não foi possível compartilhar. Você pode copiar o link.");
     }
   }
   return (
     <Modal title={`Compartilhar ${trip.title}`} onClose={onClose} busy={busy}>
       <div className="share-content">
-        <span className="share-symbol">
-          {isPublic ? <Globe2 size={27} /> : <LockKeyhole size={27} />}
-        </span>
-        <h3>
-          {isPublic
-            ? "Boas experiências ficam melhores juntas."
-            : "Essa viagem ainda é privada."}
-        </h3>
         <p className="muted">
-          {isPublic
-            ? "Quem receber o link poderá ver o roteiro, sem editar."
-            : "Somente administradores podem abrir este roteiro. Ao torná-lo público, qualquer pessoa com o link poderá visualizar."}
+          {tripAccess(trip) === "PUBLIC_EDIT"
+            ? "Qualquer pessoa com o link pode visualizar. Para colaborar, é preciso entrar com Google."
+            : tripAccess(trip) === "PUBLIC"
+              ? "Qualquer pessoa com o link pode visualizar. Apenas o proprietário e colaboradores podem editar."
+              : tripAccess(trip) === "SHARED"
+                ? "Somente o proprietário e os colaboradores têm acesso."
+                : "Somente o proprietário tem acesso."}
         </p>
-        {admin && !isPublic && (
-          <p className="field-help">Antes de publicar, revise reservas e informações pessoais. A interface pública oculta esses detalhes, mas os dados da viagem pública podem ser consultados no banco.</p>
-        )}
-        {demoMode && (
+        {demoMode ? (
           <p className="notice">
-            Demonstração local: o link não compartilha seus testes entre
-            dispositivos.
+            O compartilhamento entre pessoas exige o Firebase. A demonstração
+            fica neste navegador.
           </p>
+        ) : legacy ? (
+          <div className="notice">
+            <p>
+              Esta viagem antiga ainda não tem proprietário. Nenhum programa
+              será alterado.
+            </p>
+            <button
+              className="primary"
+              disabled={busy}
+              onClick={() =>
+                act(
+                  () => claimOwnership(trip.id),
+                  "Você agora é o proprietário desta viagem.",
+                )
+              }
+            >
+              Definir minha conta como proprietária
+            </button>
+          </div>
+        ) : (
+          owner && (
+            <>
+              <label>
+                Acesso à viagem
+                <select
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value as TripAccess)}
+                  disabled={busy}
+                >
+                  <option value="PRIVATE">Privada · somente eu</option>
+                  <option value="SHARED">
+                    Compartilhada · somente colaboradores
+                  </option>
+                  <option value="PUBLIC">Pelo link · somente visualizar</option>
+                  <option value="PUBLIC_EDIT">
+                    Pelo link · pode editar após login
+                  </option>
+                </select>
+              </label>
+              {(mode === "PUBLIC" || mode === "PUBLIC_EDIT") && (
+                <p className="field-help">
+                  O link permite leitura dos dados do roteiro, inclusive
+                  informações que a interface oculta. Revise reservas e dados
+                  pessoais antes de liberar. Em “pode editar”, qualquer conta
+                  autenticada poderá alterar e excluir programas.
+                </p>
+              )}
+              <button
+                className="primary"
+                disabled={busy || mode === tripAccess(trip)}
+                onClick={() =>
+                  act(() => setTripAccess(trip.id, mode), "Acesso atualizado.")
+                }
+              >
+                Salvar acesso
+              </button>
+              <section>
+                <h3>Colaboradores</h3>
+                <p className="field-help">
+                  Para convidar, libere “Pelo link · pode editar após login”. A
+                  pessoa entra com Google e escolhe “Participar da viagem” aqui.
+                  Depois, você pode restringir para “Somente colaboradores”.
+                  Convites por e-mail ficam para uma próxima etapa.
+                </p>
+                {members
+                  .filter((m) => m.role === "editor")
+                  .map((m) => (
+                    <div className="member-row" key={m.uid}>
+                      <span>
+                        {m.displayName || m.email}
+                        <small>{m.displayName ? m.email : ""}</small>
+                      </span>
+                      <button
+                        className="ghost"
+                        disabled={busy}
+                        onClick={() => setRemoving(m)}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ))}
+                {members.length === 0 && (
+                  <p className="muted">Nenhum colaborador ainda.</p>
+                )}
+                {removing && (
+                  <div className="notice">
+                    <p>
+                      Remover {removing.displayName || removing.email}? Se o
+                      link permitir edição, essa pessoa poderá voltar. Use
+                      “Somente colaboradores” para restringir o acesso.
+                    </p>
+                    <button
+                      className="secondary"
+                      disabled={busy}
+                      onClick={() => setRemoving(null)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      className="danger"
+                      disabled={busy}
+                      onClick={() =>
+                        act(async () => {
+                          await removeMember(trip.id, removing.uid);
+                          setRemoving(null);
+                        }, "Colaborador removido.")
+                      }
+                    >
+                      Remover colaborador
+                    </button>
+                  </div>
+                )}
+              </section>
+            </>
+          )
         )}
+        {!demoMode &&
+          !owner &&
+          !legacy &&
+          !editor &&
+          tripAccess(trip) === "PUBLIC_EDIT" && (
+            <button
+              className="primary"
+              disabled={busy}
+              onClick={() =>
+                act(async () => {
+                  if (!user) await login();
+                  await joinTrip(trip.id);
+                }, "Você está participando da viagem.")
+              }
+            >
+              Participar da viagem
+            </button>
+          )}
         <label>
           Link da viagem
           <input readOnly value={url} onFocus={(e) => e.target.select()} />
         </label>
-        <div className="share-actions">
-          {!isPublic && admin && (
-            <button className="primary" disabled={busy} onClick={publish}>
-              <Globe2 size={17} />
-              {busy ? "Publicando…" : "Tornar pública e compartilhar"}
-            </button>
-          )}
+        <button
+          className="secondary"
+          disabled={busy}
+          onClick={() =>
+            act(() => navigator.clipboard.writeText(url), "Link copiado.")
+          }
+        >
+          <Copy size={17} />
+          Copiar link
+        </button>
+        {typeof navigator.share === "function" && (
           <button
-            className={isPublic ? "primary" : "secondary"}
-            onClick={copy}
+            className="secondary"
             disabled={busy}
+            onClick={() =>
+              act(async () => {
+                try {
+                  await navigator.share({ title: trip.title, url });
+                } catch (e) {
+                  if (!(e instanceof Error && e.name === "AbortError")) throw e;
+                }
+              }, "")
+            }
           >
-            <Copy size={17} />
-            Copiar link
+            <Share2 size={17} />
+            Compartilhar…
           </button>
-          {isPublic && typeof navigator.share === "function" && (
-            <button className="secondary" onClick={share}>
-              <Share2 size={17} />
-              Compartilhar…
-            </button>
-          )}
-        </div>
+        )}
         {message && (
-          <p className="feedback" role="status">
+          <p role="status" className="feedback">
             {message}
           </p>
         )}
         {error && (
-          <p className="error" role="alert">
+          <p role="alert" className="error">
             {error}
           </p>
         )}

@@ -4,12 +4,13 @@ import { useState, type FormEvent } from "react";
 import type { Trip, TripInput } from "../types";
 
 import { daysBetween, dateKey } from "../utils/dates";
+import { tripInput } from "../utils/inputs";
 import { saveTrip } from "../services/repository";
 import { useToast } from "../hooks/useToast";
 import { Modal } from "./Modal";
 import { tripThemes, type TripTheme } from "../data/themes";
 export function TripForm({
-  trip,
+  trip: initialTrip,
   onClose,
   onSaved,
 }: {
@@ -17,6 +18,7 @@ export function TripForm({
   onClose: () => void;
   onSaved: (id: string) => void;
 }) {
+  const [trip] = useState(initialTrip);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [theme, setTheme] = useState<TripTheme["accent"]>(
@@ -44,7 +46,7 @@ export function TripForm({
       description: String(f.get("description")),
       notes: String(f.get("notes")),
       status: String(f.get("status")) as TripInput["status"],
-      isPublic: f.get("public") === "on",
+      isPublic: trip?.isPublic ?? false,
       currency: String(f.get("currency")),
       ...(theme !== "green" || trip?.theme ? { theme: { accent: theme } } : {}),
     };
@@ -54,7 +56,11 @@ export function TripForm({
     }
     setBusy(true);
     try {
-      const id = await saveTrip(input, trip?.id);
+      const id = await saveTrip(
+        input,
+        trip?.id,
+        trip ? tripInput(trip) : undefined,
+      );
       toast(trip ? "Viagem salva." : "Pronto. Agora é começar a imaginar.");
       onSaved(id);
     } catch {
@@ -149,7 +155,7 @@ export function TripForm({
           </fieldset>
           <Disclosure
             title="Detalhes da viagem"
-            description="Status, moeda, descrição e privacidade"
+            description="Status, moeda e descrição"
           >
             {" "}
             <label>
@@ -199,14 +205,9 @@ export function TripForm({
               Observações
               <textarea name="notes" defaultValue={trip?.notes} rows={2} />
             </label>
-            <label className="check wide">
-              <input
-                name="public"
-                type="checkbox"
-                defaultChecked={trip?.isPublic ?? false}
-              />
-              Viagem pública — qualquer pessoa com o link pode visualizar
-            </label>
+            <p className="field-help wide">
+              O acesso é definido em Compartilhar, pelo proprietário.
+            </p>
           </Disclosure>
         </div>{" "}
         {error && (

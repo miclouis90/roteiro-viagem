@@ -2885,3 +2885,7 @@ dialog[open] { animation: polished-sheet-in 180ms ease-out; }
 }
 .sticky-days .short-trip-days { display: grid; grid-template-columns: repeat(auto-fit,minmax(44px,1fr)); gap: 6px; }
 .sticky-days .short-trip-days button { min-width: 0; width: 100%; padding-inline: 4px; }
+.member-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+.member-row span { min-width:0; overflow-wrap:anywhere; }
+.member-row small { display:block; color:var(--muted); }
+.share-content section { text-align:left; }

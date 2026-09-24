@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { Trip, TripEvent, EventInput } from "../types";
 import { CategoryPicker } from "./ui/CategoryPicker";
+import { eventInput } from "../utils/inputs";
 import { saveEvent } from "../services/repository";
 import { useToast } from "../hooks/useToast";
 import { Modal } from "./Modal";
@@ -18,7 +19,6 @@ export function EventForm({
   trip,
   event,
   onClose,
-  firstEvent = false,
   kind = "program",
   expandDetails = false,
   onSaved,
@@ -94,14 +94,13 @@ export function EventForm({
     setBusy(true);
     setError("");
     try {
-      const id = await saveEvent(trip.id, input, event?.id);
-      toast(
-        event
-          ? "Alterações salvas."
-          : firstEvent
-            ? "Seu roteiro começou."
-            : "Programa adicionado ao roteiro.",
+      const id = await saveEvent(
+        trip.id,
+        input,
+        event?.id,
+        event ? eventInput(event) : undefined,
       );
+      toast(event ? "Alterações salvas." : "Programa adicionado.");
       onSaved({ ...input, id });
     } catch {
       setError(

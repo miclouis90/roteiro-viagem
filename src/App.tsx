@@ -22,6 +22,8 @@ import { TripPage } from "./pages/TripPage";
 import { SeedMelPage } from "./pages/SeedMelPage";
 import { TripForm } from "./components/Forms";
 
+import { useTrip } from "./hooks/useTrip";
+import { tripAccess } from "./utils/access";
 import { demoMode, configured } from "./lib/firebase";
 function Shell() {
   const { user, admin, loading, error, login, logout, toggleDemo } = useAuth();
@@ -31,6 +33,13 @@ function Shell() {
 
   const location = useLocation();
   const inTrip = /^\/viagem\/[^/]+$/.test(location.pathname);
+  const tripId = inTrip
+    ? decodeURIComponent(location.pathname.split("/")[2])
+    : "";
+  const currentTrip = useTrip(tripId);
+  const canAdd =
+    currentTrip.access.canEdit ||
+    (!!currentTrip.trip && tripAccess(currentTrip.trip) === "PUBLIC_EDIT");
   const menu = useRef<HTMLDetailsElement>(null);
   return (
     <>
@@ -41,11 +50,19 @@ function Shell() {
             rumo<span>.</span>
           </Link>
           <div className="account">
-            {admin && (
+            {(inTrip ? canAdd : admin) && (
               <button
                 className="ghost new-trip"
                 aria-label={inTrip ? "Adicionar" : "Criar viagem"}
-                onClick={() => {
+                onClick={async () => {
+                  if (inTrip && !user && !demoMode) {
+                    try {
+                      await login();
+                    } catch {
+                      toast("Entre com Google para colaborar.");
+                      return;
+                    }
+                  }
                   if (inTrip) {
                     const next = new URLSearchParams(location.search);
                     next.set("action", "add");

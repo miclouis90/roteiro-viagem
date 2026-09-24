@@ -6,6 +6,8 @@ export type EventStatus =
 export type Priority = "imperdível" | "gostaria de ir" | "opcional";
 export interface Trip {
   id: string;
+  ownerId?: string;
+  access?: TripAccess;
   title: string;
   destinationCity: string;
   destinationState: string;
@@ -19,6 +21,13 @@ export interface Trip {
   isPublic: boolean;
   currency: string;
   theme?: TripTheme;
+}
+export type TripAccess = "PRIVATE" | "SHARED" | "PUBLIC" | "PUBLIC_EDIT";
+export interface TripMember {
+  uid: string;
+  role: "owner" | "editor";
+  displayName: string;
+  email: string;
 }
 export interface TripEvent {
   id: string;

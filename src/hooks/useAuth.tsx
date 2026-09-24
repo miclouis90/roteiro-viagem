@@ -44,7 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let stopAdmin = () => {};
 
-    const stop = onAuthStateChanged(auth, (u) => {
+    const stop = onAuthStateChanged(auth, (account) => {
+      const u = account && !account.isAnonymous ? account : null;
       stopAdmin();
 
       setUser(u);
@@ -57,24 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         stopAdmin = onSnapshot(
           doc(db, "platformAdmins", u.uid),
           (snapshot) => {
-            setAdmin(
-              snapshot.exists() &&
-                snapshot.data().active === true,
-            );
+            setAdmin(snapshot.exists() && snapshot.data().active === true);
 
             setLoading(false);
           },
           (err) => {
-            console.error(
-              "Erro ao verificar permissão administrativa:",
-              err,
-            );
+            console.error("Erro ao verificar permissão administrativa:", err);
 
             setAdmin(false);
             setLoading(false);
-            setError(
-              "Não foi possível verificar a permissão administrativa.",
-            );
+            setError("Não foi possível verificar a permissão administrativa.");
           },
         );
       } else {
@@ -100,15 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         login: async () => {
           if (!auth) {
-            throw new Error(
-              "Configure o Firebase para entrar.",
-            );
+            throw new Error("Configure o Firebase para entrar.");
           }
 
-          await signInWithPopup(
-            auth,
-            new GoogleAuthProvider(),
-          );
+          await signInWithPopup(auth, new GoogleAuthProvider());
         },
 
         logout: async () => {

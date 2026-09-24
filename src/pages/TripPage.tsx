@@ -10,9 +10,10 @@ import type { Trip, TripEvent } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import { useTrip } from "../hooks/useTrip";
 import { useToast } from "../hooks/useToast";
-import { removeTrip, removeEvent, saveTrip } from "../services/repository";
+import { removeTrip, removeEvent } from "../services/repository";
 import { duplicateTrip } from "../services/duplicateTrip";
-import { tripInput } from "../utils/inputs";
+import { removeMember } from "../services/collaboration";
+import { tripAccess } from "../utils/access";
 import { datesBetween, daysBetween, formatDate } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
 import { tripTabFromSearch, itineraryViewFromSearch } from "../utils/tripView";
@@ -34,22 +35,20 @@ import { EventDetails } from "../components/Events";
 import { Modal } from "../components/Modal";
 export function TripPage() {
   const { id = "" } = useParams();
-  const { admin, loading } = useAuth();
-  const data = useTrip(id, admin, loading);
+  const data = useTrip(id);
   if (data.loading)
     return (
       <main className="loading-state" role="status">
         Preparando o roteiro…
       </main>
     );
-  if (data.error || !data.trip || (!data.trip.isPublic && !admin))
+  if (data.error || !data.trip || !data.access.canRead)
     return (
       <main>
         <EmptyState
           title="Roteiro indisponível"
           description={
-            data.error ||
-            "Entre com uma conta administrativa para abrir esta viagem privada."
+            data.error || "Entre com uma conta que participa desta viagem."
           }
         >
           <Link className="secondary" to="/">
@@ -58,10 +57,29 @@ export function TripPage() {
         </EmptyState>
       </main>
     );
-  return <TripWorkspace key={id} trip={data.trip} events={data.events} />;
+  return (
+    <TripWorkspace
+      key={id}
+      trip={data.trip}
+      events={data.events}
+      access={data.access}
+      editor={data.editor}
+    />
+  );
 }
-function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
-  const { admin } = useAuth();
+function TripWorkspace({
+  trip,
+  events,
+  access,
+  editor,
+}: {
+  trip: Trip;
+  events: TripEvent[];
+  access: ReturnType<typeof useTrip>["access"];
+  editor: boolean;
+}) {
+  const { user } = useAuth();
+  const admin = access.canEdit;
   const toast = useToast();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -104,7 +122,7 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
   const [selected, setSelected] = useState<TripEvent | null>(null);
   const [share, setShare] = useState(false);
   const [confirm, setConfirm] = useState<
-    "delete-trip" | "delete-event" | "duplicate" | "private" | null
+    "delete-trip" | "delete-event" | "duplicate" | "leave" | null
   >(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -130,6 +148,11 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
   }
   async function perform() {
     if (!admin || busy) return;
+    if (
+      (confirm === "delete-trip" || confirm === "duplicate") &&
+      !access.canManage
+    )
+      return;
     setBusy(true);
     setActionError("");
     try {
@@ -140,10 +163,11 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
       } else if (confirm === "delete-event" && selected) {
         await removeEvent(trip.id, selected.id);
         setSelected(null);
-        toast("Programa excluído.");
-      } else if (confirm === "private") {
-        await saveTrip({ ...tripInput(trip), isPublic: false }, trip.id);
-        toast("Agora só administradores podem ver a viagem.");
+        toast("Programa removido.");
+      } else if (confirm === "leave" && user) {
+        await removeMember(trip.id, user.uid);
+        navigate("/");
+        toast("Você saiu da viagem.");
       } else if (confirm === "duplicate") {
         const id = await duplicateTrip(trip, events);
         navigate(`/viagem/${id}`);
@@ -193,7 +217,9 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
                 {!trip.isPublic && (
                   <span className="privacy-label">
                     <LockKeyhole size={13} />
-                    Privada
+                    {tripAccess(trip) === "SHARED"
+                      ? "Compartilhada"
+                      : "Privada"}
                   </span>
                 )}
               </div>
@@ -210,13 +236,13 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
               )}
               {admin && (
                 <TripMenu
-                  trip={trip}
+                  owner={access.canManage}
+                  canLeave={editor}
+                  onLeave={() => ask("leave")}
                   onEdit={() => setEditTrip(true)}
                   onShare={() => setShare(true)}
                   onDuplicate={() => ask("duplicate")}
-                  onVisibility={() =>
-                    trip.isPublic ? ask("private") : setShare(true)
-                  }
+                  onVisibility={() => setShare(true)}
                   onDelete={() => ask("delete-trip")}
                 />
               )}
@@ -357,7 +383,7 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
           onClose={() => setSelected(null)}
           onEdit={() => {
             setExpandDetails(justSaved);
-            setEditEvent(selected);
+            setEditEvent(events.find((e) => e.id === selected.id) || selected);
             setSelected(null);
           }}
           onDelete={() => ask("delete-event")}
@@ -368,18 +394,24 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
         />
       )}{" "}
       {share && (
-        <ShareTrip trip={trip} admin={admin} onClose={() => setShare(false)} />
+        <ShareTrip
+          trip={trip}
+          owner={access.owner}
+          legacy={access.legacy}
+          editor={editor}
+          onClose={() => setShare(false)}
+        />
       )}
       {confirm && admin && (
         <Modal
           title={
             confirm === "duplicate"
               ? "Duplicar viagem?"
-              : confirm === "private"
-                ? "Tornar esta viagem privada?"
+              : confirm === "leave"
+                ? "Sair da viagem?"
                 : confirm === "delete-trip"
                   ? "Excluir viagem?"
-                  : "Excluir programa?"
+                  : `Excluir ${selected?.title ?? "programa"}?`
           }
           onClose={() => setConfirm(null)}
           busy={busy}
@@ -387,11 +419,11 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
           <p className="muted">
             {confirm === "duplicate"
               ? "Uma cópia privada será criada com os mesmos dias e programas. A viagem original será preservada."
-              : confirm === "private"
-                ? "Visitantes deixarão de ter acesso a este roteiro, inclusive pelo link compartilhado."
+              : confirm === "leave"
+                ? "Sua participação será removida. Se o link permitir edição, você ainda poderá voltar a colaborar ao abri-lo."
                 : confirm === "delete-trip"
                   ? "A viagem e todos os seus programas serão excluídos. Esta ação não pode ser desfeita."
-                  : "Este programa será excluído do roteiro. Esta ação não pode ser desfeita."}
+                  : "Essa alteração será removida do roteiro para todos."}
           </p>
           {actionError && (
             <p role="alert" className="error">
@@ -415,9 +447,9 @@ function TripWorkspace({ trip, events }: { trip: Trip; events: TripEvent[] }) {
                 ? "Aguarde…"
                 : confirm === "duplicate"
                   ? "Criar cópia privada"
-                  : confirm === "private"
-                    ? "Tornar privada"
-                    : "Sim, excluir"}
+                  : confirm === "leave"
+                    ? "Sair da viagem"
+                    : "Excluir"}
             </button>
           </div>
         </Modal>

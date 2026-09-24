@@ -6,7 +6,7 @@ import {
   serverTimestamp,
   writeBatch,
 } from "firebase/firestore";
-import { db, demoMode } from "../lib/firebase";
+import { auth, db, demoMode } from "../lib/firebase";
 import { saveTrip, saveEvent } from "./repository";
 import { tripInput, eventInput } from "../utils/inputs";
 import type { Trip, TripEvent } from "../types";
@@ -50,6 +50,8 @@ export async function duplicateTrip(
   const batch = writeBatch(database);
   batch.set(target, {
     ...copy,
+    ownerId: auth!.currentUser!.uid,
+    access: "PRIVATE",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

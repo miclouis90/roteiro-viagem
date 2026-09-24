@@ -13,6 +13,31 @@ service cloud.firestore {
         ).data.active == true;
     }
 
+
+    function signedIn() { return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+    function access(t) { return t.get('access', t.isPublic ? 'PUBLIC' : 'PRIVATE'); }
+    function owner(t) { return signedIn() && t.get('ownerId', '') == request.auth.uid; }
+    function legacyAdmin(t) { return !('ownerId' in t) && admin(); }
+    function trip(tripId) { return get(/databases/$(database)/documents/trips/$(tripId)).data; }
+    function isOwner(tripId) { return owner(trip(tripId)); }
+    function isEditor(tripId) {
+      return signedIn() && access(trip(tripId)) != 'PRIVATE'
+        && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid)).data.role == 'editor';
+    }
+    function canEditTrip(tripId) {
+      let t = trip(tripId);
+      return signedIn() && (owner(t) || legacyAdmin(t) || isEditor(tripId) || access(t) == 'PUBLIC_EDIT');
+    }
+    function canRead(t, tripId) {
+      return owner(t) || legacyAdmin(t) || isEditor(tripId) || t.isPublic == true;
+    }
+    function validAccess(d) {
+      return (!('ownerId' in d) || (d.ownerId is string && d.ownerId.size() > 0 && d.ownerId.size() <= 128))
+        && (!('access' in d) || (d.access in ['PRIVATE','SHARED','PUBLIC','PUBLIC_EDIT']
+        && d.isPublic == (d.access in ['PUBLIC','PUBLIC_EDIT'])));
+    }
+
     function date(v) {
       return v is string
         && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
@@ -150,7 +175,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt'
         ])
-        && d.keys().hasOnly(['theme',
+        && d.keys().hasOnly(['ownerId', 'access', 'theme',
           'title',
           'destinationCity',
           'destinationState',
@@ -166,6 +191,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt'
         ])
+        && validAccess(d)
         && ('theme' in d ? validTheme(d.theme) : true)
         && d.title is string
         && d.title.size() > 0
@@ -313,37 +339,54 @@ service cloud.firestore {
       allow list, create, update, delete: if false;
     }
 
+    // A member may discover only their own memberships. uid supports a collection-group query.
+    match /{path=**}/members/{uid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+    }
     match /trips/{tripId} {
-      allow read: if admin()
-        || resource.data.isPublic == true;
-
-      allow create: if admin()
-        && validTrip(request.resource.data)
+      allow read: if canRead(resource.data, tripId);
+      allow create: if signedIn() && admin() && validTrip(request.resource.data)
+        && request.resource.data.get('ownerId', request.auth.uid) == request.auth.uid
         && request.resource.data.createdAt == request.time;
-
-      allow update: if admin()
-        && validTrip(request.resource.data)
-        && request.resource.data.createdAt
-          == resource.data.createdAt;
-
-      allow delete: if admin();
-
+      allow update: if signedIn() && validTrip(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (
+          (owner(resource.data) && request.resource.data.ownerId == resource.data.ownerId)
+          || (legacyAdmin(resource.data) && request.resource.data.get('ownerId', '') == request.auth.uid
+            && request.resource.data.isPublic == resource.data.isPublic
+            && request.resource.data.access == access(resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ownerId','access','updatedAt']))
+          || (canEditTrip(tripId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'title','destinationCity','destinationState','country','startDate','endDate','travelerName',
+            'description','notes','status','currency','theme','updatedAt'
+          ]))
+        );
+      allow delete: if isOwner(tripId);
       match /events/{eventId} {
-        allow read: if admin()
-          || get(
-            /databases/$(database)/documents/trips/$(tripId)
-          ).data.isPublic == true;
-
-        allow create: if admin()
-          && validEvent(request.resource.data, tripId)
+        allow read: if canRead(trip(tripId), tripId);
+        allow create: if canEditTrip(tripId) && validEvent(request.resource.data, tripId)
           && request.resource.data.createdAt == request.time;
-
-        allow update: if admin()
-          && validEvent(request.resource.data, tripId)
-          && request.resource.data.createdAt
-            == resource.data.createdAt;
-
-        allow delete: if admin();
+        allow update: if canEditTrip(tripId) && validEvent(request.resource.data, tripId)
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if canEditTrip(tripId);
+      }
+      match /members/{uid} {
+        allow get: if isOwner(tripId) || (signedIn() && uid == request.auth.uid);
+        allow list: if isOwner(tripId);
+        allow create: if signedIn() && request.resource.data.keys().hasAll(['uid','role','displayName','email','addedAt'])
+          && request.resource.data.keys().hasOnly(['uid','role','displayName','email','addedAt'])
+          && request.resource.data.uid == uid
+          && request.resource.data.role in ['owner','editor']
+          && (request.resource.data.role != 'owner' || trip(tripId).ownerId == uid)
+          && request.resource.data.displayName is string && request.resource.data.displayName.size() <= 200
+          && request.resource.data.email is string && request.resource.data.email.size() <= 320
+          && request.resource.data.addedAt == request.time
+          && (isOwner(tripId) || (uid == request.auth.uid && access(trip(tripId)) == 'PUBLIC_EDIT'
+            && request.resource.data.role == 'editor'
+            && request.resource.data.email == request.auth.token.get('email','')
+            && request.resource.data.displayName == request.auth.token.get('name','')));
+        allow update: if false;
+        allow delete: if isOwner(tripId) || (signedIn() && uid == request.auth.uid && resource.data.role == 'editor');
       }
     }
   }

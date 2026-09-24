@@ -8,7 +8,7 @@ import type { Trip } from "../types";
 import { homeTrips } from "../utils/homeTrips";
 import { dateKey } from "../utils/dates";
 export function Home({ onCreate }: { onCreate: () => void }) {
-  const { admin, loading: authLoading } = useAuth();
+  const { admin, user, loading: authLoading } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -29,8 +29,9 @@ export function Home({ onCreate }: { onCreate: () => void }) {
         );
         setLoading(false);
       },
+      user?.uid,
     );
-  }, [admin, authLoading]);
+  }, [admin, authLoading, user?.uid]);
   const { featured, others } = homeTrips(trips);
   return (
     <main className="home">
