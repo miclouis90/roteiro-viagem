@@ -54,7 +54,7 @@ export function useTrip(id: string) {
         legacy: false,
       };
   useEffect(() => {
-    if (!access.canRead) {
+    if (authLoading || !access.canRead) {
       setEvents([]);
       return;
     }
@@ -73,7 +73,7 @@ export function useTrip(id: string) {
         setEventsLoading(false);
       },
     );
-  }, [id, access.canRead, user]);
+  }, [id, access.canRead, user, admin, editor, authLoading]);
   return {
     trip,
     events,

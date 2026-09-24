@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { watchTrips } from "../services/repository";
+import { LoadingState } from "../components/ui/LoadingState";
 import { TripCard } from "../components/TripCard";
 import { EmptyState } from "../components/ui/Primitives";
 import type { Trip } from "../types";
@@ -53,9 +54,7 @@ export function Home({ onCreate }: { onCreate: () => void }) {
         </p>
       </section>
       {loading ? (
-        <div className="loading-state" role="status">
-          Preparando suas viagens…
-        </div>
+        <LoadingState label="Preparando suas viagens…" />
       ) : error ? (
         <p className="error" role="alert">
           {error}

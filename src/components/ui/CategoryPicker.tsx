@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { categories, categoryGroups, categoryOf } from "../../data/categories";
-import { CategoryChip } from "./Primitives";
 
 export function CategoryPicker({
   value,
@@ -49,9 +48,6 @@ export function CategoryPicker({
           </button>
         ))}
       </div>
-      <p className="category-current">
-        Selecionada: <CategoryChip name={value} />
-      </p>
     </fieldset>
   );
 }

@@ -20,6 +20,8 @@ import { tripTabFromSearch, itineraryViewFromSearch } from "../utils/tripView";
 import { TripOverview } from "../components/trip/TripOverview";
 import { themeStyle } from "../data/themes";
 
+import { LoadingState } from "../components/ui/LoadingState";
+import { RouteArtwork } from "../components/ui/RouteArtwork";
 import { JourneyMoment } from "../components/trip/JourneyMoment";
 import {
   TripNavigation,
@@ -36,10 +38,13 @@ import { Modal } from "../components/Modal";
 export function TripPage() {
   const { id = "" } = useParams();
   const data = useTrip(id);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [id]);
   if (data.loading)
     return (
-      <main className="loading-state" role="status">
-        Preparando o roteiro…
+      <main>
+        <LoadingState label="Preparando o roteiro…" />
       </main>
     );
   if (data.error || !data.trip || !data.access.canRead)
@@ -208,7 +213,6 @@ function TripWorkspace({
                 {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
                 <span>·</span>
                 {dayCountLabel(count)}
-                {!admin && ` em ${trip.destinationCity}`}
               </p>
               <div className="trip-badges">
                 <span className={`status-chip status-${trip.status}`}>
@@ -227,11 +231,15 @@ function TripWorkspace({
                 <JourneyMoment trip={trip} events={events} now={now} />
               )}
             </div>
+            <RouteArtwork />
             <div className="heading-actions">
               {!admin && (
-                <button className="secondary" onClick={() => setShare(true)}>
+                <button
+                  className="icon-button"
+                  aria-label="Compartilhar viagem"
+                  onClick={() => setShare(true)}
+                >
                   <Share2 size={17} />
-                  Compartilhar
                 </button>
               )}
               {admin && (

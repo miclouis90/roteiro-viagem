@@ -82,8 +82,11 @@ export function TripForm({
         className="form-grid"
         onInvalidCapture={revealInvalidField}
       >
+        <p className="form-intro wide">
+          Campos com * são obrigatórios. Os outros detalhes podem esperar.
+        </p>
         <label className="wide">
-          Título
+          Título *
           <input
             name="title"
             required
@@ -93,7 +96,7 @@ export function TripForm({
           />
         </label>
         <label>
-          Cidade
+          Cidade *
           <input name="city" required defaultValue={trip?.destinationCity} />
         </label>
         <label>
@@ -101,7 +104,7 @@ export function TripForm({
           <input name="state" defaultValue={trip?.destinationState} />
         </label>
         <label>
-          País
+          País *
           <input
             name="country"
             required
@@ -113,7 +116,7 @@ export function TripForm({
           <input name="traveler" defaultValue={trip?.travelerName} />
         </label>
         <label>
-          Chegada
+          Chegada *
           <input
             type="date"
             value={start}
@@ -122,7 +125,7 @@ export function TripForm({
           />
         </label>
         <label>
-          Saída
+          Saída *
           <input
             type="date"
             min={start}

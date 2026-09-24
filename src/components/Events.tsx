@@ -1,5 +1,7 @@
 import {
   MapPin,
+  CalendarDays,
+  Clock3,
   ArrowUpRight,
   Star,
   Pencil,
@@ -46,9 +48,15 @@ export function EventCard({
             </span>
           )}
         </span>
-        <span className="location">{event.location || "Local a definir"}</span>
+        <span className="location">
+          <MapPin size={13} aria-hidden="true" />
+          {event.location || "Local a definir"}
+        </span>
         <span className="event-mobile-meta">
-          {eventPriceLabel(event, currency)} · {eventLabels[event.status]}
+          <span>{eventPriceLabel(event, currency)}</span>
+          <span className={`timeline-status status-${event.status}`}>
+            {eventLabels[event.status]}
+          </span>
         </span>
       </span>
       <span className="event-price">
@@ -85,23 +93,30 @@ export function EventDetails({
       : undefined);
   return (
     <Modal title={event.title} onClose={onClose}>
-      <div className="event-details">
+      <div className={`event-details tone-${categoryOf(event.category).tone}`}>
         <div className="detail-chips">
           <CategoryChip name={event.category} />
           <span className={`status-chip status-${event.status}`}>
             {eventLabels[event.status]}
           </span>
         </div>
-        <p className="event-when">
-          {formatDate(event.date, {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })}
-          <br />
-          {event.startTime}
-          {event.endTime && ` — ${event.endTime}`}
-        </p>
+        <div className="event-when">
+          <CalendarDays size={18} aria-hidden="true" />
+          <span>
+            {formatDate(event.date, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            })}
+          </span>
+          <span className="event-clock">
+            <Clock3 size={18} aria-hidden="true" />
+            <strong>
+              {event.startTime}
+              {event.endTime && ` — ${event.endTime}`}
+            </strong>
+          </span>
+        </div>
         <p className="inline-icon event-location">
           <MapPin size={17} />
           {event.location || "Local a definir"}

@@ -1,4 +1,5 @@
 import type { Trip, TripEvent } from "../types";
+import { Wallet, CircleHelp, CheckCircle2 } from "lucide-react";
 import { money } from "../utils/money";
 import { spending, spendingLabel } from "../utils/spending";
 import { formatDate } from "../utils/dates";
@@ -18,32 +19,51 @@ export function TripSummary({
   const active = events.filter((event) => event.status !== "cancelado");
   return (
     <section className="trip-summary">
-      <section className="summary-section expense-total">
-        <span className="eyebrow">
-          Você já planejou
-        </span>
+      <section className="expense-hero">
+        <div className="expense-hero-heading">
+          <span className="eyebrow">Estimativa da viagem</span>
+          <Wallet size={24} aria-hidden="true" />
+        </div>
         <p className="summary-amount">
           {estimate.total > 0
             ? money(estimate.total, trip.currency)
             : spendingLabel(events, trip.currency)}
         </p>
-        {estimate.undefinedCount > 0 && (
-          <p className="undefined-note">
-            {estimate.undefinedCount} programa(s) ainda sem valor. O total
-            considera apenas as estimativas conhecidas.
-          </p>
-        )}
-        {estimate.total > 0 && (
-          <p className="muted">
-            {money(estimate.total / Math.max(1, count), trip.currency)} por dia
-            {estimate.undefinedCount > 0 ? " · média parcial" : ""}
-          </p>
-        )}
-        <p className="muted">
-          {estimate.freeCount} grátis · {estimate.count - estimate.freeCount}{" "}
-          pagos
+        <p>
+          {estimate.total > 0
+            ? `${money(estimate.total / Math.max(1, count), trip.currency)} por dia${estimate.undefinedCount ? " · média parcial" : ""}`
+            : "Seus planos, no seu ritmo."}
         </p>
-        <h3>Onde está indo o dinheiro?</h3><div className="summary-breakdown">
+        <div className="expense-pills">
+          <span>
+            <CheckCircle2 size={15} aria-hidden="true" />
+            {estimate.count - estimate.undefinedCount} com valor definido
+          </span>
+          <span>{estimate.freeCount} grátis</span>
+        </div>
+      </section>
+      {estimate.undefinedCount > 0 && (
+        <div className="expense-pending">
+          <CircleHelp size={20} aria-hidden="true" />
+          <p>
+            <strong>
+              {estimate.undefinedCount}{" "}
+              {estimate.undefinedCount === 1
+                ? "programa sem valor"
+                : "programas sem valor"}
+            </strong>
+            <span>O total considera apenas as estimativas conhecidas.</span>
+          </p>
+        </div>
+      )}
+      <section className="expense-categories">
+        <div className="section-heading">
+          <div>
+            <h2>Seus planos em valores</h2>
+            <p className="muted">Uma visão por categoria.</p>
+          </div>
+        </div>
+        <div className="summary-breakdown">
           {categoryGroups.map(({ id, label, tone, icon: Icon }) => {
             const values = active.filter(
               (event) => categoryOf(event.category).group === id,
@@ -52,31 +72,41 @@ export function TripSummary({
             const group = spending(values);
             return (
               <div className={`expense-group tone-${tone}`} key={id}>
-                <div className="summary-line">
-                  <span className="expense-label">
-                    <span className="section-icon">
-                      <Icon size={18} />
-                    </span>
-                    {label}
-                  </span>
-                  <strong>{spendingLabel(values, trip.currency)}</strong>
-                </div>
-                {group.total > 0 && (
-                  <div className="expense-track" aria-hidden="true">
-                    <span
-                      style={{
-                        width: `${(group.total / estimate.total) * 100}%`,
-                      }}
-                    />
+                <span className="section-icon">
+                  <Icon size={20} aria-hidden="true" />
+                </span>
+                <div className="expense-group-content">
+                  <div className="summary-line">
+                    <span>{label}</span>
+                    <strong>{spendingLabel(values, trip.currency)}</strong>
                   </div>
-                )}
+                  <span className="expense-group-count">
+                    {values.length}{" "}
+                    {values.length === 1 ? "programa" : "programas"}
+                  </span>
+                  {group.total > 0 && (
+                    <div className="expense-track" aria-hidden="true">
+                      <span
+                        style={{
+                          width: `${(group.total / estimate.total) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
+        {!active.length && (
+          <p className="muted">
+            Os valores aparecem aqui conforme você adiciona programas ao
+            roteiro.
+          </p>
+        )}
       </section>
-      <details className="summary-section expandable">
-        <summary>Por dia</summary>
+      <details className="summary-section expandable expense-by-day">
+        <summary>Estimativa por dia</summary>
         {days.map((day) => (
           <div className="summary-line" key={day}>
             <span>{formatDate(day)}</span>
@@ -90,9 +120,8 @@ export function TripSummary({
         ))}
       </details>
       <p className="footnote">
-        Valores estimados para todas as pessoas informadas. Programas cancelados
-        não entram nos totais. Atualize os preços em cada programa para
-        completar a estimativa.
+        Estimativas para todas as pessoas informadas. Programas cancelados não
+        entram no total. Você pode ajustar os valores na ficha de cada programa.
       </p>
     </section>
   );

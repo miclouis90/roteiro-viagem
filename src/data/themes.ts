@@ -1,5 +1,5 @@
 export const tripThemes = [
-  { id: "green", label: "Verde", color: "#2D6458", soft: "#E7F1EE" },
+  { id: "green", label: "Verde", color: "#126B60", soft: "#DCF1E9" },
   { id: "blue", label: "Azul", color: "#526ED3", soft: "#EBEFFF" },
   { id: "lavender", label: "Lavanda", color: "#7456C7", soft: "#F0EBFF" },
   { id: "coral", label: "Coral", color: "#B34B30", soft: "#FFF0EA" },

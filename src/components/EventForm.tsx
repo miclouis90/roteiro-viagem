@@ -129,9 +129,12 @@ export function EventForm({
         onSubmit={submit}
         onInvalidCapture={revealInvalidField}
       >
+        <p className="form-intro">
+          Só o essencial para começar. Campos com * são obrigatórios.
+        </p>
         <div className="form-grid">
           <label className="wide">
-            Nome
+            Nome *
             <input
               name="title"
               required
@@ -156,7 +159,7 @@ export function EventForm({
             }}
           />
           <label>
-            Data
+            Data *
             <input
               name="date"
               type="date"
@@ -167,7 +170,7 @@ export function EventForm({
             />
           </label>
           <label>
-            Horário
+            Horário *
             <input
               name="startTime"
               type="time"
@@ -176,7 +179,7 @@ export function EventForm({
             />
           </label>
           <label className="wide">
-            Local / endereço
+            Local / endereço · opcional
             <input
               name="location"
               defaultValue={event?.location}

@@ -1,6 +1,13 @@
 import type { Trip, TripEvent } from "../../types";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  MapPin,
+  Wallet,
+  Sparkles,
+} from "lucide-react";
 import { tripOverview } from "../../utils/overview";
+import { spendingLabel } from "../../utils/spending";
 import { nextStep } from "../../utils/nextStep";
 import { formatDate } from "../../utils/dates";
 import { collectPlaces } from "../../utils/places";
@@ -24,8 +31,31 @@ export function TripOverview({
   const next = nextStep(trip, events, now, admin);
   return (
     <div className="overview overview-simple">
+      <section className="next-step">
+        <div className="next-step-heading">
+          <span className="eyebrow">Próximo passo</span>
+          <span className="next-step-icon">
+            <Sparkles size={20} aria-hidden="true" />
+          </span>
+        </div>
+        <h2>{next.title}</h2>
+        <p className="muted">{next.description}</p>
+        <button
+          className="next-step-cta"
+          onClick={() =>
+            next.event ? onSelect(next.event) : onDay(next.date!)
+          }
+        >
+          {next.action}
+          <ArrowRight size={16} />
+        </button>
+      </section>
+
       <section className="overview-days">
-        <SectionHeader title="Roteiro em um olhar" />
+        <SectionHeader
+          title="Roteiro em um olhar"
+          description="Toque em um dia para explorar."
+        />
         <div
           className={`day-glance ${view.days.length === 5 ? "five-days" : ""}`}
           aria-label="Roteiro por dia"
@@ -58,25 +88,26 @@ export function TripOverview({
           ))}
         </div>
       </section>
-      <section className="next-step">
-        <span className="eyebrow">Próximo passo</span>
-        <h2>{next.title}</h2>
-        <p className="muted">{next.description}</p>
-        <button
-          className="secondary"
-          onClick={() =>
-            next.event ? onSelect(next.event) : onDay(next.date!)
-          }
-        >
-          {next.action}
-          <ArrowRight size={16} />
-        </button>
-      </section>
       <section className="trip-brief">
-        <p>
-          {view.active.length} programas · {collectPlaces(view.active).length}{" "}
-          lugares · {trip.travelerName || trip.destinationCity}
-        </p>
+        <div className="trip-quick-stats" aria-label="Resumo da viagem">
+          <div>
+            <CalendarDays size={18} aria-hidden="true" />
+            <strong>{view.active.length}</strong>
+            <span>programas</span>
+          </div>
+          <div>
+            <MapPin size={18} aria-hidden="true" />
+            <strong>{collectPlaces(view.active).length}</strong>
+            <span>lugares</span>
+          </div>
+          <div>
+            <Wallet size={18} aria-hidden="true" />
+            <strong className="brief-price">
+              {spendingLabel(view.active, trip.currency)}
+            </strong>
+            <span>estimativa</span>
+          </div>
+        </div>
         {(trip.description || trip.notes) && (
           <details className="expandable">
             <summary>Sobre a viagem</summary>
