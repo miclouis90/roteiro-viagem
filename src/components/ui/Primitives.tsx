@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 import { Compass, CalendarDays, WalletCards, Luggage } from "lucide-react";
 import { categoryOf } from "../../data/categories";
@@ -123,11 +124,9 @@ const tabs = [
 export function TripNavigation({
   value,
   onChange,
-  onTrips,
 }: {
   value: TripTab;
   onChange: (v: TripTab) => void;
-  onTrips: () => void;
 }) {
   return (
     <nav className="trip-tabs" aria-label="Seções da viagem">
@@ -142,10 +141,10 @@ export function TripNavigation({
           <span>{label}</span>
         </button>
       ))}
-      <button onClick={onTrips}>
+      <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>
         <Luggage size={20} aria-hidden="true" />
         <span>Viagens</span>
-      </button>
+      </Link>
     </nav>
   );
 }

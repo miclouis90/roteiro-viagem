@@ -1,3 +1,4 @@
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TripNavigation } from "../components/ui/Primitives";
@@ -42,9 +43,10 @@ describe("navegação simplificada", () => {
   });
   it("exibe três seções da viagem e o acesso à lista de viagens", () => {
     const html = renderToStaticMarkup(
-      <TripNavigation value="roteiro" onChange={() => {}} onTrips={() => {}} />,
+      <MemoryRouter initialEntries={["/viagem/brasilia-da-mel-2026?tab=roteiro"]}><TripNavigation value="roteiro" onChange={() => {}} /></MemoryRouter>,
     );
-    expect(html.match(/<button/g)).toHaveLength(4);
+    expect(html.match(/<button/g)).toHaveLength(3);
+    expect(html).toMatch(/<a[^>]*href="\/"[^>]*>[\s\S]*?<span>Viagens<\/span><\/a>/);
     for (const text of ["Visão geral", "Roteiro", "Gastos", "Viagens"])
       expect(html).toContain(text);
     expect(html).not.toContain("Lugares");

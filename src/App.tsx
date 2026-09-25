@@ -71,7 +71,7 @@ function Shell() {
                 }}
               >
                 <Plus size={18} />
-                <span>{inTrip ? "Adicionar" : "Viagem"}</span>
+                <span>{inTrip ? "Adicionar" : "Nova viagem"}</span>
               </button>
             )}
             {!loading &&
@@ -172,7 +172,7 @@ function Shell() {
           }}
         />
       )}
-      {!inTrip && (
+      {!inTrip && location.pathname !== "/" && (
         <footer className="site-footer">
           <span>rumo.</span> Feito para viver o caminho.
         </footer>

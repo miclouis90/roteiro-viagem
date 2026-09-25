@@ -258,10 +258,7 @@ function TripWorkspace({
           <h1>{tab === "roteiro" ? "Roteiro" : "Gastos"}</h1>
         </header>
       )}
-      <TripNavigation value={tab} onChange={(value) => changeTab(value)} onTrips={() => {
-        navigate("/");
-        window.scrollTo({ top: 0, behavior: "instant" });
-      }} />
+      <TripNavigation value={tab} onChange={(value) => changeTab(value)} />
       <div className="trip-content" id="trip-section" key={tab}>
         {tab === "geral" ? (
           <TripOverview

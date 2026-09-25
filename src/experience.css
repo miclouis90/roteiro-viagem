@@ -979,7 +979,7 @@ textarea:focus {
     width: fit-content;
     margin-bottom: 28px;
   }
-  .theme-trip .trip-tabs button.active {
+  .theme-trip .trip-tabs :is(button, a).active {
     background: var(--trip-soft);
     color: var(--trip-accent);
     border-radius: 12px;
@@ -1028,7 +1028,7 @@ textarea:focus {
     box-shadow: 0 -6px 26px #1635310a;
     width: 100%;
   }
-  .trip-tabs button {
+  .trip-tabs :is(button, a) {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -1041,13 +1041,13 @@ textarea:focus {
     font-size: 0.75rem;
     background: transparent;
   }
-  .theme-trip .trip-tabs button.active {
+  .theme-trip .trip-tabs :is(button, a).active {
     color: var(--trip-accent);
     background: var(--trip-soft);
     font-weight: 700;
     box-shadow: none;
   }
-  .trip-tabs button.active svg {
+  .trip-tabs :is(button, a).active svg {
     stroke-width: 2.5px;
   }
   .trip-page {
@@ -1332,9 +1332,9 @@ textarea:focus {
 }
 .trip-about .ghost { min-height: 44px; padding: 8px 0; margin-top: 4px; }
 @media (max-width: 900px) {
-  .theme-trip .trip-tabs button.active { background: transparent; }
-  .trip-tabs button svg { position: relative; z-index: 1; }
-  .trip-tabs button.active::before {
+  .theme-trip .trip-tabs :is(button, a).active { background: transparent; }
+  .trip-tabs :is(button, a) svg { position: relative; z-index: 1; }
+  .trip-tabs :is(button, a).active::before {
     content: "";
     position: absolute;
     top: 3px;
@@ -1360,7 +1360,7 @@ textarea:focus {
 .category-choice svg { color: var(--category-ink); }
 .category-groups .filter-chip.active,
 .category-choice.active { box-shadow: inset 0 0 0 1px var(--category-border); }
-.theme-trip .trip-tabs button.active { color: var(--trip-accent); }
+.theme-trip .trip-tabs :is(button, a).active { color: var(--trip-accent); }
 .trip-quick-stats > div { color: var(--color-other-ink); }
 .trip-quick-stats > div:nth-child(2) { color: var(--color-other-ink); }
 .trip-quick-stats > div:nth-child(3) { color: var(--color-other-ink); }
@@ -1493,5 +1493,23 @@ textarea:focus {
 
 @media (max-width: 900px) {
   .trip-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .trip-tabs button { min-width: 0; padding-inline: 2px; }
+  .trip-tabs :is(button, a) { min-width: 0; padding-inline: 2px; }
+}
+
+/* Compact trip listing without changing trip-page surfaces. */
+.home .featured-trip { min-height: 0; }
+.home .trip-card .trip-cover { min-height: 100px; padding: 16px 20px; }
+.home .featured-trip .trip-cover { min-height: 180px; padding: 24px; }
+.home .trip-card .trip-card-body { padding: 18px 20px; }
+.home .trip-card-body > .eyebrow { margin-bottom: 8px; }
+.home .card-title { margin-bottom: 4px; }
+.home .trip-card-body > .muted,
+.home .trip-dates { margin-bottom: 8px; }
+.home .card-countdown { margin: 8px 0; }
+.home .featured-trip .feature-description { margin: 10px 0; }
+.home .trip-card-footer { margin-top: 12px; }
+@media (max-width: 600px) {
+  .home .featured-trip .trip-cover { min-height: 88px; padding: 12px 18px; }
+  .home .trip-card .trip-card-body { padding: 16px 18px; }
+  .home .trip-cover > svg { width: 28px; height: 28px; }
 }

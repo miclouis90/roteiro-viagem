@@ -23,7 +23,15 @@ export function useTrip(id: string) {
     );
   }, [id, user]);
   useEffect(() => {
-    if (authLoading || !id) return;
+    if (!id) {
+      setTrip(null);
+      setEvents([]);
+      setError("");
+      setLoading(false);
+      setEventsLoading(false);
+      return;
+    }
+    if (authLoading) return;
     setLoading(true);
     setError("");
     setTrip(null);
@@ -44,7 +52,7 @@ export function useTrip(id: string) {
       },
     );
   }, [id, admin, authLoading, user, editor]);
-  const access = trip
+  const access = id && trip
     ? permissions(trip, user?.uid, admin, editor)
     : {
         canRead: false,
@@ -54,7 +62,7 @@ export function useTrip(id: string) {
         legacy: false,
       };
   useEffect(() => {
-    if (authLoading || !access.canRead) {
+    if (!id || authLoading || !access.canRead) {
       setEvents([]);
       return;
     }
@@ -75,7 +83,7 @@ export function useTrip(id: string) {
     );
   }, [id, access.canRead, user, admin, editor, authLoading]);
   return {
-    trip,
+    trip: id ? trip : null,
     events,
     editor,
     access,
