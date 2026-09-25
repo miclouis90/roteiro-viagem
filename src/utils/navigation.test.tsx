@@ -40,12 +40,12 @@ describe("navegação simplificada", () => {
     for (const category of ["Voo", "Transfer", "Carro", "Táxi / app", "Ônibus", "Metrô", "Trem"])
       expect(html).toContain(`${category}</button>`);
   });
-  it("exibe somente três destinos principais", () => {
+  it("exibe três seções da viagem e o acesso à lista de viagens", () => {
     const html = renderToStaticMarkup(
-      <TripNavigation value="roteiro" onChange={() => {}} />,
+      <TripNavigation value="roteiro" onChange={() => {}} onTrips={() => {}} />,
     );
-    expect(html.match(/<button/g)).toHaveLength(3);
-    for (const text of ["Visão geral", "Roteiro", "Gastos"])
+    expect(html.match(/<button/g)).toHaveLength(4);
+    for (const text of ["Visão geral", "Roteiro", "Gastos", "Viagens"])
       expect(html).toContain(text);
     expect(html).not.toContain("Lugares");
     expect(html).toContain('aria-current="page"');

@@ -5,7 +5,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { ArrowLeft, Share2, LockKeyhole } from "lucide-react";
+import { Share2, LockKeyhole } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import { useTrip } from "../hooks/useTrip";
@@ -255,14 +255,13 @@ function TripWorkspace({
         </>
       ) : (
         <header className="internal-heading">
-          <button className="back" onClick={() => changeTab("geral")}>
-            <ArrowLeft size={17} />
-            {trip.title}
-          </button>
           <h1>{tab === "roteiro" ? "Roteiro" : "Gastos"}</h1>
         </header>
       )}
-      <TripNavigation value={tab} onChange={(value) => changeTab(value)} />
+      <TripNavigation value={tab} onChange={(value) => changeTab(value)} onTrips={() => {
+        navigate("/");
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }} />
       <div className="trip-content" id="trip-section" key={tab}>
         {tab === "geral" ? (
           <TripOverview

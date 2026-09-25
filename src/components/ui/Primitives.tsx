@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
-import { Compass, CalendarDays, WalletCards } from "lucide-react";
+import { Compass, CalendarDays, WalletCards, Luggage } from "lucide-react";
 import { categoryOf } from "../../data/categories";
 import type { TripTab } from "../../utils/tripView";
 export type { TripTab } from "../../utils/tripView";
@@ -123,9 +123,11 @@ const tabs = [
 export function TripNavigation({
   value,
   onChange,
+  onTrips,
 }: {
   value: TripTab;
   onChange: (v: TripTab) => void;
+  onTrips: () => void;
 }) {
   return (
     <nav className="trip-tabs" aria-label="Seções da viagem">
@@ -140,6 +142,10 @@ export function TripNavigation({
           <span>{label}</span>
         </button>
       ))}
+      <button onClick={onTrips}>
+        <Luggage size={20} aria-hidden="true" />
+        <span>Viagens</span>
+      </button>
     </nav>
   );
 }
