@@ -1,14 +1,8 @@
+import { useState } from "react";
 import type { Trip, TripEvent } from "../../types";
-import {
-  ArrowRight,
-  CalendarDays,
-  MapPin,
-  Wallet,
-  Sparkles,
-} from "lucide-react";
+import { CalendarDays, MapPin, Wallet } from "lucide-react";
 import { tripOverview } from "../../utils/overview";
 import { spendingLabel } from "../../utils/spending";
-import { nextStep } from "../../utils/nextStep";
 import { formatDate } from "../../utils/dates";
 import { collectPlaces } from "../../utils/places";
 import { SectionHeader } from "../ui/Primitives";
@@ -16,41 +10,19 @@ export function TripOverview({
   trip,
   events,
   now,
-  admin,
   onDay,
-  onSelect,
 }: {
   trip: Trip;
   events: TripEvent[];
   now: Date;
-  admin: boolean;
   onDay: (date: string) => void;
-  onSelect: (event: TripEvent) => void;
 }) {
   const view = tripOverview(trip, events, now);
-  const next = nextStep(trip, events, now, admin);
+  const [aboutExpanded, setAboutExpanded] = useState(false);
+  const about = [trip.description, trip.notes].filter(Boolean).join("\n\n");
+  const longAbout = about.length > 220;
   return (
     <div className="overview overview-simple">
-      <section className="next-step">
-        <div className="next-step-heading">
-          <span className="eyebrow">Próximo passo</span>
-          <span className="next-step-icon">
-            <Sparkles size={20} aria-hidden="true" />
-          </span>
-        </div>
-        <h2>{next.title}</h2>
-        <p className="muted">{next.description}</p>
-        <button
-          className="next-step-cta"
-          onClick={() =>
-            next.event ? onSelect(next.event) : onDay(next.date!)
-          }
-        >
-          {next.action}
-          <ArrowRight size={16} />
-        </button>
-      </section>
-
       <section className="overview-days">
         <SectionHeader
           title="Roteiro em um olhar"
@@ -108,12 +80,26 @@ export function TripOverview({
             <span>estimativa</span>
           </div>
         </div>
-        {(trip.description || trip.notes) && (
-          <details className="expandable">
-            <summary>Sobre a viagem</summary>
-            {trip.description && <p>{trip.description}</p>}
-            {trip.notes && <p>{trip.notes}</p>}
-          </details>
+        {about && (
+          <section className="trip-about" aria-labelledby="trip-about-title">
+            <h2 id="trip-about-title">Sobre esta viagem</h2>
+            <p
+              id="trip-about-text"
+              className={longAbout && !aboutExpanded ? "about-preview" : ""}
+            >
+              {about}
+            </p>
+            {longAbout && (
+              <button
+                className="ghost"
+                aria-expanded={aboutExpanded}
+                aria-controls="trip-about-text"
+                onClick={() => setAboutExpanded(!aboutExpanded)}
+              >
+                {aboutExpanded ? "Ver menos" : "Ver mais"}
+              </button>
+            )}
+          </section>
         )}
       </section>
     </div>

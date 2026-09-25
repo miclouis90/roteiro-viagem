@@ -61,3 +61,35 @@ O carregador `runner` evita o processo extra de empacotamento da configuração 
 - Ficha de visitante verificada sem edição, exclusão ou código privado de reserva.
 - Lint, TypeScript, 78 testes e build aprovados. O build mantém o aviso de tamanho do chunk Firestore (527 kB), sem erro.
 - Nenhuma alteração em Firebase, schema, dados persistidos do projeto ou dependências. QA realizada exclusivamente na demonstração local; sem deploy, commit ou push.
+
+## Revisão final da composição atual — 25/09/2026
+
+- Retomada exclusivamente de QA, preservando a implementação existente.
+- Revisão local em 360×800, 390×844, 430×932 e desktop 1440×900: visão geral, roteiro, gastos, lugares, ficha rápida e formulário de edição.
+- Conferidos os cinco dias, dia livre, busca sem resultados, navegação entre abas, rolagem interna do formulário e detalhes expandidos da ficha.
+- Troca para administração preservou os cinco programas do primeiro dia.
+- Corrigida apenas a margem direita dos filtros de Lugares, que causava overflow horizontal. Largura do documento confirmada igual à largura útil em 360, 390 e 430 px.
+- Console da prévia sem erros ou avisos.
+- QA executada em build separado com VITE_DEMO_MODE=true, sem acesso ao Firestore real, publicação ou mudanças de schema e permissões.
+- Comandos de validação: npm run lint; npm run typecheck; npm test -- --configLoader runner; npm run build -- --configLoader runner.
+
+## Refinamento exclusivo da Visão geral — 25/09/2026
+
+- Removidos Voltar e Próximo passo. Hero e cards de dias compactados, preservando título, metadados, categorias e ações existentes.
+- Resumo único com três métricas; descrição e observações integradas em Sobre esta viagem, com expansão para textos longos.
+- Rodapé institucional oculto dentro da viagem; indicador ativo menor na navegação mobile, mantendo as três abas e seus alvos de toque.
+- Revisão na demonstração local em 360×800, 390×844, 430×932 e 1440×900: sem overflow horizontal, descrição alcançável por rolagem e sem cobertura permanente pela navegação. Console sem erros.
+- Lint, TypeScript, 99 testes e build aprovados. Persiste somente o aviso de chunk Firestore acima de 500 kB.
+- Sem seed, deploy, push, alterações de schema, permissões ou dados reais. Conteúdo de Roteiro, Lugares, Gastos, fichas e formulários preservado.
+
+## Fase 2 — consistência cromática — 25/09/2026
+
+- Fase 1 preservada. Alterações exclusivamente de cores, sem mudanças de medidas, estrutura, navegação ou funcionalidades.
+- Famílias --color-food (coral), --color-drink (violeta), --color-culture (índigo), --color-outdoor (mint), --color-transport (cyan) e --color-other (slate), com variantes -ink, -bg e -border. Café segue Comer; vinho segue Beber; shows seguem Cultura; todas as modalidades de transporte seguem cyan.
+- Neutros revisados: --color-bg, --color-surface-subtle, --color-text-primary, --color-text-secondary, --text-tertiary, --color-border e slate. Novos tokens: --surface-selected, --surface-input, --surface-glass, --surface-overlay, --surface-scrim, --surface-hero, --surface-finance, --color-warning-bg/ink/border e --color-selection-border.
+- themes.ts reutiliza tokens CSS, mantendo os identificadores existentes. Removidas sobrescritas locais de categorias em styles.css. Aplicação em ícones, chips, filtros, seleção de categorias, timeline, ficha e barras financeiras. Seleção de dias suavizada; identidade teal preservada nas ações e navegação.
+- Contraste calculado de foreground sobre tint: Comer 6,21:1; Beber 6,55:1; Cultura 6,20:1; Passear 6,09:1; Transporte 5,93:1; Outro 6,64:1. Labels, ícones e semântica de seleção preservados.
+- Revisão visual na demonstração local em 360, 390, 430 e desktop 1440 px: Visão geral, roteiro, seletor de dias/Roteiro-Lugares, ficha, formulário, Gastos e bottom navigation. Console sem erros. Nenhuma edição de teste foi salva.
+- Lint, TypeScript, 99 testes e build aprovados. Warning preexistente do bundle Firestore mantido, conforme escopo.
+- Arquivos desta fase: src/tokens.css, src/styles.css, src/experience.css, src/data/themes.ts, src/utils/evolution.test.tsx e este registro. Alterações anteriores da Fase 1 preservadas.
+- Nenhum ajuste estrutural bloqueante identificado. Sem seed, deploy, push ou acesso a dados reais.

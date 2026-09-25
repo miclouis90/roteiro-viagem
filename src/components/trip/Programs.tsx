@@ -1,6 +1,8 @@
 import { useState } from "react";
 
-import { CalendarDays, List, ChevronDown } from "lucide-react";
+import { CalendarDays, List, ChevronDown, Download } from "lucide-react";
+import { Modal } from "../Modal";
+import { useToast } from "../../hooks/useToast";
 import type { Trip, TripEvent } from "../../types";
 import { datesBetween, dateKey, formatDate } from "../../utils/dates";
 import { spendingLabel } from "../../utils/spending";
@@ -11,6 +13,7 @@ import { EventFilters, emptyFilters } from "./EventFilters";
 import { EmptyState } from "../ui/Primitives";
 import { Places } from "./Places";
 import { TripCalendar } from "../TripCalendar";
+import { exportTrip, type ExportFormat } from "../../services/exportTrip";
 export function Programs({
   trip,
   events,
@@ -43,15 +46,33 @@ export function Programs({
     priority: initialPriority,
   });
   const [view, setView] = useState("agenda");
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState("");
+  const toast = useToast();
+  async function chooseExport(format: ExportFormat) {
+    if (exportBusy) return;
+    setExportBusy(true);
+    setExportError("");
+    try {
+      await exportTrip(trip, events, format);
+      setExportOpen(false);
+      toast("Arquivo preparado.");
+    } catch {
+      setExportError("Não foi possível exportar o roteiro.");
+    } finally {
+      setExportBusy(false);
+    }
+  }
   const filtered = filterEvents(events, filters);
   const list = filtered.filter((e) => e.date === day);
   const extra = filtered.filter((e) => !days.includes(e.date));
   const hasFilters = Object.values(filters).some(Boolean);
   return (
-    <section className="programs">
+    <section className={`programs ${tab === "roteiro" ? "itinerary-programs" : ""}`}>
       {tab === "roteiro" && (
         <details className="context-menu itinerary-display">
-          <summary aria-label="Formato do roteiro">
+          <summary aria-label="Formato e opções do roteiro">
             {view === "agenda" ? "Agenda" : "Calendário"}
             <ChevronDown size={14} />
           </summary>
@@ -79,8 +100,25 @@ export function Programs({
               <CalendarDays size={18} />
               Calendário
             </button>
+            <button onClick={() => setExportOpen(true)}>
+              <Download size={18} />
+              Exportar roteiro
+            </button>
           </div>
         </details>
+      )}
+      {exportOpen && (
+        <Modal title="Exportar roteiro" onClose={() => setExportOpen(false)} busy={exportBusy}>
+          <p className="muted" role="status">{exportBusy ? "Preparando arquivo..." : "Escolha o formato para baixar o roteiro completo."}</p>
+          {exportError && <p className="error" role="alert">{exportError}</p>}
+          <div className="quick-actions">
+            {(["PDF", "Excel", "CSV"] as const).map((format) => (
+              <button key={format} className="secondary" disabled={exportBusy} onClick={() => chooseExport(format)}>
+                {format}
+              </button>
+            ))}
+          </div>
+        </Modal>
       )}
       {tab === "roteiro" && view === "agenda" && (
         <div className="sticky-days">

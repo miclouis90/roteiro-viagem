@@ -30,6 +30,16 @@ const lunch = {
 };
 
 describe("navegação simplificada", () => {
+  it("preserva Aeroporto legado sem oferecê-lo como opção de cadastro", () => {
+    const html = renderToStaticMarkup(
+      <EventForm trip={trip} event={{ ...flight, category: "Aeroporto" }} onClose={() => {}} onSaved={() => {}} />,
+    );
+    expect(html).toContain('name="category" value="Aeroporto"');
+    expect(html).toContain("Categoria atual: Aeroporto");
+    expect(html).not.toMatch(/<button[^>]*>[\s\S]*?>Aeroporto<\/button>/);
+    for (const category of ["Voo", "Transfer", "Carro", "Táxi / app", "Ônibus", "Metrô", "Trem"])
+      expect(html).toContain(`${category}</button>`);
+  });
   it("exibe somente três destinos principais", () => {
     const html = renderToStaticMarkup(
       <TripNavigation value="roteiro" onChange={() => {}} />,
@@ -78,18 +88,18 @@ describe("navegação simplificada", () => {
       expect(expanded).toContain(`name="${field}"`);
     expect(expanded).toContain("Informações do voo");
   });
-  it("visão geral apresenta um próximo passo sem empilhar módulos", () => {
+  it("visão geral mantém dias e resumo sem o próximo passo", () => {
     const html = renderToStaticMarkup(
       <TripOverview
         trip={trip}
         events={[flight, lunch]}
         now={new Date(2026, 9, 1)}
-        admin
         onDay={() => {}}
-        onSelect={() => {}}
       />,
     );
-    expect(html).toContain("Próximo passo");
+    expect(html).not.toContain("Próximo passo");
+    expect(html).toContain("Roteiro em um olhar");
+    expect(html).toContain("Resumo da viagem");
     for (const heading of [
       "Transporte",
       "Próximo programa",

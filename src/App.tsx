@@ -172,9 +172,11 @@ function Shell() {
           }}
         />
       )}
-      <footer className="site-footer">
-        <span>rumo.</span> Feito para viver o caminho.
-      </footer>
+      {!inTrip && (
+        <footer className="site-footer">
+          <span>rumo.</span> Feito para viver o caminho.
+        </footer>
+      )}
     </>
   );
 }

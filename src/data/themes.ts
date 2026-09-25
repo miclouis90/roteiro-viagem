@@ -1,9 +1,9 @@
 export const tripThemes = [
-  { id: "green", label: "Verde", color: "#126B60", soft: "#DCF1E9" },
-  { id: "blue", label: "Azul", color: "#526ED3", soft: "#EBEFFF" },
-  { id: "lavender", label: "Lavanda", color: "#7456C7", soft: "#F0EBFF" },
-  { id: "coral", label: "Coral", color: "#B34B30", soft: "#FFF0EA" },
-  { id: "gold", label: "Dourado", color: "#8D641D", soft: "#FFF4DF" },
+  { id: "green", label: "Verde", color: "var(--color-brand)", soft: "var(--brand-100)" },
+  { id: "blue", label: "Azul", color: "var(--color-culture-ink)", soft: "var(--color-culture-bg)" },
+  { id: "lavender", label: "Lavanda", color: "var(--color-drink-ink)", soft: "var(--color-drink-bg)" },
+  { id: "coral", label: "Coral", color: "var(--color-food-ink)", soft: "var(--color-food-bg)" },
+  { id: "gold", label: "Dourado", color: "var(--color-warning-ink)", soft: "var(--color-warning-bg)" },
 ] as const;
 export type TripTheme = { accent: (typeof tripThemes)[number]["id"] };
 export const themeOf = (theme?: TripTheme) =>

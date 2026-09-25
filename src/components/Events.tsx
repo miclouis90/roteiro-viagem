@@ -8,6 +8,7 @@ import {
   Trash2,
   MoreHorizontal,
   Share2,
+  ChevronDown,
 } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
 import { money, safeUrl } from "../utils/money";
@@ -121,6 +122,10 @@ export function EventDetails({
           <MapPin size={17} />
           {event.location || "Local a definir"}
         </p>
+        <p className="event-cost-preview">
+          <span>Gasto estimado</span>
+          <strong>{eventPriceLabel(event, trip.currency)}</strong>
+        </p>
         <div className="quick-event-actions">
           {admin && (
             <button className="primary" onClick={onEdit}>
@@ -187,7 +192,7 @@ export function EventDetails({
           </p>
         )}
         <details className="expandable event-extra">
-          <summary>Detalhes do programa</summary>
+          <summary>Detalhes do programa <ChevronDown size={18} aria-hidden="true" /></summary>
           <div className="event-extra-body">
             <section className="detail-block">
               <h3>Informações</h3>

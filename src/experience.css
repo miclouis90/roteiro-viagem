@@ -31,8 +31,8 @@ summary {
   outline-offset: 3px;
 }
 .site-header {
-  background: #ffffffed;
-  border-bottom-color: #e3ecea;
+  background: var(--surface-glass);
+  border-bottom-color: var(--color-border);
 }
 .header-inner {
   min-height: 76px;
@@ -78,8 +78,8 @@ main {
 .trip-hero {
   isolation: isolate;
   position: relative;
-  border: 1px solid #ffffffbd;
-  background: linear-gradient(115deg, var(--trip-soft), #f0f8f3 66%, #e5eff9);
+  border: 1px solid var(--color-surface);
+  background: var(--surface-hero);
   padding: 32px;
   box-shadow: 0 10px 32px #194e4210;
   margin-bottom: 24px;
@@ -102,7 +102,7 @@ main {
   font-weight: 650;
 }
 .trip-hero .trip-period {
-  color: #446760;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   gap: 8px;
 }
@@ -110,18 +110,18 @@ main {
   gap: 10px;
 }
 .trip-hero .status-chip {
-  background: #ffffffb8;
+  background: var(--surface-overlay);
   color: var(--trip-accent);
 }
 .trip-hero .privacy-label {
-  color: #466961;
+  color: var(--text-secondary);
 }
 .trip-hero .heading-actions {
   z-index: 3;
 }
 .trip-hero .heading-actions summary,
 .trip-hero .heading-actions > .icon-button {
-  background: #ffffff8f;
+  background: var(--surface-overlay);
   border-radius: 50%;
   width: 44px;
   height: 44px;
@@ -167,10 +167,10 @@ main {
   stroke-width: 5;
 }
 .art-stop-coral {
-  fill: #db8967;
+  fill: var(--color-food);
 }
 .art-stop-purple {
-  fill: #9381c6;
+  fill: var(--color-drink);
 }
 
 /* One next action, five readable days, and a small three-part recap. */
@@ -184,7 +184,7 @@ main {
   grid-column: auto;
   grid-row: auto;
   padding: 22px;
-  border: 1px solid #e0eae6;
+  border: 1px solid var(--color-border);
   border-radius: 22px;
   background: white;
   box-shadow: var(--shadow-sm);
@@ -256,7 +256,7 @@ main {
   border-radius: 0;
 }
 .overview-days .glance-day {
-  border: 1px solid #e0e9e6;
+  border: 1px solid var(--color-border);
   border-radius: 17px;
   background: white;
   gap: 5px;
@@ -265,7 +265,7 @@ main {
   box-shadow: var(--shadow-sm);
 }
 .overview-days .glance-day:last-child {
-  border-right: 1px solid #e0e9e6;
+  border-right: 1px solid var(--color-border);
 }
 .overview-days .glance-day small {
   font-size: 0.75rem;
@@ -358,7 +358,7 @@ main {
   font-size: 2.1rem;
 }
 .itinerary-tabs {
-  background: #e6eeee;
+  background: var(--color-surface-subtle);
   border-radius: 15px;
   padding: 4px;
   gap: 2px;
@@ -382,7 +382,7 @@ main {
   border-radius: 12px;
 }
 .sticky-days {
-  background: #f4f7f8f5;
+  background: var(--color-bg);
   backdrop-filter: blur(12px);
   border: 0;
   margin: 0 -4px 18px;
@@ -395,20 +395,20 @@ main {
 }
 .sticky-days .day-picker button {
   min-height: 96px;
-  border: 1px solid #e1eae7;
+  border: 1px solid var(--color-border);
   border-radius: 17px;
   background: #fff;
   gap: 3px;
   box-shadow: var(--shadow-sm);
 }
 .sticky-days .day-picker button.active {
-  background: var(--trip-accent);
-  color: white;
-  box-shadow: 0 5px 12px #126b6020;
-  border-color: var(--trip-accent);
+  background: var(--surface-selected);
+  color: var(--trip-accent);
+  box-shadow: inset 0 0 0 1px var(--color-selection-border);
+  border-color: var(--color-selection-border);
 }
 .sticky-days .day-picker button.active :is(small, strong, .day-indicator) {
-  color: white;
+  color: var(--trip-accent);
 }
 .day-picker .day-indicator {
   font-size: 0.65rem;
@@ -417,7 +417,7 @@ main {
   gap: 10px;
 }
 .toolbar .search {
-  border: 1px solid #e1eae7;
+  border: 1px solid var(--color-border);
   background: white;
   border-radius: 15px;
   padding: 0 14px;
@@ -432,7 +432,7 @@ main {
   outline: none;
 }
 .toolbar > .ghost {
-  border: 1px solid #e1eae7;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   background: white;
   min-height: 48px;
@@ -498,13 +498,13 @@ main {
   top: 15px;
   left: 3px;
   height: 90px;
-  background: #dce7e5;
+  background: var(--color-border);
 }
 .event-main {
   padding: 18px;
   border-radius: 18px;
   background: white;
-  border: 1px solid #e3ebe9;
+  border: 1px solid var(--color-border);
   border-left: 3px solid color-mix(in srgb, var(--category-accent) 60%, white);
   box-shadow: var(--shadow-sm);
   gap: 10px;
@@ -562,7 +562,7 @@ main {
   gap: 18px;
 }
 .collection-card {
-  border: 1px solid #e3ebe9;
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   border-radius: 22px;
 }
@@ -593,6 +593,7 @@ main {
 }
 .chip-scroll {
   gap: 8px;
+  margin-right: 0;
   padding-block: 4px 16px;
 }
 .filter-chip {
@@ -602,7 +603,7 @@ main {
 .filter-chip.active {
   background: var(--category-bg, var(--trip-soft));
   color: var(--category-ink, var(--trip-accent));
-  border-color: var(--category-accent, var(--trip-accent));
+  border-color: var(--category-border, var(--color-selection-border));
 }
 
 /* Clear total first, then the optional breakdown. */
@@ -613,9 +614,9 @@ main {
 }
 .expense-hero {
   border-radius: 25px;
-  background: linear-gradient(115deg, #ddefe9, #edf4e6 75%, #f4ecd8);
+  background: var(--surface-finance);
   padding: 26px;
-  color: #24594f;
+  color: var(--text-secondary);
 }
 .expense-hero-heading {
   display: flex;
@@ -625,11 +626,11 @@ main {
 }
 .expense-hero .eyebrow {
   margin: 0;
-  color: #24594f;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 .expense-hero .summary-amount {
-  color: #123e36;
+  color: var(--text-primary);
   font-size: clamp(2rem, 6vw, 3rem);
   letter-spacing: -0.045em;
   font-weight: 700;
@@ -650,7 +651,7 @@ main {
   display: flex;
   align-items: center;
   gap: 5px;
-  background: #ffffffaa;
+  background: var(--surface-overlay);
   border-radius: 9px;
   padding: 7px 10px;
   font-size: 0.75rem;
@@ -659,9 +660,9 @@ main {
   display: flex;
   gap: 12px;
   padding: 16px;
-  background: #fcf3df;
+  background: var(--color-warning-bg);
   border-radius: 17px;
-  color: #785c29;
+  color: var(--color-warning-ink);
 }
 .expense-pending p {
   display: flex;
@@ -672,7 +673,7 @@ main {
 }
 .expense-categories {
   background: white;
-  border: 1px solid #e3ebe9;
+  border: 1px solid var(--color-border);
   border-radius: 22px;
   padding: 22px;
   box-shadow: var(--shadow-sm);
@@ -725,7 +726,7 @@ main {
 }
 .expense-by-day {
   padding: 4px 20px;
-  border: 1px solid #e3ebe9;
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   background: white;
   margin: 0;
@@ -748,7 +749,7 @@ dialog {
   box-shadow: 0 24px 80px #183b3333;
 }
 dialog::backdrop {
-  background: #163c354a;
+  background: var(--surface-scrim);
   backdrop-filter: blur(3px);
 }
 .modal-head {
@@ -825,9 +826,9 @@ dialog::backdrop {
 input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
-  border: 1px solid #dce6e3;
+  border: 1px solid var(--color-border);
   border-radius: 13px;
-  background: #f7faf9;
+  background: var(--surface-input);
   min-height: 48px;
   transition:
     border-color var(--motion-normal),
@@ -853,11 +854,11 @@ textarea:focus {
   background: transparent;
 }
 .category-groups .filter-chip {
-  background: #f0f5f4;
+  background: var(--color-surface-subtle);
 }
 .category-groups .filter-chip.active {
   background: var(--category-bg);
-  border-color: var(--category-accent);
+  border-color: var(--category-border);
   color: var(--category-ink);
 }
 .category-choice {
@@ -866,13 +867,13 @@ textarea:focus {
   min-height: 44px;
 }
 .category-choice.active {
-  border-color: var(--category-accent);
+  border-color: var(--category-border);
   box-shadow: none;
   background: var(--category-bg);
 }
 .form-section {
-  background: #f7faf9;
-  border: 1px solid #e1eae6;
+  background: var(--surface-input);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
 }
 .form-section > summary {
@@ -883,7 +884,7 @@ textarea:focus {
 }
 .empty-state {
   background: white;
-  border: 1px dashed #cddfda;
+  border: 1px dashed var(--color-border);
   border-radius: 22px;
   padding: 36px 24px;
 }
@@ -932,7 +933,7 @@ textarea:focus {
   font-weight: 730;
 }
 .trip-card {
-  border: 1px solid #e1eae7;
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-md);
   border-radius: 26px;
 }
@@ -972,7 +973,7 @@ textarea:focus {
   }
   .trip-tabs {
     background: white;
-    border: 1px solid #e3ebe9;
+    border: 1px solid var(--color-border);
     border-radius: 16px;
     padding: 5px;
     width: fit-content;
@@ -1020,9 +1021,9 @@ textarea:focus {
     margin: 0;
     padding: 9px 16px calc(9px + env(safe-area-inset-bottom));
     border: 0;
-    border-top: 1px solid #e0e9e6;
+    border-top: 1px solid var(--color-border);
     border-radius: 24px 24px 0 0;
-    background: #ffffffed;
+    background: var(--surface-glass);
     backdrop-filter: blur(16px);
     box-shadow: 0 -6px 26px #1635310a;
     width: 100%;
@@ -1260,4 +1261,232 @@ textarea:focus {
   .event-main {
     transition: none;
   }
+}
+
+/* Overview density refinement; other trip content keeps its existing layout. */
+.trip-hero {
+  padding-block: 22px;
+  margin-bottom: 20px;
+}
+.trip-hero .eyebrow { margin-bottom: 10px; }
+.trip-hero h1 { margin-bottom: 10px; }
+.trip-hero .trip-period { margin-bottom: 10px; }
+.trip-hero .journey-moment { margin-top: 14px; }
+.overview-simple {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.overview-simple .overview-days {
+  grid-column: 1;
+  grid-row: auto;
+  width: 100%;
+}
+.overview-days .section-heading { margin-bottom: 14px; }
+.overview-days .glance-day {
+  min-height: 112px;
+  padding: 10px 4px 8px;
+  gap: 3px;
+}
+.overview-days .day-tones { gap: 3px; margin-top: 2px; }
+.overview-days .day-tones i { width: 5px; height: 5px; }
+.trip-quick-stats {
+  gap: 0;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+.trip-quick-stats > div,
+.trip-quick-stats > div:nth-child(2),
+.trip-quick-stats > div:nth-child(3) {
+  background: transparent;
+  border-radius: 0;
+  padding: 0 12px;
+  gap: 3px;
+}
+.trip-quick-stats > div + div { border-left: 1px solid var(--color-border); }
+.trip-quick-stats svg { width: 15px; height: 15px; }
+.trip-quick-stats strong { margin-top: 1px; font-size: 1.05rem; }
+.trip-quick-stats .brief-price { font-size: .875rem; }
+.trip-about {
+  padding: 16px 18px;
+  background: var(--surface-overlay);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+.trip-about h2 { font-size: .9375rem; margin-bottom: 8px; }
+.trip-about p {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+  font-size: .875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.trip-about .about-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.trip-about .ghost { min-height: 44px; padding: 8px 0; margin-top: 4px; }
+@media (max-width: 900px) {
+  .theme-trip .trip-tabs button.active { background: transparent; }
+  .trip-tabs button svg { position: relative; z-index: 1; }
+  .trip-tabs button.active::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 29px;
+    border-radius: 20px;
+    background: var(--trip-soft);
+  }
+}
+@media (max-width: 600px) {
+  .trip-hero { padding-block: 18px; margin-bottom: 20px; }
+  .trip-hero .eyebrow { margin-bottom: 8px; }
+  .trip-hero .journey-moment { margin-top: 12px; }
+  .trip-hero .trip-period { line-height: 1.45; }
+  .trip-hero .route-artwork { height: 135px; }
+  .overview-days .day-glance { gap: 5px; }
+}
+
+/* Color-only selected states retain the existing layout and semantics. */
+.category-groups .filter-chip svg,
+.category-choice svg { color: var(--category-ink); }
+.category-groups .filter-chip.active,
+.category-choice.active { box-shadow: inset 0 0 0 1px var(--category-border); }
+.theme-trip .trip-tabs button.active { color: var(--trip-accent); }
+.trip-quick-stats > div { color: var(--color-other-ink); }
+.trip-quick-stats > div:nth-child(2) { color: var(--color-other-ink); }
+.trip-quick-stats > div:nth-child(3) { color: var(--color-other-ink); }
+
+/* Itinerary only: independent columns keep times clear of the timeline. */
+.itinerary-programs .event-row {
+  display: grid;
+  grid-template-columns: 43px 13px minmax(0, 1fr);
+  column-gap: 6px;
+  position: relative;
+}
+.itinerary-programs .event-time {
+  grid-column: 1;
+  width: auto;
+  min-width: 0;
+  padding-top: 13px;
+  white-space: nowrap;
+}
+.itinerary-programs .event-time small { margin-top: 5px; }
+.itinerary-programs .timeline-dot {
+  grid-column: 2;
+  position: relative;
+  left: auto;
+  top: auto;
+  justify-self: center;
+  align-self: start;
+  margin-top: 19px;
+}
+.itinerary-programs .timeline-dot::after { display: none; }
+.itinerary-programs .event-row:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 55px;
+  top: 30px;
+  bottom: -25px;
+  width: 1px;
+  background: var(--color-border);
+  pointer-events: none;
+}
+.itinerary-programs .event-main {
+  grid-column: 3;
+  min-width: 0;
+  padding: 12px;
+  gap: 6px;
+}
+.itinerary-programs .event-main > strong { line-height: 1.3; }
+.itinerary-programs .timeline-status {
+  background: transparent;
+  padding: 0;
+  color: var(--text-secondary);
+}
+.itinerary-programs .sticky-days .day-picker button { min-height: 82px; padding-block: 10px; }
+.itinerary-programs .toolbar { gap: 8px; }
+.itinerary-programs .toolbar .search { box-shadow: none; }
+@media (min-width: 901px) {
+  .itinerary-programs .event-row { grid-template-columns: 50px 13px minmax(0, 1fr); column-gap: 8px; }
+  .itinerary-programs .event-row:not(:last-child)::before { left: 64px; }
+  .itinerary-programs .event-main { padding: 14px 16px; }
+}
+
+/* Program sheet and editing only; keep the rest of the trip unchanged. */
+.event-details .event-cost-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  margin: 0 0 16px;
+  font-size: .8125rem;
+  color: var(--text-secondary);
+}
+.event-cost-preview strong { color: var(--text-primary); font-weight: 600; }
+.event-details .event-extra { padding: 0; border-radius: 0; background: transparent; }
+.event-details .event-extra > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.event-details .event-extra > summary::after { content: none; }
+.event-details .event-extra > summary svg { flex-shrink: 0; transition: transform var(--motion-normal); }
+.event-details .event-extra[open] > summary svg { transform: rotate(180deg); }
+.event-details .event-extra-body > section { margin-bottom: 20px; }
+.event-details .specific-details dd { overflow-wrap: anywhere; }
+.event-details .flight-route > div { min-width: 0; overflow-wrap: anywhere; }
+.event-edit-form .form-grid { gap: 16px; }
+.event-edit-form .category-picker { margin-block: 2px; }
+.event-edit-form .form-intro { margin-bottom: 18px; }
+.event-edit-form input, .event-edit-form textarea, .event-edit-form select { scroll-margin-block: 70px; }
+@media (max-width: 600px) {
+  dialog:has(.event-details), dialog:has(.event-edit-form) { max-height: 88dvh; overscroll-behavior: contain; }
+  .event-edit-form .form-actions {
+    position: static;
+    padding-bottom: env(safe-area-inset-bottom);
+    margin-top: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-details .event-extra > summary svg { transition: none; }
+}
+
+/* Expenses only: compact category rows and an always-visible daily estimate. */
+.trip-summary .expense-categories { padding: 18px; }
+.trip-summary .expense-categories .section-heading { margin-bottom: 10px; }
+.trip-summary .expense-group { padding: 10px 0; gap: 10px; }
+.trip-summary .expense-group .section-icon { width: 34px; height: 34px; border-radius: 10px; }
+.trip-summary .expense-track { height: 4px; margin-top: 6px; }
+.trip-summary .expense-by-day { padding: 0; border: 0; background: transparent; }
+.trip-summary .expense-by-day h2 { font-size: 1.125rem; margin: 0 0 12px; }
+.expense-day-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.expense-day {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  min-width: 0;
+}
+.expense-day h3 { font-size: .8125rem; font-weight: 500; color: var(--text-secondary); margin: 0; text-transform: capitalize; }
+.expense-day > strong { font-size: .9375rem; line-height: 1.4; overflow-wrap: anywhere; }
+.expense-day > span { font-size: .75rem; color: var(--text-secondary); }
+@media (min-width: 601px) {
+  .expense-day-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

@@ -196,10 +196,6 @@ function TripWorkspace({
     >
       {tab === "geral" ? (
         <>
-          <Link className="back" to="/">
-            <ArrowLeft size={17} />
-            Voltar
-          </Link>
           <header
             className={`trip-heading ${tab === "geral" ? "trip-hero" : "compact-heading"}`}
           >
@@ -273,12 +269,7 @@ function TripWorkspace({
             trip={trip}
             events={events}
             now={now}
-            admin={admin}
             onDay={(date) => changeTab("roteiro", date)}
-            onSelect={(event) => {
-              setJustSaved(false);
-              setSelected(event);
-            }}
           />
         ) : tab === "gastos" ? (
           <>

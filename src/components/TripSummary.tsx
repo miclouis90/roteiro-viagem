@@ -105,20 +105,21 @@ export function TripSummary({
           </p>
         )}
       </section>
-      <details className="summary-section expandable expense-by-day">
-        <summary>Estimativa por dia</summary>
-        {days.map((day) => (
-          <div className="summary-line" key={day}>
-            <span>{formatDate(day)}</span>
-            <span>
-              {spendingLabel(
-                active.filter((event) => event.date === day),
-                trip.currency,
-              )}
-            </span>
-          </div>
-        ))}
-      </details>
+      <section className="expense-by-day" aria-labelledby="expense-days-title">
+        <h2 id="expense-days-title">Estimativa por dia</h2>
+        <div className="expense-day-grid">
+          {days.map((day) => {
+            const programs = active.filter((event) => event.date === day);
+            return (
+              <article className="expense-day" key={day}>
+                <h3>{formatDate(day, { weekday: "short", day: "numeric" })}</h3>
+                <strong>{spendingLabel(programs, trip.currency)}</strong>
+                <span>{programs.length} {programs.length === 1 ? "programa" : "programas"}</span>
+              </article>
+            );
+          })}
+        </div>
+      </section>
       <p className="footnote">
         Estimativas para todas as pessoas informadas. Programas cancelados não
         entram no total. Você pode ajustar os valores na ficha de cada programa.

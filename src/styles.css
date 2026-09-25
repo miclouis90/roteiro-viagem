@@ -791,65 +791,52 @@ main {
   background: var(--category-bg);
   flex-shrink: 0;
 }
-.tone-coffee {
-  --category-ink: #86621e;
-  --category-bg: var(--color-yellow-light);
-  --category-accent: var(--color-yellow);
-}
+.tone-coffee,
 .tone-food {
+  --category-accent: var(--color-food);
   --category-ink: var(--color-food-ink);
   --category-bg: var(--color-food-bg);
-  --category-accent: var(--color-food);
+  --category-border: var(--color-food-border);
 }
 .tone-night,
-.tone-show {
+.tone-wine {
+  --category-accent: var(--color-drink);
   --category-ink: var(--color-drink-ink);
   --category-bg: var(--color-drink-bg);
-  --category-accent: var(--color-drink);
-}
-.tone-wine,
-.tone-shopping {
-  --category-ink: #944662;
-  --category-bg: var(--color-rose-light);
-  --category-accent: var(--color-rose);
+  --category-border: var(--color-drink-border);
 }
 .tone-culture,
-.tone-flight {
+.tone-show {
+  --category-accent: var(--color-culture);
   --category-ink: var(--color-culture-ink);
   --category-bg: var(--color-culture-bg);
-  --category-accent: var(--color-culture);
+  --category-border: var(--color-culture-border);
 }
 .tone-outdoor,
 .tone-experience {
+  --category-accent: var(--color-outdoor);
   --category-ink: var(--color-outdoor-ink);
   --category-bg: var(--color-outdoor-bg);
-  --category-accent: var(--color-outdoor);
+  --category-border: var(--color-outdoor-border);
 }
-.tone-transport {
+.tone-transport,
+.tone-flight,
+.tone-car,
+.tone-rail,
+.tone-airport {
+  --category-accent: var(--color-transport);
   --category-ink: var(--color-transport-ink);
   --category-bg: var(--color-transport-bg);
-  --category-accent: var(--color-transport);
+  --category-border: var(--color-transport-border);
 }
-.tone-car {
-  --category-ink: #2d706a;
-  --category-bg: #e5f4f0;
-  --category-accent: #429589;
-}
-.tone-rail {
-  --category-ink: #325f75;
-  --category-bg: #e9f1f6;
-  --category-accent: #4a819e;
-}
-.tone-airport {
-  --category-ink: #52677e;
-  --category-bg: #edf1f7;
-  --category-accent: #718cac;
-}
-.tone-other {
+.tone-other,
+.tone-shopping {
+  --category-accent: var(--color-other);
   --category-ink: var(--color-other-ink);
   --category-bg: var(--color-other-bg);
-  --category-accent: var(--color-other);
+  --category-border: var(--color-other-border);
 }
+
 .priority-label {
   display: inline-flex;
   gap: 4px;
@@ -2851,8 +2838,6 @@ button:not(:disabled):active,
 .event-extra-body .specific-details dl { gap: 14px 18px; }
 .event-extra-body .flight-route { padding-top: 0; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--color-border); }
 .event-extra-body .link-row { margin: 0; gap: 8px; }
-.tone-coffee { --category-accent: #c08b2d; --category-ink: #79551b; --category-bg: #fff3d6; }
-.tone-flight, .tone-car, .tone-rail, .tone-airport { --category-accent: var(--color-transport); --category-ink: var(--color-transport-ink); --category-bg: var(--color-transport-bg); }
 .day-picker button, .glance-day, .event-row, .itinerary-tabs button, .quick-event-actions button, .quick-event-actions a, summary { transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 .day-picker button:hover, .glance-day:hover { background: var(--trip-soft, var(--surface-brand)); }
 .day-picker button.active { box-shadow: inset 0 0 0 1px var(--trip-accent, var(--color-brand)); }

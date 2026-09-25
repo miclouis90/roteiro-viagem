@@ -9,11 +9,18 @@ export function CategoryPicker({
   onChange: (value: string) => void;
 }) {
   const [group, setGroup] = useState(categoryOf(value).group);
-  const choices = categories.filter((category) => category.group === group);
+  const choices = categories.filter(
+    (category) => category.group === group && category.name !== "Aeroporto",
+  );
   return (
     <fieldset className="category-picker wide">
       <legend>Grupo e categoria</legend>
       <input type="hidden" name="category" value={value} />
+      {value === "Aeroporto" && (
+        <p className="field-help">
+          Categoria atual: Aeroporto. Ela será preservada, a menos que você escolha outra opção.
+        </p>
+      )}
       <div className="category-groups" aria-label="Grupos de categoria">
         {categoryGroups.map(({ id, label, tone, icon: Icon }) => (
           <button

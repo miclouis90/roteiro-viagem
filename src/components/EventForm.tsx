@@ -125,12 +125,12 @@ export function EventForm({
       busy={busy}
     >
       <form
-        className="progressive-form"
+        className="progressive-form event-edit-form"
         onSubmit={submit}
         onInvalidCapture={revealInvalidField}
       >
         <p className="form-intro">
-          Só o essencial para começar. Campos com * são obrigatórios.
+          {event ? "Edite o essencial. Os demais detalhes são opcionais." : "Só o essencial para começar."} Campos com * são obrigatórios.
         </p>
         <div className="form-grid">
           <label className="wide">
