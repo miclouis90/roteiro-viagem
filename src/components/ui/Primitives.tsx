@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 import { Compass, CalendarDays, WalletCards, Luggage } from "lucide-react";
 import { categoryOf } from "../../data/categories";
@@ -124,15 +124,19 @@ const tabs = [
 export function TripNavigation({
   value,
   onChange,
+  disabled = false,
 }: {
-  value: TripTab;
+  value: TripTab | "viagens";
+  disabled?: boolean;
   onChange: (v: TripTab) => void;
 }) {
+  const location = useLocation();
   return (
     <nav className="trip-tabs" aria-label="Seções da viagem">
       {tabs.map(({ id, label, icon: Icon }) => (
         <button
           key={id}
+          disabled={disabled}
           aria-current={value === id ? "page" : undefined}
           className={value === id ? "active" : ""}
           onClick={() => onChange(id)}
@@ -141,7 +145,7 @@ export function TripNavigation({
           <span>{label}</span>
         </button>
       ))}
-      <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>
+      <Link to="/" state={value !== "viagens" ? { returnTripPath: location.pathname } : location.state} className={value === "viagens" ? "active" : ""} aria-current={value === "viagens" ? "page" : undefined} onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>
         <Luggage size={20} aria-hidden="true" />
         <span>Viagens</span>
       </Link>

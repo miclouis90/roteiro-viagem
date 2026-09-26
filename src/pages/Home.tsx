@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { watchTrips } from "../services/repository";
 import { LoadingState } from "../components/ui/LoadingState";
 import { TripCard } from "../components/TripCard";
-import { EmptyState } from "../components/ui/Primitives";
-import type { Trip } from "../types";
-import { homeTrips } from "../utils/homeTrips";
-import { dateKey } from "../utils/dates";
+import { EmptyState, TripNavigation } from "../components/ui/Primitives";
+import type { Trip, TripStatus } from "../types";
+import { filterHomeTrips } from "../utils/filterHomeTrips";
+import { useLocation, useNavigate } from "react-router-dom";
 export function Home({ onCreate }: { onCreate: () => void }) {
   const { admin, user, loading: authLoading } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -33,27 +33,17 @@ export function Home({ onCreate }: { onCreate: () => void }) {
       user?.uid,
     );
   }, [admin, authLoading, user?.uid]);
-  const { featured, others } = homeTrips(trips);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<TripStatus | "">("");
+  const { upcoming, others } = filterHomeTrips(trips, query, status);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const returnPath = typeof location.state?.returnTripPath === "string" && trips.some(t => `/viagem/${t.id}` === location.state.returnTripPath) ? location.state.returnTripPath : undefined;
   return (
     <main className="home">
-      <section className="home-intro">
-        <span className="eyebrow">Sua próxima história</span>
-        <h1>
-          {featured
-            ? featured.endDate < dateKey()
-              ? "Histórias para lembrar."
-              : featured.startDate <= dateKey()
-                ? "Sua viagem está acontecendo."
-                : "Sua próxima viagem."
-            : "Para onde vamos?"}
-        </h1>
-        <p>
-          {featured
-            ? "Os lugares, os planos e a vontade de ir."
-            : "Organize lugares, momentos e boas ideias em um só lugar."}
-        </p>
-      </section>
-      {loading ? (
+      <section className="home-intro"><h1>Minhas viagens</h1><p>Organize seus próximos destinos.</p></section>
+      <label className="search home-search"><Search size={18} aria-hidden="true" /><input type="search" aria-label="Buscar viagem" placeholder="Buscar viagem" value={query} onChange={e => setQuery(e.target.value)} /></label>
+      <div className="chip-scroll home-status" aria-label="Status das viagens">{([["", "Todas"], ["planejamento", "Planejando"], ["confirmada", "Confirmadas"], ["concluída", "Concluídas"]] as const).map(([id,label]) => <button key={id} className={`filter-chip ${status === id ? "active" : ""}`} aria-pressed={status === id} onClick={() => setStatus(id)}>{label}</button>)}</div>      {loading ? (
         <LoadingState label="Preparando suas viagens…" />
       ) : error ? (
         <p className="error" role="alert">
@@ -76,26 +66,12 @@ export function Home({ onCreate }: { onCreate: () => void }) {
           )}
         </EmptyState>
       ) : (
-        featured && (
-          <>
-            <TripCard trip={featured} featured admin={admin} />
-            {others.length > 0 && (
-              <section className="other-trips">
-                <div className="section-heading">
-                  <h2>Outras viagens</h2>
-                </div>
-                <div className="trip-grid">
-                  {[...others]
-                    .sort((a, b) => a.startDate.localeCompare(b.startDate))
-                    .map((t) => (
-                      <TripCard key={t.id} trip={t} admin={admin} />
-                    ))}
-                </div>
-              </section>
-            )}
-          </>
-        )
+        <>
+          {upcoming.length > 0 && <section className="home-section"><h2>Próximas viagens</h2><div className="home-carousel" tabIndex={0} aria-label="Próximas viagens">{upcoming.map(t => <TripCard key={t.id} trip={t} />)}</div></section>}
+          {others.length > 0 && <section className="home-section"><h2>Outras viagens</h2><div className="home-trip-list">{others.map(t => <TripCard key={t.id} trip={t} compact />)}</div></section>}
+          {!upcoming.length && !others.length && <EmptyState title="Nenhuma viagem encontrada." description="Tente outro nome, destino ou status." />}
+        </>
       )}
-    </main>
+      <TripNavigation value="viagens" disabled={!returnPath} onChange={tab => { if (returnPath) navigate(`${returnPath}?tab=${tab}`); }} />    </main>
   );
 }

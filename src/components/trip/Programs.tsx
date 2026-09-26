@@ -69,7 +69,7 @@ export function Programs({
   const extra = filtered.filter((e) => !days.includes(e.date));
   const hasFilters = Object.values(filters).some(Boolean);
   return (
-    <section className={`programs ${tab === "roteiro" ? "itinerary-programs" : ""}`}>
+    <section className={`programs ${tab === "roteiro" ? "itinerary-programs" : "places-programs"}`}>
       {tab === "roteiro" && (
         <details className="context-menu itinerary-display">
           <summary aria-label="Formato e opções do roteiro">

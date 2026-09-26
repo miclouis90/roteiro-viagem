@@ -6,10 +6,11 @@ import App from "./App";
 import { demoTrip } from "./data/demo";
 import { watchEvents, watchTrip, watchTrips } from "./services/repository";
 
+const authState = vi.hoisted(() => ({ admin: false }));
 vi.mock("./lib/firebase", () => ({ db: {}, auth: null, demoMode: false, configured: true }));
 vi.mock("./hooks/useAuth", () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
-  useAuth: () => ({ user: null, admin: false, loading: false, error: "", login: vi.fn(), logout: vi.fn() }),
+  useAuth: () => ({ user: null, admin: authState.admin, loading: false, error: "", login: vi.fn(), logout: vi.fn() }),
 }));
 vi.mock("./services/repository", () => ({ watchTrips: vi.fn(), watchTrip: vi.fn(), watchEvents: vi.fn() }));
 const trip = { ...demoTrip, id: "brasilia-da-mel-2026", title: "Brasília da Mel", isPublic: true };
@@ -28,6 +29,7 @@ function expectHome() {
   expect(container.querySelector("main.home")?.textContent).toContain("Brasília da Mel");
 }
 beforeEach(() => {
+  authState.admin = false;
   vi.clearAllMocks();
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -62,4 +64,33 @@ describe("Home sem contexto de viagem", () => {
     vi.mocked(watchTrips).mockImplementation((_admin, _next, error) => { error(new Error("offline")); return () => {}; });
     await mount("/"); expect(container.querySelector('[role="alert"]')?.textContent).toContain("Não foi possível carregar as viagens");
   });
+});
+
+it("filtra a Home por busca e chips", async () => {
+  await mount("/");
+  const input = container.querySelector('input[aria-label="Buscar viagem"]')!;
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+  await act(async () => { setter.call(input,"inexistente"); input.dispatchEvent(new Event("input",{bubbles:true})); });
+  expect(container.textContent).toContain("Nenhuma viagem encontrada");
+  await act(async () => { setter.call(input,"brasilia"); input.dispatchEvent(new Event("input",{bubbles:true})); });
+  expectHome();
+  await click([...container.querySelectorAll('.home-status button')].find(b => b.textContent === "Concluídas")!);
+  expect(container.textContent).toContain("Nenhuma viagem encontrada");
+});
+it("preserva a criação e marca Viagens ativa sem escolher uma viagem implicitamente", async () => {
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
+  Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
+  authState.admin = true;
+  await mount("/");
+  expect(container.querySelector('.trip-tabs a[aria-current="page"]')?.textContent).toBe("Viagens");
+  expect(container.querySelector('.trip-tabs button:disabled')).not.toBeNull();
+  await click(container.querySelector('button[aria-label="Criar viagem"]'));
+  expect(container.querySelector('dialog')?.textContent).toContain("Uma nova viagem");
+});
+it("retorna pela navegação da Home à viagem selecionada", async () => {
+  await mount(`/viagem/${trip.id}`);
+  await click(container.querySelector('.trip-tabs a[href="#/"]'));
+  expectHome();
+  await click([...container.querySelectorAll('.trip-tabs button')].find(b => b.textContent === "Roteiro")!);
+  expect(container.querySelector('h1')?.textContent).toBe("Roteiro");
 });
