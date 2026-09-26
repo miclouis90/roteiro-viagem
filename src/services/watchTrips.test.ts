@@ -1,10 +1,10 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const state = vi.hoisted(() => ({ listeners: [] as {target: unknown; next: (v:any)=>void; error:(e:Error)=>void; stop:ReturnType<typeof vi.fn>}[] }));
+const state = vi.hoisted(() => ({ listeners: [] as {target: unknown; next: (v:unknown)=>void; error:(e:Error)=>void; stop:ReturnType<typeof vi.fn>}[] }));
 vi.mock('../lib/firebase',()=>({db:{},auth:null,demoMode:false}));
 vi.mock('firebase/firestore',()=>({
   collection: (_db:unknown,path:string)=>({path}), collectionGroup:(_db:unknown,path:string)=>({group:path}),
   where:(field:string,op:string,value:string)=>({field,op,value}), query:(target:unknown,filter:unknown)=>({target,filter}),
-  onSnapshot:(target:unknown,next:(v:any)=>void,error:(e:Error)=>void)=>{const stop=vi.fn();state.listeners.push({target,next,error,stop});return stop;},
+  onSnapshot:(target:unknown,next:(v:unknown)=>void,error:(e:Error)=>void)=>{const stop=vi.fn();state.listeners.push({target,next,error,stop});return stop;},
   addDoc:vi.fn(),deleteDoc:vi.fn(),deleteField:vi.fn(),doc:vi.fn(),getDocs:vi.fn(),getDocFromServer:vi.fn(),serverTimestamp:vi.fn(),writeBatch:vi.fn(),updateDoc:vi.fn(),
 }));
 import { watchTrips } from './repository';
