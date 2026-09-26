@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import {
   HashRouter,
+  Navigate,
   Routes,
   Route,
   Link,
@@ -17,6 +18,8 @@ import {
 } from "lucide-react";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ToastProvider, useToast } from "./hooks/useToast";
+import { isOnboardingCompleted, saveOnboardingCompleted } from "./utils/onboarding";
+import { Onboarding } from "./pages/Onboarding";
 import { Home } from "./pages/Home";
 import { TripPage } from "./pages/TripPage";
 import { SeedMelPage } from "./pages/SeedMelPage";
@@ -180,12 +183,24 @@ function Shell() {
     </>
   );
 }
+function AppRoutes() {
+  const [completed, setCompleted] = useState(isOnboardingCompleted);
+  const complete = () => {
+    saveOnboardingCompleted();
+    setCompleted(true);
+  };
+  return <Routes>
+    <Route path="/onboarding" element={<Onboarding onComplete={complete} />} />
+    <Route path="/" element={completed ? <Shell /> : <Navigate to="/onboarding" replace />} />
+    <Route path="*" element={<Shell />} />
+  </Routes>;
+}
 export default function App() {
   return (
     <HashRouter>
       <AuthProvider>
         <ToastProvider>
-          <Shell />
+          <AppRoutes />
         </ToastProvider>
       </AuthProvider>
     </HashRouter>

@@ -15,3 +15,14 @@ describe("listagem da Home", () => {
     expect(filterHomeTrips([mel,past], "mel", "planejamento", "2026-09-26")).toEqual({upcoming:[],others:[]});
   });
 });
+
+it("filtra por período inclusivo combinado com busca e status", () => {
+  for (const day of ["2026-10-29", "2026-10-31", "2026-11-02"]) {
+    expect(filterHomeTrips([mel,past], "brasilia", "confirmada", "2026-09-26", day).upcoming).toEqual([mel]);
+  }
+  for (const day of ["2026-10-28", "2026-11-03"]) {
+    expect(filterHomeTrips([mel,past], "", "", "2026-09-26", day).upcoming).toEqual([]);
+  }
+  expect(filterHomeTrips([mel], "recife", "confirmada", "2026-09-26", "2026-10-29").upcoming).toEqual([]);
+  expect(filterHomeTrips([mel], "", "planejamento", "2026-09-26", "2026-10-29").upcoming).toEqual([]);
+});

@@ -1570,3 +1570,61 @@ textarea:focus {
 .home .trip-tabs button:disabled { opacity: .4; cursor: default; }
 @media (min-width: 701px) { .home-trip-list { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 700px) { .home { padding-bottom: calc(110px + env(safe-area-inset-bottom)); } }
+
+/* Personal global Home, keeping all trip surfaces unchanged. */
+.home .home-intro { padding-block: 18px 16px; }
+.home .home-intro h1 { font-size: 1.375rem; line-height: 1.3; letter-spacing: -.025em; }
+.home .home-intro p { font-size: .8125rem; }
+.home-search-row { display: flex; align-items: center; gap: 8px; }
+.home .home-search { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid var(--color-border); background: white; border-radius: 14px; }
+.home .home-search > svg { flex-shrink: 0; color: var(--color-brand); }
+.home .home-search input { width: 100%; padding: 0; border: 0; background: transparent; border-radius: 0; box-shadow: none; font-size: .875rem; }
+.home-calendar-button { flex: 0 0 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; color: var(--color-brand); background: var(--color-brand-light); border: 1px solid var(--color-border); }
+.home-calendar-button:hover { background: var(--color-brand-light); color: var(--color-brand-hover); }
+.home .home-status { padding-block: 12px 18px; }
+.home .home-status .filter-chip { background: white; color: var(--color-muted); border: 1px solid var(--color-border); min-height: 40px; padding: 7px 12px; border-radius: 12px; }
+.home .home-status .filter-chip.active { background: var(--color-brand); border-color: var(--color-brand); color: white; }
+.home .home-trip-upcoming { border-radius: 18px; padding: 6px; box-shadow: 0 3px 12px #153a3a06; }
+.home .home-trip-upcoming .home-trip-art { height: 72px; border-radius: 12px; background: linear-gradient(125deg, var(--trip-soft), color-mix(in srgb, var(--trip-accent) 18%, white)); }
+.home .home-trip-upcoming .home-trip-art > svg { width: 34px; height: 34px; }
+.home .home-trip-upcoming .home-trip-copy { padding: 10px 6px 6px; }
+.home .home-trip-upcoming h3 { font-weight: 700; }
+.home .home-trip-upcoming .home-trip-meta > span:last-child:not(.status-chip) { color: var(--trip-accent); font-weight: 600; }
+.home-calendar-content > p { font-size: .875rem; }
+.home-calendar-content ul { list-style: none; padding: 0; margin: 16px 0 0; }
+.home-calendar-content li { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--color-border); }
+.home-calendar-content li span { font-size: .8125rem; color: var(--color-muted); }
+
+.home .home-carousel:focus { outline: none; box-shadow: none; }
+.home .home-carousel:focus-visible { outline: 1px solid var(--color-border); outline-offset: 2px; }
+.home-date-chip { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: var(--color-brand-light); color: var(--color-brand); font-size: .8125rem; }
+.home-date-chip span { font-size: 1.1rem; }
+.home-calendar-month { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.home-calendar-month strong { text-transform: none; font-size: .9375rem; }
+.home-calendar-week, .home-calendar-days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); }
+.home-calendar-week span { text-align: center; color: var(--color-muted); font-size: .75rem; padding-bottom: 8px; }
+.home-calendar-days button { position: relative; min-width: 0; height: 44px; padding: 0; border-radius: 10px; background: none; color: var(--color-text); font-size: .875rem; }
+.home-calendar-days button:hover { background: var(--color-brand-light); }
+.home-calendar-days button.selected { background: var(--color-brand); color: white; }
+.home-calendar-days button[aria-current="date"] { font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
+.home-calendar-days i, .home-calendar-legend i { width: 4px; height: 4px; border-radius: 50%; background: var(--color-brand); }
+.home-calendar-days i { position: absolute; bottom: 4px; left: calc(50% - 2px); }
+.home-calendar-days .selected i { background: white; }
+.home-calendar-legend { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--color-muted); margin: 12px 0 6px; }
+
+/* Home cards adapt to the number of trips without changing their data. */
+.home .home-trip-upcoming { flex-basis: min(280px, 84%); }
+.home .home-trip-upcoming:only-child { flex-basis: min(100%, 420px); }
+.home .home-trip-upcoming .home-trip-art { height: 62px; background: radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--trip-accent) 24%, transparent), transparent 65%), linear-gradient(120deg, var(--trip-soft), color-mix(in srgb, var(--trip-soft) 55%, white)); }
+.home .home-trip-art .cover-route { width: 170px; height: 170px; right: 18px; bottom: -104px; transform: rotate(-18deg); }
+.home .home-trip-upcoming .home-trip-copy { padding: 10px 8px 8px; }
+.home .home-trip-upcoming h3 { font-size: 1.0625rem; margin-bottom: 3px; }
+.home .home-trip-upcoming p { margin-bottom: 6px; }
+.home .home-trip-row { gap: 10px; grid-template-columns: 58px minmax(0, 1fr); padding: 10px; }
+.home .home-trip-row .home-trip-art { height: 72px; }
+.home .home-trip-row .home-trip-copy { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 6px; }
+.home .home-trip-row h3, .home .home-trip-row .home-trip-copy > p:not(.home-trip-period) { flex-basis: 100%; margin: 0; }
+.home .home-trip-row .home-trip-period { font-size: .6875rem; margin: 0; }
+.home .home-trip-row .status-chip { background: none; color: var(--color-muted); padding: 0; font-size: .625rem; }
+.home-calendar-month .icon-button { width: 44px; height: 44px; border-radius: 12px; background: var(--color-surface-secondary); color: var(--color-brand); }
+.home-calendar-month .icon-button:hover { background: var(--color-brand-light); }
