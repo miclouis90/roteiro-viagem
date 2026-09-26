@@ -89,7 +89,7 @@ try {
   await check('owner lists members',async()=>assert.equal((await getDocs(collection(admin,'trips',tripId,'members'))).size,1));
   await check('anonymous cannot edit PUBLIC',()=>deny(()=>updateDoc(eventRef(guest,'legacy'),{title:'Attack',updatedAt:serverTimestamp()})));
   await check('non-member cannot edit PUBLIC',()=>deny(()=>updateDoc(eventRef(outsider,'legacy'),{title:'Attack',updatedAt:serverTimestamp()})));
-  await check('public home query',async()=>assert.ok((await getDocs(query(collection(guest,'trips'),where('isPublic','==',true)))).size>=1));
+  await check('public home query denied',()=>deny(()=>getDocs(query(collection(guest,'trips'),where('isPublic','==',true)))));
   await updateDoc(tripRef,{access:'SHARED',isPublic:false,updatedAt:serverTimestamp()});
   await check('member reads SHARED',async()=>assert.equal((await getDoc(doc(member,'trips',tripId))).exists(),true));
   await check('outsider cannot read SHARED',()=>deny(()=>getDoc(doc(outsider,'trips',tripId))));
@@ -139,6 +139,35 @@ try {
   await setDoc(other,{...trip,ownerId:'local-admin',access:'PRIVATE'});
   await check('owner deletes own trip',()=>deleteDoc(other));
 
+  const memberC = client('rules-member-c', 'member-c');
+  const unrelated = client('rules-unrelated', 'unrelated');
+  const x = tripId+'-X', y = tripId+'-Y';
+  await setDoc(doc(admin,'trips',x),{...trip,ownerId:'local-admin',access:'PUBLIC',isPublic:true});
+  await setDoc(doc(admin,'trips',y),{...trip,ownerId:'local-admin',access:'PUBLIC_EDIT',isPublic:true});
+  await setDoc(doc(admin,'trips',x,'members','local-member'),{uid:'local-member',role:'editor',displayName:'B',email:'',addedAt:serverTimestamp()});
+  await setDoc(doc(admin,'trips',y,'members','member-c'),{uid:'member-c',role:'editor',displayName:'C',email:'',addedAt:serverTimestamp()});
+  async function homeIds(db, uid) {
+    const owned = await getDocs(query(collection(db,'trips'),where('ownerId','==',uid)));
+    const memberships = await getDocs(query(collectionGroup(db,'members'),where('uid','==',uid)));
+    const shared = await Promise.all(memberships.docs.map(m => getDoc(m.ref.parent.parent)));
+    return [...new Set([...owned.docs,...shared].filter(d=>d.exists()).map(d=>d.id))].filter(id=>id===x||id===y).sort();
+  }
+  await check('A sees owned X and Y',async()=>assert.deepEqual(await homeIds(admin,'local-admin'),[x,y]));
+  await check('B discovers only member X',async()=>assert.deepEqual(await homeIds(member,'local-member'),[x]));
+  await check('C discovers only member Y',async()=>assert.deepEqual(await homeIds(memberC,'member-c'),[y]));
+  await check('D discovers neither public trip',async()=>assert.deepEqual(await homeIds(unrelated,'unrelated'),[]));
+  await check('D opens PUBLIC by direct link',async()=>assert.equal((await getDoc(doc(unrelated,'trips',x))).exists(),true));
+  await check('D opens PUBLIC_EDIT by direct link',async()=>assert.equal((await getDoc(doc(unrelated,'trips',y))).exists(),true));
+  await check('guest opens PUBLIC_EDIT by direct link',async()=>assert.equal((await getDoc(doc(guest,'trips',y))).exists(),true));
+  for (const db of [admin, member, unrelated, guest]) {
+    await check('unscoped trips list denied',()=>deny(()=>getDocs(collection(db,'trips'))));
+    await check('public trips discovery denied',()=>deny(()=>getDocs(query(collection(db,'trips'),where('isPublic','==',true)))));
+  }
+  await check('other owner query denied',()=>deny(()=>getDocs(query(collection(unrelated,'trips'),where('ownerId','==','local-admin')))));
+  await check('unscoped collectionGroup members denied',()=>deny(()=>getDocs(collectionGroup(unrelated,'members'))));
+  await check('other uid memberships denied',()=>deny(()=>getDocs(query(collectionGroup(unrelated,'members'),where('uid','==','local-member')))));
+  await check('guest memberships denied',()=>deny(()=>getDocs(query(collectionGroup(guest,'members'),where('uid','==','local-member')))));
+  await check('owner cannot discover all memberships across trips',()=>deny(()=>getDocs(collectionGroup(admin,'members'))));
   console.log(`${passed} local Firestore rules checks passed. No production project was accessed.`);
 } finally {
   await Promise.all(databases.map(async ({db,app}) => { await terminate(db); await deleteApp(app); }));

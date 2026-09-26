@@ -15,7 +15,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { auth, db, demoMode } from "../lib/firebase";
-import { melTripId } from "../data/melTrip";
+
 import { demoTrip, demoEvents } from "../data/demo";
 import type { Trip, TripEvent, TripInput, EventInput } from "../types";
 import { changedFields } from "../utils/access";
@@ -74,6 +74,7 @@ export function watchTrips(
     );
     return () => {};
   }
+  if (!uid) { next([]); return () => {}; }
   const database = db;
   const buckets = new Map<string, Trip[]>();
   const emit = () =>
@@ -95,63 +96,27 @@ export function watchTrips(
       },
       error,
     );
-  const stops = [
-    listen(
-      "public",
-      query(collection(database, "trips"), where("isPublic", "==", true)),
-    ),
-  ];
-  if (uid)
-    stops.push(
-      listen(
-        "owned",
-        query(collection(database, "trips"), where("ownerId", "==", uid)),
-      ),
-    );
-  // Old private trips remain accessible by their existing links; no ownership migration on read.
-  if (admin) {
-    let known = [melTripId];
-    try {
-      known = [
-        ...new Set([
-          ...known,
-          ...(JSON.parse(
-            localStorage.getItem("rumo-known-legacy-trips") || "[]",
-          ) as string[]),
-        ]),
-      ];
-    } catch {
-      /* Optional local shortcuts. */
-    }
-    for (const id of known)
-      stops.push(
-        onSnapshot(
-          doc(database, "trips", id),
-          (s) => {
-            buckets.set(
-              "legacy:" + id,
-              s.exists() ? [{ ...s.data(), id: s.id } as Trip] : [],
-            );
-            emit();
-          },
-          () => {},
-        ),
-      );
-  }
+  const stops = [listen(
+    "owned",
+    query(collection(database, "trips"), where("ownerId", "==", uid)),
+  )];
   let memberStops: (() => void)[] = [];
+  let membershipVersion = 0;
   if (uid)
     stops.push(
       onSnapshot(
         query(collectionGroup(database, "members"), where("uid", "==", uid)),
         (s) => {
+          const version = ++membershipVersion;
           memberStops.forEach((stop) => stop());
           for (const name of buckets.keys())
             if (name.startsWith("member:")) buckets.delete(name);
-          memberStops = s.docs.map((member) => {
+          memberStops = s.docs.filter(member => member.id === uid && member.ref.parent.parent?.parent.path === "trips").map((member) => {
             const parent = member.ref.parent.parent!;
             return onSnapshot(
               parent,
               (trip) => {
+                if (version !== membershipVersion) return;
                 buckets.set(
                   "member:" + parent.id,
                   trip.exists()
@@ -161,6 +126,7 @@ export function watchTrips(
                 emit();
               },
               () => {
+                if (version !== membershipVersion) return;
                 buckets.delete("member:" + parent.id);
                 emit();
               },
@@ -172,6 +138,7 @@ export function watchTrips(
       ),
     );
   return () => {
+    membershipVersion++;
     stops.forEach((stop) => stop());
     memberStops.forEach((stop) => stop());
   };

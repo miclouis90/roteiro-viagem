@@ -184,6 +184,7 @@ function Shell() {
   );
 }
 function AppRoutes() {
+  const location = useLocation();
   const [completed, setCompleted] = useState(isOnboardingCompleted);
   const complete = () => {
     saveOnboardingCompleted();
@@ -191,8 +192,8 @@ function AppRoutes() {
   };
   return <Routes>
     <Route path="/onboarding" element={<Onboarding onComplete={complete} />} />
-    <Route path="/" element={completed ? <Shell /> : <Navigate to="/onboarding" replace />} />
-    <Route path="*" element={<Shell />} />
+
+    <Route path="*" element={location.pathname === "/" && !completed ? <Navigate to="/onboarding" replace /> : <Shell />} />
   </Routes>;
 }
 export default function App() {

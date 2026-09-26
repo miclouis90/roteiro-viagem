@@ -341,10 +341,13 @@ service cloud.firestore {
 
     // A member may discover only their own memberships. uid supports a collection-group query.
     match /{path=**}/members/{uid} {
-      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow get: if signedIn() && uid == request.auth.uid && resource.data.uid == request.auth.uid;
+      allow list: if signedIn() && resource.data.uid == request.auth.uid;
     }
     match /trips/{tripId} {
-      allow read: if canRead(resource.data, tripId);
+      allow get: if canRead(resource.data, tripId);
+      // Public links allow GET, never discovery of unrelated trips.
+      allow list: if owner(resource.data);
       allow create: if signedIn() && admin() && validTrip(request.resource.data)
         && request.resource.data.get('ownerId', request.auth.uid) == request.auth.uid
         && request.resource.data.createdAt == request.time;

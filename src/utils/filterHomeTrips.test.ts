@@ -26,3 +26,11 @@ it("filtra por período inclusivo combinado com busca e status", () => {
   expect(filterHomeTrips([mel], "recife", "confirmada", "2026-09-26", "2026-10-29").upcoming).toEqual([]);
   expect(filterHomeTrips([mel], "", "planejamento", "2026-09-26", "2026-10-29").upcoming).toEqual([]);
 });
+
+it("viagem em andamento SP vem antes de Brasília, sem depender de criação ou status", () => {
+  const sp = {...mel,id:"sp",title:"SPzinho + DIIV",startDate:"2026-09-26",endDate:"2026-09-28"};
+  for (const today of ["2026-09-26","2026-09-27","2026-09-28"]) {
+    expect(filterHomeTrips([mel,sp],"","",today).upcoming.map(t=>t.id)).toEqual(["sp","mel"]);
+  }
+  expect(filterHomeTrips([mel,sp],"","","2026-09-29").others).toEqual([sp]);
+});
