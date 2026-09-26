@@ -7,10 +7,9 @@ import { HomeCalendar } from "../components/HomeCalendar";
 import { Modal } from "../components/Modal";
 import { formatDate } from "../utils/dates";
 import { TripCard } from "../components/TripCard";
-import { EmptyState, TripNavigation } from "../components/ui/Primitives";
+import { EmptyState } from "../components/ui/Primitives";
 import type { Trip, TripStatus } from "../types";
 import { filterHomeTrips } from "../utils/filterHomeTrips";
-import { useLocation, useNavigate } from "react-router-dom";
 export function Home({ onCreate }: { onCreate: () => void }) {
   const { admin, user, loading: authLoading } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -42,9 +41,6 @@ export function Home({ onCreate }: { onCreate: () => void }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<TripStatus | "">("");
   const { upcoming, others } = filterHomeTrips(trips, query, status, undefined, selectedDate);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const returnPath = typeof location.state?.returnTripPath === "string" && trips.some(t => `/viagem/${t.id}` === location.state.returnTripPath) ? location.state.returnTripPath : undefined;
   return (
     <main className="home">
       <section className="home-intro"><h1>{firstName ? `Oi, ${firstName}` : "Oi"} 👋</h1><p>Para onde vamos agora?</p></section>
@@ -82,6 +78,6 @@ export function Home({ onCreate }: { onCreate: () => void }) {
       {calendarOpen && <Modal title="Calendário de viagens" onClose={() => setCalendarOpen(false)}>
         <HomeCalendar trips={trips} selected={selectedDate} onSelect={day => { setSelectedDate(day); setCalendarOpen(false); }} onClear={() => setSelectedDate("")} />
       </Modal>}
-      <TripNavigation value="viagens" disabled={!returnPath} onChange={tab => { if (returnPath) navigate(`${returnPath}?tab=${tab}`); }} />    </main>
+    </main>
   );
 }

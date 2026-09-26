@@ -26,6 +26,7 @@ async function click(element: Element | null) {
 }
 function expectHome() {
   expect(container.querySelector("main.home")).not.toBeNull();
+  expect(container.querySelector(".trip-tabs")).toBeNull();
   expect(container.querySelector("main.home")?.textContent).toContain("Brasília da Mel");
 }
 beforeEach(() => {
@@ -79,22 +80,24 @@ it("filtra a Home por busca e chips", async () => {
   await click([...container.querySelectorAll('.home-status button')].find(b => b.textContent === "Concluídas")!);
   expect(container.textContent).toContain("Nenhuma viagem encontrada");
 });
-it("preserva a criação e marca Viagens ativa sem escolher uma viagem implicitamente", async () => {
+it("preserva a criação na Home sem bottom navigation", async () => {
   Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
   Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
   authState.admin = true;
   await mount("/");
-  expect(container.querySelector('.trip-tabs a[aria-current="page"]')?.textContent).toBe("Viagens");
-  expect(container.querySelector('.trip-tabs button:disabled')).not.toBeNull();
+  expect(container.querySelector(".trip-tabs")).toBeNull();
+
   await click(container.querySelector('button[aria-label="Criar viagem"]'));
   expect(container.querySelector('dialog')?.textContent).toContain("Uma nova viagem");
 });
-it("retorna pela navegação da Home à viagem selecionada", async () => {
+it("oculta a barra ao voltar à Home e restaura ao abrir a viagem", async () => {
   await mount(`/viagem/${trip.id}`);
+  expect(container.querySelector('.trip-tabs')).not.toBeNull();
   await click(container.querySelector('.trip-tabs a[href="#/"]'));
   expectHome();
-  await click([...container.querySelectorAll('.trip-tabs button')].find(b => b.textContent === "Roteiro")!);
-  expect(container.querySelector('h1')?.textContent).toBe("Roteiro");
+  await click(container.querySelector(`main.home a[href="#/viagem/${trip.id}"]`));
+  expect(container.querySelector('.trip-tabs')).not.toBeNull();
+  expect(container.querySelector('.trip-tabs [aria-current="page"]')?.textContent).toBe('Visão geral');
 });
 it("cumprimenta pelo primeiro nome e preserva fallback sem usuário", async () => {
   await mount("/");

@@ -49,6 +49,7 @@ describe("navegação simplificada", () => {
     expect(html).toMatch(/<a[^>]*href="\/"[^>]*>[\s\S]*?<span>Viagens<\/span><\/a>/);
     for (const text of ["Visão geral", "Roteiro", "Gastos", "Viagens"])
       expect(html).toContain(text);
+    expect([...html.matchAll(/<span>(Viagens|Visão geral|Roteiro|Gastos)<\/span>/g)].map(match => match[1])).toEqual(["Viagens", "Visão geral", "Roteiro", "Gastos"]);
     expect(html).not.toContain("Lugares");
     expect(html).toContain('aria-current="page"');
   });

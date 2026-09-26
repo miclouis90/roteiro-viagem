@@ -133,6 +133,10 @@ export function TripNavigation({
   const location = useLocation();
   return (
     <nav className="trip-tabs" aria-label="Seções da viagem">
+      <Link to="/" state={value !== "viagens" ? { returnTripPath: location.pathname } : location.state} className={value === "viagens" ? "active" : ""} aria-current={value === "viagens" ? "page" : undefined} onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>
+        <Luggage size={20} aria-hidden="true" />
+        <span>Viagens</span>
+      </Link>
       {tabs.map(({ id, label, icon: Icon }) => (
         <button
           key={id}
@@ -145,10 +149,7 @@ export function TripNavigation({
           <span>{label}</span>
         </button>
       ))}
-      <Link to="/" state={value !== "viagens" ? { returnTripPath: location.pathname } : location.state} className={value === "viagens" ? "active" : ""} aria-current={value === "viagens" ? "page" : undefined} onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>
-        <Luggage size={20} aria-hidden="true" />
-        <span>Viagens</span>
-      </Link>
+
     </nav>
   );
 }
