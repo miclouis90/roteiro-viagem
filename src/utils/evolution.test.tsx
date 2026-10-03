@@ -89,7 +89,7 @@ describe("visão geral contextual", () => {
       const ids = [...view.transport,...(view.next ? [view.next] : []),...view.todayPreview,...view.highlights].map(e=>e.id);
       expect(new Set(ids).size).toBe(ids.length);
       const html = renderToStaticMarkup(<TripOverview trip={trip} events={events} now={now} onDay={()=>{}} />);
-      expect(html).toContain("Roteiro em um olhar");
+      expect(html).toContain("Seus dias");
       expect(html).toContain("Dia livre");
       expect(html).not.toContain("Adicionar programa");
     }

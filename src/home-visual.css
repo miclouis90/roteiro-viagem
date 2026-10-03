@@ -1,0 +1,43 @@
+/* Home composition. Shared foundation and trip screens remain unchanged. */
+.home .home-intro { padding: 24px 0 25px; }
+.home .home-intro h1 { font-size: .9375rem; font-weight: 550; color: var(--text-secondary); margin: 0 0 8px; }
+.home .home-intro p { max-width: 310px; font-size: clamp(1.9rem, 7.8vw, 2.5rem); line-height: 1.12; letter-spacing: -.045em; font-weight: var(--weight-heading); color: var(--text-primary); margin: 0; }
+.home .home-search-row { gap: 0; padding: 5px; background: var(--surface-raised); border-radius: var(--radius-pill); box-shadow: var(--shadow-sm); }
+.home .home-search { border: 0; box-shadow: none; background: transparent; height: 44px; padding: 0 12px; }
+.home .home-search input { font-size: .875rem; }
+.home .home-calendar-button { border: 0; border-radius: 50%; background: var(--brand-50); color: var(--brand-700); width: 44px; height: 44px; flex-basis: 44px; }
+.home .home-status { gap: 5px; padding: 14px 0 25px; }
+.home .home-status .filter-chip { min-height: 40px; border: 0; padding: 8px 11px; border-radius: var(--radius-pill); background: transparent; font-size: .75rem; color: var(--text-secondary); }
+.home .home-status .filter-chip.active { background: var(--brand-700); color: white; }
+.home .home-section { margin-bottom: 27px; }
+.home .home-section h2 { font-size: 1.125rem; letter-spacing: -.025em; margin: 0 0 13px; }
+.home .home-carousel { gap: 14px; padding: 2px 2px 10px; }
+.home .home-trip-upcoming { flex: 0 0 87%; max-width: 390px; padding: 0; border: 0; border-radius: var(--radius-xl); overflow: hidden; background: var(--surface-raised); box-shadow: var(--shadow-sm); }
+.home .home-trip-upcoming:only-child { flex-basis: 100%; max-width: 520px; }
+.home .home-trip-art { position: relative; isolation: isolate; overflow: hidden; background: linear-gradient(130deg, var(--trip-soft), color-mix(in srgb, var(--trip-accent) 35%, var(--surface-raised))); }
+.home .home-trip-upcoming .home-trip-art { height: 132px; border-radius: 0; }
+.home .home-art-orbit { position: absolute; width: 205px; height: 205px; border: 1px solid color-mix(in srgb, var(--trip-accent) 24%, transparent); border-radius: 50%; right: -18px; top: -96px; box-shadow: 0 0 0 27px color-mix(in srgb, var(--trip-accent) 5%, transparent), 0 0 0 55px color-mix(in srgb, var(--trip-accent) 4%, transparent); }
+.home .home-art-horizon { position: absolute; width: 240px; height: 150px; border-radius: 50%; background: color-mix(in srgb, var(--trip-accent) 12%, transparent); left: -65px; bottom: -110px; transform: rotate(22deg); }
+.home .home-trip-art > svg { position: absolute; left: 23px; top: 23px; width: 36px; height: 36px; color: var(--trip-accent); opacity: .8; }
+.home .home-trip-art .cover-route { width: 160px; height: 160px; right: 35px; bottom: -65px; transform: rotate(-26deg); opacity: .65; }
+.home .home-trip-upcoming .home-trip-copy { padding: 18px 19px 17px; }
+.home .home-trip-heading { display: flex; align-items: flex-start; gap: 12px; }
+.home .home-trip-heading > svg { flex: 0 0 19px; margin-top: 4px; color: var(--trip-accent); }
+.home .home-trip-upcoming h3 { flex: 1; min-width: 0; font-size: 1.375rem; line-height: 1.18; letter-spacing: -.035em; margin: 0 0 7px; overflow-wrap: anywhere; }
+.home .home-trip-copy > p { font-size: .8125rem; margin: 0 0 8px; color: var(--text-secondary); }
+.home .home-trip-copy .home-trip-period { font-size: .75rem; line-height: 1.5; }
+.home .home-trip-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+.home .home-trip-meta .status-chip { font-size: .6875rem; padding: 4px 8px; background: var(--surface-soft); color: var(--text-secondary); border: 0; }
+.home .home-trip-meta > span:last-child:not(.status-chip) { font-size: .6875rem; color: var(--action-accent); font-weight: 600; }
+.home .home-trip-list { display: grid; gap: 10px; }
+.home .home-trip-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 13px; padding: 10px; border: 0; border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: none; }
+.home .home-trip-row .home-trip-art { height: 100%; min-height: 88px; border-radius: var(--radius-md); }
+.home .home-trip-row .home-trip-art > svg { top: 18px; left: 18px; width: 27px; height: 27px; }
+.home .home-trip-row .home-trip-copy { display: block; padding: 3px 0; min-width: 0; }
+.home .home-trip-row h3 { flex: 1; margin: 0 0 4px; font-size: .9375rem; line-height: 1.25; overflow-wrap: anywhere; }
+.home .home-trip-row .home-trip-heading > svg { width: 15px; flex-basis: 15px; }
+.home .home-trip-row .home-trip-copy > p { font-size: .75rem; margin: 0 0 4px; }
+.home .home-trip-row .home-trip-copy .home-trip-period { font-size: .6875rem; }
+.home .home-trip-row .home-trip-meta { margin-top: 4px; }
+.home .home-trip-row .home-trip-meta .status-chip { padding: 0; background: transparent; font-size: .625rem; }
+@media (max-width: 700px) { .home { padding-bottom: calc(32px + env(safe-area-inset-bottom)); } }

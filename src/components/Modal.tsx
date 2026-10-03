@@ -22,7 +22,7 @@ export function Modal({
     return () => {
       d?.close();
       document.body.style.overflow = before;
-      if (focused?.isConnected) focused.focus();
+      if (focused?.isConnected) focused.focus({ preventScroll: true });
     };
   }, []);
   return (

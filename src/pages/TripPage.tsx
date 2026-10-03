@@ -5,7 +5,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { Share2, LockKeyhole } from "lucide-react";
+import { Share2, LockKeyhole, ChevronLeft } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import { useTrip } from "../hooks/useTrip";
@@ -14,14 +14,13 @@ import { removeTrip, removeEvent } from "../services/repository";
 import { duplicateTrip } from "../services/duplicateTrip";
 import { removeMember } from "../services/collaboration";
 import { tripAccess } from "../utils/access";
-import { datesBetween, daysBetween, formatDate } from "../utils/dates";
+import { datesBetween, daysBetween, formatDate, dateKey } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
 import { tripTabFromSearch, itineraryViewFromSearch } from "../utils/tripView";
-import { TripOverview } from "../components/trip/TripOverview";
+import { TripOverview, OverviewArtwork, OverviewSummary } from "../components/trip/TripOverview";
 import { themeStyle } from "../data/themes";
 
 import { LoadingState } from "../components/ui/LoadingState";
-import { RouteArtwork } from "../components/ui/RouteArtwork";
 import { JourneyMoment } from "../components/trip/JourneyMoment";
 import {
   TripNavigation,
@@ -106,9 +105,19 @@ function TripWorkspace({
   }, []);
   function changeTab(value: TripTab, date?: string) {
     scrollPositions.current[tab] = window.scrollY;
-    const next: Record<string, string> =
-      value === "geral" ? {} : { tab: value };
-    if (date) next.day = date;
+    const next = new URLSearchParams(params);
+    if (value === "geral") next.delete("tab");
+    else next.set("tab", value);
+    // Keep the selected day/view when visiting another section of this trip.
+    if (tab === "roteiro" && !next.has("day")) {
+      const localToday = dateKey();
+      next.set("day", days.includes(localToday) ? localToday : trip.startDate);
+    }
+    if (params.get("tab") === "lugares") next.set("view", "lugares");
+    if (date) {
+      next.set("day", date);
+      next.delete("view");
+    }
     setParams(next);
     requestAnimationFrame(() => {
       if (!date && scrollPositions.current[value] !== undefined) {
@@ -194,12 +203,20 @@ function TripWorkspace({
       className={`trip-page theme-trip ${admin ? "" : "public-trip"}`}
       style={themeStyle(trip.theme) as React.CSSProperties}
     >
+      {tab !== "geral" && <div className="trip-context">
+        <Link to="/" className="trip-home-link" onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>
+          <ChevronLeft size={18} aria-hidden="true" />
+          Viagens
+        </Link>
+        <span className="trip-context-name" title={trip.title}>{trip.title}</span>
+      </div>}
       {tab === "geral" ? (
         <>
           <header
-            className={`trip-heading ${tab === "geral" ? "trip-hero" : "compact-heading"}`}
+            className={`trip-heading ${tab === "geral" ? "trip-hero overview-hero" : "compact-heading"}`}
           >
-            <div>
+            <div className="overview-hero-copy">
+              <Link to="/" className="trip-home-link overview-home-link" onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}><ChevronLeft size={18} aria-hidden="true" />Viagens</Link>
               <span className="eyebrow">
                 {trip.destinationCity}
                 {trip.destinationState && ` · ${trip.destinationState}`}
@@ -227,7 +244,7 @@ function TripWorkspace({
                 <JourneyMoment trip={trip} events={events} now={now} />
               )}
             </div>
-            <RouteArtwork />
+            <OverviewArtwork city={trip.destinationCity} />
             <div className="heading-actions">
               {!admin && (
                 <button
@@ -251,6 +268,7 @@ function TripWorkspace({
                 />
               )}
             </div>
+            <OverviewSummary trip={trip} events={events} now={now} />
           </header>
         </>
       ) : (
@@ -266,6 +284,8 @@ function TripWorkspace({
             events={events}
             now={now}
             onDay={(date) => changeTab("roteiro", date)}
+            onSelect={(event) => { setJustSaved(false); setSelected(event); }}
+            onAdd={admin ? () => { setNewDate(trip.startDate); setAddKind("program"); setExpandDetails(false); setJustSaved(false); setEditEvent("new"); } : undefined}
           />
         ) : tab === "gastos" ? (
           <>
@@ -379,7 +399,6 @@ function TripWorkspace({
           onEdit={() => {
             setExpandDetails(justSaved);
             setEditEvent(events.find((e) => e.id === selected.id) || selected);
-            setSelected(null);
           }}
           onDelete={() => ask("delete-event")}
           onShare={() => {

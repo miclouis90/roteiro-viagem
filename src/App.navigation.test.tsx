@@ -3,16 +3,16 @@ import { act, StrictMode, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
-import { demoTrip } from "./data/demo";
+import { demoTrip, demoEvents } from "./data/demo";
 import { watchEvents, watchTrip, watchTrips } from "./services/repository";
 
 const authState = vi.hoisted(() => ({ admin: false, user: null as null | {uid: string; displayName: string} }));
-vi.mock("./lib/firebase", () => ({ db: {}, auth: null, demoMode: false, configured: true }));
+vi.mock("./lib/firebase", () => ({ db: null, auth: null, demoMode: false, configured: true }));
 vi.mock("./hooks/useAuth", () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
   useAuth: () => ({ user: authState.user, admin: authState.admin, loading: false, error: "", login: vi.fn(), logout: vi.fn() }),
 }));
-vi.mock("./services/repository", () => ({ watchTrips: vi.fn(), watchTrip: vi.fn(), watchEvents: vi.fn() }));
+vi.mock("./services/repository", () => ({ watchTrips: vi.fn(), watchTrip: vi.fn(), watchEvents: vi.fn(), saveEvent: vi.fn().mockResolvedValue("demo-6") }));
 const trip = { ...demoTrip, id: "brasilia-da-mel-2026", title: "Brasília da Mel", isPublic: true };
 let container: HTMLDivElement;
 let root: Root;
@@ -53,12 +53,14 @@ describe("Home sem contexto de viagem", () => {
   it("renderiza Home após clicar Viagens e permite reabrir a viagem e suas abas", async () => {
     await mount(`/viagem/${trip.id}`);
     expect(container.querySelector("h1")?.textContent).toBe(trip.title);
-    await click(container.querySelector('.trip-tabs a[href="#/"]'));
+    await click(container.querySelector('.trip-home-link[href="#/"]'));
     expect(window.location.hash).toBe("#/"); expectHome();
     expect(vi.mocked(watchEvents).mock.calls.every(([id]) => id === trip.id)).toBe(true);
     await click(container.querySelector(`main.home a[href="#/viagem/${trip.id}"]`));
     expect(container.querySelector("h1")?.textContent).toBe(trip.title);
     for (const label of ["Roteiro", "Gastos", "Visão geral"]) {
+      expect(container.querySelectorAll(".trip-tabs button")).toHaveLength(3);
+      expect(container.querySelector(".trip-tabs")?.textContent).not.toContain("Viagens");
       await click([...container.querySelectorAll(".trip-tabs button")].find(button => button.textContent === label)!);
       expect(container.querySelector("h1")?.textContent).toBe(label === "Visão geral" ? trip.title : label);
     }
@@ -93,7 +95,7 @@ it("preserva a criação na Home sem bottom navigation", async () => {
 it("oculta a barra ao voltar à Home e restaura ao abrir a viagem", async () => {
   await mount(`/viagem/${trip.id}`);
   expect(container.querySelector('.trip-tabs')).not.toBeNull();
-  await click(container.querySelector('.trip-tabs a[href="#/"]'));
+  await click(container.querySelector('.trip-home-link[href="#/"]'));
   expectHome();
   await click(container.querySelector(`main.home a[href="#/viagem/${trip.id}"]`));
   expect(container.querySelector('.trip-tabs')).not.toBeNull();
@@ -166,6 +168,7 @@ it("permite pular o onboarding e preserva deep links", async () => {
 it("abre deep link diretamente sem onboarding", async () => {
   await mount(`/viagem/${trip.id}?tab=roteiro`);
   expect(container.querySelector('h1')?.textContent).toBe('Roteiro');
+  expect(container.querySelector(".trip-context-name")?.textContent).toBe(trip.title);
   expect(container.querySelector('.onboarding')).toBeNull();
 });
 
@@ -200,6 +203,7 @@ it.each(['', '?tab=roteiro', '?tab=lugares&invite=shared'])('não intercepta dee
   const path = `/viagem/${trip.id}${suffix}`;
   await mount(path);
   expect(window.location.hash).toBe(`#${path}`);
+  expect(container.querySelector('.trip-home-link')?.getAttribute("href")).toBe("#/");
   expect(container.querySelector('.onboarding')).toBeNull();
   expect(container.querySelector('h1')).not.toBeNull();
   expect(localStorage.getItem('rumo:onboarding-completed')).toBeNull();
@@ -210,4 +214,55 @@ it("não bloqueia a saída se localStorage falhar", async () => {
   await mount('/');
   await click(container.querySelector('.onboarding-skip'));
   expectHome();
+});
+it("keeps itinerary tools secondary and switches days without leaving the trip", async () => {
+  await mount(`/viagem/${trip.id}?tab=roteiro`);
+  expect(container.querySelector('.itinerary-search')?.hasAttribute('open')).toBe(false);
+  const days = container.querySelectorAll('.day-picker button');
+  await click(days[1]);
+  expect(days[1].getAttribute('aria-pressed')).toBe('true');
+  expect(window.location.hash).toContain('day=2026-10-30');
+  expect(container.querySelector('.timeline-heading h3')?.textContent).toContain('30');
+  expect(container.querySelector('.itinerary-display')).not.toBeNull();
+});
+
+it("opens the existing add-program flow for the trip owner", async () => {
+  authState.user = { uid: "owner-test", displayName: "Owner" };
+  vi.mocked(watchTrip).mockImplementation((_id, next) => { next({...trip, ownerId: "owner-test"}); return () => {}; });
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
+  Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
+  await mount(`/viagem/${trip.id}?tab=roteiro&day=2026-10-30`);
+  await click(container.querySelector('[aria-label="Adicionar programa"]'));
+  await click([...container.querySelectorAll('dialog button')].find(button => button.textContent === 'Programa')!);
+  expect(container.querySelector('dialog input[name="title"]')).not.toBeNull();
+  expect(container.querySelector('dialog input[name="date"]')?.getAttribute('value')).toBe('2026-10-30');
+});
+
+it.each(["roteiro", "lugares"])("preserves %s context through details, editing and tabs", async view => {
+  authState.user = { uid: "owner-test", displayName: "Owner" };
+  vi.mocked(watchTrip).mockImplementation((_id, next) => { next({...trip, ownerId: "owner-test"}); return () => {}; });
+  vi.mocked(watchEvents).mockImplementation((_id, next) => { next([demoEvents[6]]); return () => {}; });
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
+  Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
+  const path = `/viagem/${trip.id}?tab=roteiro&day=2026-10-31${view === "lugares" ? "&view=lugares" : ""}`;
+  await mount(path);
+  const openItem = () => click(container.querySelector('.programs .event-row, .programs .place-list-main'));
+  await openItem();
+  await click(container.querySelector('dialog [aria-label="Fechar"]'));
+  expect(window.location.hash).toBe(`#${path}`);
+  await openItem();
+  const edit = () => click([...container.querySelectorAll('dialog button')].find(button => button.textContent === 'Editar')!);
+  await edit();
+  await click(container.querySelector('dialog [aria-label="Fechar"]'));
+  expect(container.querySelector('dialog')?.textContent).toContain(demoEvents[6].title);
+  expect(container.querySelector('dialog form')).toBeNull();
+  await edit();
+  await act(async () => { container.querySelector('dialog form')!.dispatchEvent(new Event('submit', {bubbles:true,cancelable:true})); });
+  expect(container.querySelector('dialog form')).toBeNull();
+  expect(window.location.hash).toBe(`#${path}`);
+  await click(container.querySelector('dialog [aria-label="Fechar"]'));
+  for (const index of [2, 0, 1]) await click(container.querySelectorAll('.trip-tabs button')[index]);
+  expect(window.location.hash).toContain('day=2026-10-31');
+  expect(container.querySelector('.itinerary-tabs [aria-pressed="true"]')?.textContent).toBe(view === "lugares" ? 'Lugares' : 'Roteiro');
+  expect(container.querySelector('.trip-tabs [aria-current="page"]')?.textContent).toBe('Roteiro');
 });

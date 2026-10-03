@@ -21,7 +21,7 @@ export function TripSummary({
     <section className="trip-summary">
       <section className="expense-hero">
         <div className="expense-hero-heading">
-          <span className="eyebrow">Estimativa da viagem</span>
+          <span className="eyebrow">Total estimado da viagem</span>
           <Wallet size={24} aria-hidden="true" />
         </div>
         <p className="summary-amount">
@@ -29,6 +29,7 @@ export function TripSummary({
             ? money(estimate.total, trip.currency)
             : spendingLabel(events, trip.currency)}
         </p>
+        {estimate.undefinedCount > 0 && estimate.total > 0 && <span className="expense-known">Total já definido</span>}
         <p>
           {estimate.total > 0
             ? `${money(estimate.total / Math.max(1, count), trip.currency)} por dia${estimate.undefinedCount ? " · média parcial" : ""}`
@@ -49,8 +50,8 @@ export function TripSummary({
             <strong>
               {estimate.undefinedCount}{" "}
               {estimate.undefinedCount === 1
-                ? "programa sem valor"
-                : "programas sem valor"}
+                ? "programa ainda sem estimativa"
+                : "programas ainda sem estimativa"}
             </strong>
             <span>O total considera apenas as estimativas conhecidas.</span>
           </p>
@@ -78,11 +79,13 @@ export function TripSummary({
                 <div className="expense-group-content">
                   <div className="summary-line">
                     <span>{label}</span>
-                    <strong>{spendingLabel(values, trip.currency)}</strong>
+                    <strong>{group.total > 0 ? money(group.total, trip.currency) : spendingLabel(values, trip.currency)}</strong>
                   </div>
                   <span className="expense-group-count">
                     {values.length}{" "}
                     {values.length === 1 ? "programa" : "programas"}
+                    {group.total > 0 && <span className="expense-percent"> · {Math.round(group.total / estimate.total * 100)}% do total definido</span>}
+                    {group.undefinedCount > 0 && <span className="expense-undefined"> + {group.undefinedCount} sem estimativa</span>}
                   </span>
                   {group.total > 0 && (
                     <div className="expense-track" aria-hidden="true">
@@ -110,11 +113,13 @@ export function TripSummary({
         <div className="expense-day-grid">
           {days.map((day) => {
             const programs = active.filter((event) => event.date === day);
+            const daily = spending(programs);
             return (
               <article className="expense-day" key={day}>
                 <h3>{formatDate(day, { weekday: "short", day: "numeric" })}</h3>
-                <strong>{spendingLabel(programs, trip.currency)}</strong>
+                <strong>{daily.total > 0 ? money(daily.total, trip.currency) : spendingLabel(programs, trip.currency)}</strong>
                 <span>{programs.length} {programs.length === 1 ? "programa" : "programas"}</span>
+                {daily.undefinedCount > 0 && <span className="expense-undefined">{daily.undefinedCount} sem estimativa</span>}
               </article>
             );
           })}

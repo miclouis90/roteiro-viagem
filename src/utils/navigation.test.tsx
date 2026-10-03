@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TripNavigation } from "../components/ui/Primitives";
 import { EventForm } from "../components/EventForm";
-import { TripOverview } from "../components/trip/TripOverview";
+import { TripOverview, OverviewSummary } from "../components/trip/TripOverview";
 import { demoTrip, demoEvents } from "../data/demo";
 import { tripTabFromSearch, itineraryViewFromSearch } from "./tripView";
 import { nextStep } from "./nextStep";
@@ -46,11 +46,11 @@ describe("navegação simplificada", () => {
       <MemoryRouter initialEntries={["/viagem/brasilia-da-mel-2026?tab=roteiro"]}><TripNavigation value="roteiro" onChange={() => {}} /></MemoryRouter>,
     );
     expect(html.match(/<button/g)).toHaveLength(3);
-    expect(html).toMatch(/<a[^>]*href="\/"[^>]*>[\s\S]*?<span>Viagens<\/span><\/a>/);
-    for (const text of ["Visão geral", "Roteiro", "Gastos", "Viagens"])
+    for (const text of ["Visão geral", "Roteiro", "Gastos"])
       expect(html).toContain(text);
-    expect([...html.matchAll(/<span>(Viagens|Visão geral|Roteiro|Gastos)<\/span>/g)].map(match => match[1])).toEqual(["Viagens", "Visão geral", "Roteiro", "Gastos"]);
+    expect([...html.matchAll(/<span>(Viagens|Visão geral|Roteiro|Gastos)<\/span>/g)].map(match => match[1])).toEqual(["Visão geral", "Roteiro", "Gastos"]);
     expect(html).not.toContain("Lugares");
+    expect(html).not.toContain("Viagens");
     expect(html).toContain('aria-current="page"');
   });
   it("preserva links antigos de Lugares e os novos links secundários", () => {
@@ -101,8 +101,9 @@ describe("navegação simplificada", () => {
       />,
     );
     expect(html).not.toContain("Próximo passo");
-    expect(html).toContain("Roteiro em um olhar");
-    expect(html).toContain("Resumo da viagem");
+    expect(html).toContain("Seus dias");
+    const summary = renderToStaticMarkup(<OverviewSummary trip={trip} events={[flight, lunch]} now={new Date(2026, 9, 1)} />);
+    expect(summary).toContain("Resumo da viagem");
     for (const heading of [
       "Transporte",
       "Próximo programa",

@@ -130,12 +130,24 @@ export function Programs({
           />
         </div>
       )}
+      {tab === "roteiro" ? (
+        <details className="itinerary-search">
+          <summary>Buscar e filtrar{hasFilters ? " - Ativos" : ""}</summary>
+      <EventFilters
+        value={filters}
+        onChange={setFilters}
+        days={days}
+        showDate={view === "calendar"}
+      />
+        </details>
+      ) : (
       <EventFilters
         value={filters}
         onChange={setFilters}
         days={days}
         showDate={tab === "lugares" || view === "calendar"}
       />
+      )}
       {tab === "lugares" ? (
         <Places trip={trip} events={filtered} onSelect={onSelect} />
       ) : view === "calendar" ? (
@@ -148,7 +160,7 @@ export function Programs({
       ) : (
         <>
           <div className="timeline-heading">
-            <h3>{formatDate(day, { weekday: "long" })}</h3>
+            <h3>{formatDate(day, { weekday: "long", day: "numeric", month: "short" })}</h3>
             <span>
               {list.length} {list.length === 1 ? "programa" : "programas"}
               {list.length > 0 && ` · ${spendingLabel(list, trip.currency)}`}

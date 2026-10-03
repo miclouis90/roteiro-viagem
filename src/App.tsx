@@ -39,6 +39,8 @@ function Shell() {
   const tripId = inTrip
     ? decodeURIComponent(location.pathname.split("/")[2])
     : "";
+  const itineraryAction = inTrip && new URLSearchParams(location.search).get("tab") === "roteiro" && new URLSearchParams(location.search).get("view") !== "lugares";
+  const addLabel = itineraryAction ? "Adicionar programa" : "Adicionar";
   const currentTrip = useTrip(tripId);
   const canAdd =
     currentTrip.access.canEdit ||
@@ -55,8 +57,8 @@ function Shell() {
           <div className="account">
             {(inTrip ? canAdd : admin) && (
               <button
-                className="ghost new-trip"
-                aria-label={inTrip ? "Adicionar" : "Criar viagem"}
+                className={`ghost new-trip ${itineraryAction ? "itinerary-add" : ""}`}
+                aria-label={inTrip ? addLabel : "Criar viagem"}
                 onClick={async () => {
                   if (inTrip && !user && !demoMode) {
                     try {
@@ -74,7 +76,7 @@ function Shell() {
                 }}
               >
                 <Plus size={18} />
-                <span>{inTrip ? "Adicionar" : "Nova viagem"}</span>
+                <span>{inTrip ? addLabel : "Nova viagem"}</span>
               </button>
             )}
             {!loading &&
