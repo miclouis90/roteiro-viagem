@@ -5,7 +5,7 @@ import { TripNavigation } from "../components/ui/Primitives";
 import { EventForm } from "../components/EventForm";
 import { TripOverview, OverviewSummary } from "../components/trip/TripOverview";
 import { demoTrip, demoEvents } from "../data/demo";
-import { tripTabFromSearch, itineraryViewFromSearch } from "./tripView";
+import { tripTabFromSearch, itineraryTypeFromSearch, normalizeItinerarySearch } from "./tripView";
 import { nextStep } from "./nextStep";
 
 vi.mock("../hooks/useToast", () => ({ useToast: () => vi.fn() }));
@@ -53,15 +53,19 @@ describe("navegação simplificada", () => {
     expect(html).not.toContain("Viagens");
     expect(html).toContain('aria-current="page"');
   });
-  it("preserva links antigos de Lugares e os novos links secundários", () => {
+  it("normaliza links antigos mantendo dia, tipo e colaboração", () => {
     for (const search of ["tab=lugares", "tab=roteiro&view=lugares"]) {
       const params = new URLSearchParams(search);
       expect(tripTabFromSearch(params)).toBe("roteiro");
-      expect(itineraryViewFromSearch(params)).toBe("lugares");
+      expect(itineraryTypeFromSearch(params)).toBe("places");
+      expect(normalizeItinerarySearch(params).toString()).toBe("tab=roteiro&type=places");
     }
-    expect(itineraryViewFromSearch(new URLSearchParams("tab=roteiro"))).toBe(
-      "roteiro",
-    );
+    const calendar = normalizeItinerarySearch(new URLSearchParams("tab=calendario&day=2026-11-01&invite=shared"));
+    expect(calendar.get("tab")).toBe("roteiro");
+    expect(calendar.get("day")).toBe("2026-11-01");
+    expect(calendar.get("invite")).toBe("shared");
+    expect(calendar.has("view")).toBe(false);
+    expect(itineraryTypeFromSearch(new URLSearchParams("tab=roteiro"))).toBe("all");
   });
   it("cadastro inicial mostra somente o essencial e um salvar", () => {
     const html = renderToStaticMarkup(

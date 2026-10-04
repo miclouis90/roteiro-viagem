@@ -1,0 +1,67 @@
+/* Itinerary composition only; other trip views retain their own surfaces. */
+.itinerary-view { padding-top: 8px; }
+.itinerary-view .toolbar { display: flex; align-items: center; gap: 8px; }
+.itinerary-view .toolbar .search { display: flex; flex: 1; gap: 7px; min-width: 0; height: 44px; padding: 0 10px; border: 0; border-radius: 99px; background: white; box-shadow: var(--shadow-sm); }
+.itinerary-view .toolbar .search input { width: 100%; min-width: 0; padding: 0; min-height: 40px; font-size: .75rem; }
+.itinerary-view .toolbar > button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 8px 10px; border: 0; background: white; border-radius: 14px; box-shadow: var(--shadow-sm); color: var(--brand-700); font-size: .75rem; }
+.itinerary-view .timeline-heading { margin-bottom: 15px; gap: 5px; }
+.itinerary-view .timeline-heading > span { font-size: .75rem; }
+.itinerary-view .timeline { gap: 10px; }
+.itinerary-view .experience-row { width: 100%; display: grid; grid-template-columns: 38px 10px minmax(0,1fr); gap: 8px; align-items: start; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; text-align: left; }
+.itinerary-view .experience-row .event-time { padding-top: 13px; font-size: .75rem; color: var(--text-primary); line-height: 1.2; }
+.itinerary-view .experience-row .event-time small { font-size: .6875rem; margin-top: 6px; color: var(--text-secondary); }
+.itinerary-view .experience-row .timeline-dot { width: 8px; height: 8px; margin-top: 16px; border: 0; box-shadow: 0 0 0 4px var(--color-bg); background: var(--category-accent); }
+.itinerary-view .experience-row:not(:last-child)::before { left: 50px; top: 24px; bottom: -15px; width: 1px; border: 0; background: repeating-linear-gradient(to bottom, var(--color-border) 0 5px, transparent 5px 8px); }
+.event-experience { grid-column: 3; display: grid; grid-template-columns: 42px minmax(0,1fr) 10px; align-items: start; gap: 8px; min-width: 0; padding: 10px; border-radius: 18px; background: white; box-shadow: var(--shadow-sm); }
+.experience-visual { position: relative; display: grid; place-items: center; align-self: stretch; min-height: 78px; overflow: hidden; border-radius: 12px; background: linear-gradient(145deg, var(--category-bg), color-mix(in srgb, var(--category-accent) 12%, white)); color: var(--category-ink); }
+.experience-visual::after { content: ''; position: absolute; width: 55px; height: 55px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--category-accent) 15%, transparent); right: -24px; bottom: -25px; }
+.experience-copy { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.experience-copy > strong { font-size: .875rem; line-height: 1.25; letter-spacing: -.02em; color: var(--text-primary); overflow-wrap: anywhere; }
+.experience-copy .event-meta { display: flex; flex-wrap: wrap; gap: 3px 6px; }
+.experience-copy .category-chip { padding: 3px 5px; font-size: .625rem; gap: 3px; min-height: 0; border: 0; }
+.experience-copy .category-chip svg { width: 12px; height: 12px; }
+.experience-copy .priority-label { font-size: .625rem; color: var(--action-accent); gap: 3px; padding: 3px 0; }
+.experience-copy .location { display: flex; align-items: flex-start; gap: 4px; font-size: .6875rem; line-height: 1.3; color: var(--text-secondary); overflow-wrap: anywhere; }
+.experience-copy .location svg { flex: 0 0 12px; margin-top: 1px; }
+.experience-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 6px; font-size: .6875rem; color: var(--text-secondary); }
+.experience-footer .timeline-status { font-size: .5625rem; font-weight: 550; color: var(--text-secondary); padding: 0; background: none; }
+.experience-footer .status-confirmado { color: var(--color-outdoor-ink); }
+.experience-footer .status-ideia { color: var(--color-food-ink); }
+.experience-arrow { margin-top: 3px; color: var(--text-secondary); }
+.itinerary-view .experience-row:active .event-experience { background: var(--surface-selected); }
+@media (hover: hover) { .itinerary-view .experience-row:hover .event-experience { box-shadow: var(--shadow-md); } }
+@media (min-width: 701px) { .event-experience { grid-template-columns: 65px minmax(0,1fr) 16px; gap: 14px; padding: 14px; } .experience-copy > strong { font-size: 1rem; } }
+
+
+.itinerary-view .toolbar .search { box-shadow: none; padding-inline: 11px; }
+.itinerary-view .toolbar .search svg { color: var(--text-secondary); flex: 0 0 18px; }
+.itinerary-view .toolbar .search input { font-size: .75rem; }
+.itinerary-view .toolbar > button { padding-inline: 10px; box-shadow: none; font-size: .75rem; }
+.itinerary-view .timeline-heading { margin: 0 0 14px; gap: 5px; }
+.itinerary-view .timeline-heading > span { font-size: .75rem; font-weight: 400; color: var(--text-secondary); }
+/* Three distinct columns. The rail spans the entire row and joins the next marker. */
+.itinerary-view .timeline { gap: 9px; }
+.itinerary-view .experience-row { position: relative; grid-template-columns: 34px 8px minmax(0,1fr); gap: 7px; align-items: stretch; isolation: isolate; }
+.itinerary-view .experience-row::before, .itinerary-view .experience-row::after { display: none; }
+.itinerary-view .experience-row .event-time { min-width: 0; width: auto; padding-top: 12px; font-size: .75rem; font-weight: 550; white-space: nowrap; }
+.itinerary-view .experience-row .event-time small { font-size: .6875rem; font-weight: 400; margin-top: 7px; }
+.itinerary-view .experience-rail { position: relative; grid-column: 2; align-self: stretch; }
+.itinerary-view .experience-rail .timeline-dot { position: absolute; top: 17px; left: 0; width: 8px; min-width: 8px; height: 8px; margin: 0; box-shadow: 0 0 0 3px var(--surface-base); z-index: 1; }
+.itinerary-view .experience-rail .timeline-dot::after { display: none; }
+.itinerary-view .timeline .experience-row:not(:last-child) .experience-rail::after { content: ''; position: absolute; top: 21px; bottom: -30px; left: 3.5px; width: 1px; background: repeating-linear-gradient(to bottom,var(--color-border) 0 4px,transparent 4px 7px); }
+.itinerary-view .event-experience { position: relative; grid-template-columns: 43px minmax(0,1fr); align-items: stretch; gap: 9px; padding: 9px; border-radius: 18px; background: color-mix(in srgb,white 95%,var(--surface-base)); box-shadow: 0 3px 14px #173b4205; }
+.itinerary-view .experience-visual { min-height: 72px; border-radius: 12px; background: linear-gradient(150deg,var(--category-bg),color-mix(in srgb,var(--category-accent) 8%,white)); }
+.itinerary-view .experience-visual svg { width: 29px; height: 29px; }
+.itinerary-view .experience-copy { gap: 5px; padding-block: 1px; }
+.itinerary-view .experience-copy > strong { padding-right: 15px; font-size: .875rem; line-height: 1.25; font-weight: 650; letter-spacing: -.025em; }
+.itinerary-view .experience-copy .event-meta { gap: 3px 6px; align-items: center; }
+.itinerary-view .experience-copy .category-chip { min-height: 0; padding: 3px 5px; font-size: .625rem; font-weight: 500; background: var(--category-bg); }
+.itinerary-view .experience-copy .priority-label { padding: 0; font-size: .625rem; font-weight: 450; }
+.itinerary-view .experience-copy .location { font-size: .6875rem; line-height: 1.35; }
+.itinerary-view .experience-footer { gap: 4px 8px; font-size: .6875rem; margin-top: auto; }
+.itinerary-view .experience-footer .timeline-status { font-size: .625rem; font-weight: 450; }
+.itinerary-view .experience-arrow { position: absolute; top: 11px; right: 8px; margin: 0; width: 14px; height: 14px; }
+.itinerary-view .experience-row:focus-visible { outline: 0; }
+.itinerary-view .experience-row:focus-visible .event-experience { box-shadow: inset 0 0 0 2px var(--color-focus); }
+@media(hover:hover) { .itinerary-view .experience-row:hover .event-experience { background: white; box-shadow: 0 3px 14px #173b420d; } }
+@media(min-width:701px) { .itinerary-view .experience-row { grid-template-columns: 46px 8px minmax(0,1fr); gap: 10px; } .itinerary-view .event-experience { grid-template-columns: 58px minmax(0,1fr); padding: 12px; gap: 12px; } .itinerary-view .experience-copy > strong { font-size: 1rem; } }

@@ -1,8 +1,8 @@
 /* Trip cover uses the reference-inspired image atlas; no shared tokens change. */
-.trip-page .overview-hero { position: relative; isolation: isolate; display: block; overflow: visible; min-height: 430px; margin: 0 0 51px; padding: 20px 22px 140px; border: 0; border-radius: 28px; background: #204d5c; color: white; box-shadow: var(--shadow-sm); }
+.trip-page .overview-hero { position: relative; isolation: isolate; display: block; overflow: visible; min-height: 410px; margin: 0 0 35px; padding: 20px 22px 140px; border: 0; border-radius: 28px; background: #204d5c; color: white; box-shadow: var(--shadow-sm); }
 .overview-destination-art { position: absolute; inset: 0; border-radius: inherit; z-index: -2; background: linear-gradient(130deg, #174653, #b4c7c3); }
 .overview-destination-art.destination-brasilia { background-image: url("./assets/overview/brasilia-atlas.webp"); background-size: auto 179.65%; background-position: 54% top; }
-.trip-page .overview-hero::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, #042e40a3, #123c4b35 55%, transparent); z-index: -1; pointer-events: none; }
+.trip-page .overview-hero::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, #042e4085, #123c4b1c 58%, transparent); z-index: -1; pointer-events: none; }
 .trip-page .overview-hero > .overview-hero-copy { padding: 0; }
 .overview-hero .overview-home-link { display: inline-flex; color: white; margin: -7px 0 13px -7px; padding: 7px; min-height: 44px; }
 .trip-page .overview-hero .eyebrow { display: flex; width: fit-content; padding: 7px 12px; background: #ffffff26; border-radius: 99px; color: white; font-size: .75rem; letter-spacing: 0; margin-bottom: 18px; }
@@ -16,7 +16,7 @@
 .trip-page .overview-hero .journey-copy { color: white; font-size: .8125rem; margin-top: 8px; }
 .trip-page .overview-hero .heading-actions { position: absolute; right: 15px; top: 16px; z-index: 5; }
 .trip-page .overview-hero .heading-actions :is(summary, .icon-button) { background: #ffffff25; color: white; }
-.overview-hero .trip-quick-stats { position: absolute; left: 12px; right: 12px; bottom: -22px; display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 0; padding: 16px 7px; border: 1px solid #ffffffaa; border-radius: 20px; background: #ffffffdc; backdrop-filter: blur(18px); box-shadow: 0 8px 24px #183f4a13; color: var(--brand-700); z-index: 3; }
+.overview-hero .trip-quick-stats { position: absolute; left: 12px; right: 12px; bottom: -12px; display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 0; padding: 16px 7px; border: 0; border-radius: 20px; background: #eff4efb8; backdrop-filter: blur(18px); box-shadow: 0 5px 18px #183f4a0d; color: var(--brand-700); z-index: 3; }
 .overview-hero .trip-quick-stats > div { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 3px 5px; padding: 0 7px; background: none; border: 0; }
 .overview-hero .trip-quick-stats > div + div { border-left: 1px solid #1b4d5926; }
 .overview-hero .trip-quick-stats svg { grid-row: span 2; width: 20px; height: 20px; color: var(--brand-600); }
@@ -45,7 +45,7 @@
 .overview-simple .trip-about .ghost { padding: 0; color: var(--brand-600); min-height: 44px; }
 
 
-.overview-simple .overview-days .glance-day { flex-basis: 112px; width: 112px; min-width: 112px; min-height: 183px; padding: 12px 12px 10px; background-size: 500% 225.55%; background-position-y: bottom; }
+.overview-simple .overview-days .glance-day { flex-basis: 128px; width: 128px; min-width: 128px; min-height: 202px; padding: 12px 12px 10px; background-size: 500% 225.55%; background-position-y: bottom; }
 .trip-page:has(.destination-brasilia) .glance-day { background-image: linear-gradient(180deg, #082e435c, transparent 70%), url("./assets/overview/brasilia-atlas.webp"); }
 .overview-simple .glance-day.day-scene-0 { background-position-x: 0%; }
 .overview-simple .glance-day.day-scene-1 { background-position-x: 25%; }
@@ -58,3 +58,16 @@
 .overview-simple .glance-day.is-today { box-shadow: inset 0 0 0 2px var(--action-accent); }
 .overview-simple .trip-brief { margin-top: 3px; }
 @media (min-width: 701px) { .trip-page .overview-hero { padding: 24px 36px 140px; } .overview-destination-art.destination-brasilia { background-size: 100% 179.65%; } .overview-simple .overview-days .glance-day { flex-basis: 145px; min-height: 220px; } .overview-hero .trip-quick-stats { left: 22px; right: 22px; } }
+
+/* Compact only the testira rendered above Overview. */
+body:has(.overview-hero) .header-inner { min-height: 56px; padding-block: 5px; }
+body:has(.overview-hero) .site-header .new-trip { min-height: 44px; padding: 8px 12px; font-size: .8125rem; }
+.trip-page:has(.overview-hero) { padding-top: 8px; padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+.overview-simple .glance-day.is-first { box-shadow: inset 0 0 0 2px #ffffffb3, 0 3px 8px #143e4c14; }
+.overview-simple .trip-about { border-top: 1px solid var(--color-border); padding-top: 17px; margin-top: 13px; }
+.trip-about-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.overview-simple .trip-about-header h2 { margin: 0; font-size: 1.1875rem; color: var(--brand-700); }
+.overview-simple .trip-about-header .ghost { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; margin: 0; font-size: .75rem; min-height: 44px; }
+.trip-about-body { display: grid; grid-template-columns: 32px minmax(0,1fr); gap: 12px; align-items: start; }
+.trip-about-body > svg { color: var(--action-accent); margin-top: 4px; }
+.overview-simple .trip-about-body p { margin: 0; line-height: 1.6; font-size: .8125rem; }

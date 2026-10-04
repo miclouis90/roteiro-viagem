@@ -15,7 +15,7 @@ const normalize = (text: string) =>
 export function collectPlaces(events: readonly TripEvent[]): PlaceCollection[] {
   const grouped = new Map<string, PlaceCollection>();
   for (const event of [...events].sort((a, b) =>
-    (a.date + a.startTime).localeCompare(b.date + b.startTime),
+    ((a.date || "") + (a.startTime || "")).localeCompare((b.date || "") + (b.startTime || "")),
   )) {
     const key = normalize(event.location || event.mapsUrl || event.title);
     const current = grouped.get(key);

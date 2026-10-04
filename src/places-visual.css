@@ -1,0 +1,39 @@
+/* Place collection only. The approved shared shell stays in itinerary-shell.css. */
+.unified-itinerary .saved-places .places-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 11px; }
+.unified-itinerary .saved-places .place-list-card { display: block; position: relative; padding: 0; border: 0; border-radius: 19px; background: #ffffffb8; box-shadow: 0 3px 15px #173b4205; overflow: hidden; }
+.unified-itinerary .saved-places .place-card-face { position: relative; }
+.unified-itinerary .saved-places .place-list-main { position: relative; display: grid; grid-template-columns: 31% minmax(0,1fr); align-items: stretch; gap: 0; width: 100%; min-height: 124px; padding: 0; border: 0; border-radius: 19px; background: transparent; text-align: left; }
+.unified-itinerary .saved-places .place-list-visual { display: block; position: relative; isolation: isolate; overflow: hidden; width: 100%; height: auto; min-height: 124px; max-height: none; align-self: stretch; border-radius: 19px 0 0 19px; color: var(--category-ink); background: linear-gradient(155deg,var(--category-bg),color-mix(in srgb,var(--category-accent) 17%,white)); }
+.unified-itinerary .saved-places .place-artwork { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.unified-itinerary .saved-places .art-halo { fill: var(--category-accent); opacity: .09; }
+.unified-itinerary .saved-places .art-fill { fill: var(--category-accent); opacity: .15; }
+.unified-itinerary .saved-places .art-line { stroke: var(--category-ink); stroke-width: 1.3; opacity: .3; }
+.unified-itinerary .saved-places .art-route { stroke: var(--category-ink); stroke-width: 2; stroke-dasharray: 4 6; opacity: .5; }
+.unified-itinerary .saved-places .place-art-symbol { position: absolute; bottom: 9px; left: 9px; width: 35px; height: 35px; display: grid; place-items: center; border-radius: 11px; background: #ffffffc7; backdrop-filter: blur(7px); color: var(--category-ink); }
+.unified-itinerary .saved-places .place-art-scene { background-image: linear-gradient(180deg,transparent 65%,#153e4a26),url('./assets/overview/brasilia-atlas.webp'); background-size: 100% 100%,500% 225.55%; background-position-y: center,bottom; }
+.unified-itinerary .saved-places .place-art-scene-0 { background-position-x: center,0%; }
+.unified-itinerary .saved-places .place-art-scene-1 { background-position-x: center,25%; }
+.unified-itinerary .saved-places .place-art-scene-2 { background-position-x: center,50%; }
+.unified-itinerary .saved-places .place-art-scene-3 { background-position-x: center,75%; }
+.unified-itinerary .saved-places .place-art-scene-4 { background-position-x: center,100%; }
+.unified-itinerary .saved-places .place-list-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-width: 0; gap: 5px; padding: 11px 12px 40px; }
+.unified-itinerary .saved-places .place-list-copy strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-width: 100%; padding-right: 13px; font-size: .9375rem; line-height: 1.25; font-weight: 680; letter-spacing: -.025em; color: var(--text-primary); overflow-wrap: anywhere; }
+.unified-itinerary .saved-places .place-list-address { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-width: 100%; font-size: .6875rem; line-height: 1.35; color: var(--text-secondary); overflow-wrap: anywhere; }
+.unified-itinerary .saved-places .place-list-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 0; min-height: 15px; font-size: .625rem; line-height: 1.25; color: var(--text-secondary); }
+.unified-itinerary .saved-places .place-category-name { display: inline-flex; align-items: center; gap: 3px; color: var(--category-ink); }
+.unified-itinerary .saved-places .place-category-name svg { flex-shrink: 0; }
+.unified-itinerary .saved-places .place-list-meta .status-chip { padding: 0; border: 0; background: none; font-size: .625rem; color: var(--text-secondary); }
+.unified-itinerary .saved-places .place-list-meta .status-chip::before { content: none; }
+.unified-itinerary .saved-places .place-list-open { position: absolute; top: 12px; right: 10px; width: 15px; height: 15px; color: var(--category-ink); }
+.unified-itinerary .saved-places .place-list-map { position: absolute; right: 10px; bottom: 0; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: auto; margin: 0; white-space: nowrap; min-height: 44px; padding: 0 4px; border: 0; border-radius: 99px; background: transparent; color: var(--brand-600); font-size: .625rem; text-decoration: none; }
+.unified-itinerary .saved-places .place-list-map:hover { color: var(--action-accent); background: var(--surface-soft); }
+.unified-itinerary .saved-places .place-list-visits { position: relative; margin: 0; padding: 0; border: 0; min-height: 0; }
+.unified-itinerary .saved-places .place-list-visits[open] { padding: 4px 12px 8px calc(31% + 12px); }
+.unified-itinerary .saved-places .place-list-visits summary { position: absolute; top: -44px; left: calc(31% + 12px); display: inline-flex; align-items: center; justify-content: flex-start; gap: 5px; min-width: 80px; min-height: 44px; padding: 0; font-size: .625rem; color: var(--text-secondary); }
+.unified-itinerary .saved-places .place-list-visits .ghost { min-height: 44px; white-space: normal; text-align: left; }
+.unified-itinerary .saved-places .place-list-main:active { background: var(--surface-selected); }
+.unified-itinerary .saved-places .place-list-main:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--color-focus); }
+@media(hover:hover) { .unified-itinerary .saved-places .place-list-main:hover { background: #fff; } }
+@media(min-width:701px) { .unified-itinerary .saved-places .places-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .unified-itinerary .saved-places .place-list-main { min-height: 140px; } .unified-itinerary .saved-places .place-list-copy { padding-top: 14px; } }
+
+.unified-itinerary .saved-places .place-art-scene .place-art-symbol { display: none; }

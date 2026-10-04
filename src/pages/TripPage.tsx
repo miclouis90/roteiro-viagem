@@ -16,7 +16,7 @@ import { removeMember } from "../services/collaboration";
 import { tripAccess } from "../utils/access";
 import { datesBetween, daysBetween, formatDate, dateKey } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
-import { tripTabFromSearch, itineraryViewFromSearch } from "../utils/tripView";
+import { tripTabFromSearch, itineraryTypeFromSearch, normalizeItinerarySearch } from "../utils/tripView";
 import { TripOverview, OverviewArtwork, OverviewSummary } from "../components/trip/TripOverview";
 import { themeStyle } from "../data/themes";
 
@@ -88,7 +88,11 @@ function TripWorkspace({
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const tab = tripTabFromSearch(params);
-  const itineraryView = itineraryViewFromSearch(params);
+  const itineraryType = itineraryTypeFromSearch(params);
+  useEffect(() => {
+    const next = normalizeItinerarySearch(params);
+    if (next.toString() !== params.toString()) setParams(next, { replace: true });
+  }, [params, setParams]);
   const [addSheet, setAddSheet] = useState(false);
   const [addKind, setAddKind] = useState<"program" | "transport" | "place">(
     "program",
@@ -108,15 +112,14 @@ function TripWorkspace({
     const next = new URLSearchParams(params);
     if (value === "geral") next.delete("tab");
     else next.set("tab", value);
-    // Keep the selected day/view when visiting another section of this trip.
+    // Keep the selected day and result type when visiting another section.
     if (tab === "roteiro" && !next.has("day")) {
       const localToday = dateKey();
       next.set("day", days.includes(localToday) ? localToday : trip.startDate);
     }
-    if (params.get("tab") === "lugares") next.set("view", "lugares");
     if (date) {
       next.set("day", date);
-      next.delete("view");
+      next.delete("type");
     }
     setParams(next);
     requestAnimationFrame(() => {
@@ -200,7 +203,7 @@ function TripWorkspace({
   }
   return (
     <main
-      className={`trip-page theme-trip ${admin ? "" : "public-trip"}`}
+      className={`trip-page theme-trip ${tab === "roteiro" ? "itinerary-view itinerary-workspace unified-itinerary" : ""} ${admin ? "" : "public-trip"}`}
       style={themeStyle(trip.theme) as React.CSSProperties}
     >
       {tab !== "geral" && <div className="trip-context">
@@ -271,10 +274,10 @@ function TripWorkspace({
             <OverviewSummary trip={trip} events={events} now={now} />
           </header>
         </>
+      ) : tab === "roteiro" ? (
+        <header className="internal-heading itinerary-title"><h1>Roteiro</h1></header>
       ) : (
-        <header className="internal-heading">
-          <h1>{tab === "roteiro" ? "Roteiro" : "Gastos"}</h1>
-        </header>
+        <header className="internal-heading"><h1>Gastos</h1></header>
       )}
       <TripNavigation value={tab} onChange={(value) => changeTab(value)} />
       <div className="trip-content" id="trip-section" key={tab}>
@@ -294,33 +297,22 @@ function TripWorkspace({
               events={events}
               days={days}
               count={count}
+              onCalendar={() => changeTab("roteiro", params.get("day") || trip.startDate)}
             />
           </>
         ) : (
           <>
-            <nav className="itinerary-tabs" aria-label="Visões do roteiro">
-              {(["roteiro", "lugares"] as const).map((view) => (
-                <button
-                  key={view}
-                  aria-pressed={itineraryView === view}
-                  className={itineraryView === view ? "active" : ""}
-                  onClick={() => {
-                    const next = new URLSearchParams(params);
-                    next.set("tab", "roteiro");
-                    if (view === "lugares") next.set("view", "lugares");
-                    else next.delete("view");
-                    setParams(next);
-                  }}
-                >
-                  {view === "roteiro" ? "Roteiro" : "Lugares"}
-                </button>
-              ))}
-            </nav>
             <Programs
-              key={`${itineraryView}-${params.get("priority") || ""}`}
+              key={params.get("priority") || ""}
               trip={trip}
               events={events}
-              tab={itineraryView}
+              type={itineraryType}
+              onTypeChange={(type) => {
+                const next = new URLSearchParams(params);
+                if (type === "all") next.delete("type");
+                else next.set("type", type);
+                setParams(next, { replace: true });
+              }}
               admin={admin}
               selectedDate={params.get("day") || ""}
               onDayChange={(date) => {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Trip, TripEvent } from "../../types";
-import { ChevronRight, CalendarDays, MapPin, Wallet } from "lucide-react";
+import { Sparkles, ChevronRight, CalendarDays, MapPin, Wallet } from "lucide-react";
 import { tripOverview } from "../../utils/overview";
 import { spendingLabel } from "../../utils/spending";
 import { formatDate } from "../../utils/dates";
@@ -39,7 +39,7 @@ export function TripOverview({
           {view.days.map(({ date, count }, index) => (
             <button
               key={date}
-              className={`glance-day day-scene-${index % 5} ${date === view.today ? "is-today" : ""}`}
+              className={`glance-day day-scene-${index % 5} ${index === 0 ? "is-first" : ""} ${date === view.today ? "is-today" : ""}`}
               onClick={() => onDay(date)}
             >
               <span className="glance-date">
@@ -58,13 +58,8 @@ export function TripOverview({
       <section className="trip-brief">
         {about && (
           <section className="trip-about" aria-labelledby="trip-about-title">
+            <div className="trip-about-header">
             <h2 id="trip-about-title">Sobre esta viagem</h2>
-            <p
-              id="trip-about-text"
-              className={longAbout && !aboutExpanded ? "about-preview" : ""}
-            >
-              {about}
-            </p>
             {longAbout && (
               <button
                 className="ghost"
@@ -72,9 +67,18 @@ export function TripOverview({
                 aria-controls="trip-about-text"
                 onClick={() => setAboutExpanded(!aboutExpanded)}
               >
-                {aboutExpanded ? "Ver menos" : "Ver mais"}
+                {aboutExpanded ? "Ver menos" : "Ver mais"}<ChevronRight size={15} aria-hidden="true" />
               </button>
             )}
+            </div>
+            <div className="trip-about-body"><Sparkles size={22} aria-hidden="true" />
+            <p
+              id="trip-about-text"
+              className={longAbout && !aboutExpanded ? "about-preview" : ""}
+            >
+              {about}
+            </p>
+            </div>
           </section>
         )}
       </section>

@@ -1,0 +1,58 @@
+/* One planning surface: month, visual days, tools and the day's experiences. */
+.unified-itinerary { padding-top: 4px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.unified-itinerary .itinerary-title { margin: 0 0 18px; padding: 0; }
+.unified-itinerary .itinerary-title h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.65rem, 10vw, 3.75rem); letter-spacing: -.055em; line-height: 1.05; color: var(--brand-700); }
+.unified-programs { min-width: 0; }
+.unified-itinerary .trip-calendar { gap: 15px; }
+.unified-itinerary .trip-month { padding: 10px 10px 12px; border: 0; box-shadow: 0 3px 18px #173b4205; background: #ffffffcf; }
+.unified-itinerary .trip-month-header h2 { font-size: .9375rem; }
+.unified-itinerary .month-date { box-sizing: border-box; height: 44px; min-height: 44px; padding: 5px 0; transform: none; }
+.unified-itinerary .month-date.selected { box-shadow: inset 0 0 0 1px #ffffff10; }
+.unified-itinerary .month-date:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--color-focus); }
+.unified-itinerary .calendar-day-strip { margin: 0; padding: 3px 2px 6px; gap: 10px; }
+.unified-itinerary .calendar-day-preview { box-sizing: border-box; flex: 0 0 112px; width: 112px; height: 171px; min-width: 112px; padding: 11px 9px 9px; border: 0; outline: 0; }
+.unified-itinerary .calendar-day-preview.selected { box-shadow: inset 0 0 0 2px #82a9ad, 0 2px 8px #173b4212; }
+.unified-itinerary .calendar-day-preview:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--color-focus); }
+.calendar-day-summary { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; max-width: 100%; }
+.unified-itinerary .calendar-day-count { font-size: .625rem; line-height: 1.2; padding: 4px 6px; }
+.calendar-day-value { color: white; font-size: .6875rem; font-weight: 600; line-height: 1.2; text-shadow: 0 1px 5px #102c39; overflow-wrap: anywhere; }
+.unified-itinerary .itinerary-tools { margin: 14px 0 17px; display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
+.unified-itinerary .filter-area { margin-bottom: 0; }
+.unified-itinerary .toolbar { gap: 8px; margin: 0; }
+.unified-itinerary .toolbar .search { height: 44px; box-shadow: none; }
+.unified-itinerary .toolbar .search input { font-size: .8125rem; }
+.unified-itinerary .toolbar > button { font-size: .75rem; min-height: 44px; box-shadow: none; }
+.unified-itinerary .itinerary-export { display: inline-flex; align-items: center; justify-content: center; align-self: flex-end; gap: 5px; padding: 5px 4px; border: 0; background: none; color: var(--text-secondary); font-size: .6875rem; min-height: 36px; }
+.unified-itinerary .clear-filters { min-height: 36px; padding: 5px 3px; font-size: .6875rem; }
+.unified-schedule { min-width: 0; }
+.unified-schedule-header { display: flex; flex-wrap: wrap; gap: 5px 12px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.unified-itinerary .timeline-heading { margin: 0; gap: 5px; }
+.unified-itinerary .timeline-heading h2 { font-size: 1.25rem; font-family: inherit; font-weight: 700; line-height: 1.3; letter-spacing: -.035em; margin: 0; }
+.unified-itinerary .timeline-heading h2::first-letter { text-transform: uppercase; }
+.unified-itinerary .calendar-map { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; padding: 7px 10px; font-size: .6875rem; color: var(--brand-700); background: var(--surface-selected); border-radius: 99px; text-decoration: none; }
+.unified-itinerary .saved-places { margin-top: 18px; }
+.unified-itinerary .saved-places-heading { margin-bottom: 12px; }
+.unified-itinerary .saved-places-heading h3 { margin: 0 0 4px; font-size: 1rem; }
+.unified-itinerary .saved-places-heading p { margin: 0; color: var(--text-secondary); font-size: .75rem; }
+.itinerary-search-day + .itinerary-search-day { margin-top: 23px; }
+.itinerary-search-day > h3 { font-size: .875rem; color: var(--text-secondary); text-transform: capitalize; margin-bottom: 11px; }
+.itinerary-filter-sheet { display: flex; flex-direction: column; gap: 19px; }
+.itinerary-filter-sheet fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.itinerary-filter-sheet legend { padding: 0; margin-bottom: 9px; font-size: .8125rem; font-weight: 650; }
+.itinerary-filter-sheet label { font-size: .8125rem; }
+.itinerary-filter-sheet .filter-options { display: flex; flex-wrap: wrap; gap: 7px; }
+.itinerary-filter-sheet .filter-option { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 99px; font-size: .75rem; color: var(--text-secondary); background: var(--surface-soft); }
+.itinerary-filter-sheet .filter-option[aria-pressed="true"] { background: var(--brand-700); color: white; }
+.itinerary-filter-sheet .category-options .filter-option svg { color: var(--category-ink); }
+.itinerary-filter-sheet .category-options .filter-option[aria-pressed="true"] svg { color: white; }
+.itinerary-filter-sheet .priority-option { align-self: flex-start; }
+.itinerary-filter-sheet .additional-filters { padding: 0; border: 0; background: none; }
+.itinerary-filter-sheet .additional-filters > summary { min-height: 44px; font-size: .8125rem; }
+.itinerary-filter-sheet .additional-filters label { margin-top: 10px; }
+.itinerary-filter-sheet .form-actions { margin: 0; padding-top: 5px; justify-content: space-between; }
+@media (min-width: 701px) {
+  .unified-itinerary .trip-month { padding: 16px 24px; }
+  .unified-itinerary .calendar-day-preview { flex-basis: 136px; width: 136px; height: 191px; }
+  .unified-itinerary .trip-month-grid .month-date { height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) { .unified-itinerary :is(.month-date, .calendar-day-preview) { transition: none; } }

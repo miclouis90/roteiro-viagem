@@ -9,11 +9,13 @@ import {
   MoreHorizontal,
   Share2,
   ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
 import { money, safeUrl } from "../utils/money";
 import { eventPriceLabel, hasUndefinedPrice } from "../utils/eventPrice";
 import { formatDate } from "../utils/dates";
+import { hasProgramDate } from "../utils/itinerary";
 import { eventLabels, priorityLabels } from "../utils/labels";
 import { CategoryChip } from "./ui/Primitives";
 import { categoryOf } from "../data/categories";
@@ -23,11 +25,33 @@ export function EventCard({
   event,
   currency,
   onClick,
+  visual = false,
+  itinerary = false,
 }: {
   event: TripEvent;
   currency: string;
   onClick: () => void;
+  visual?: boolean;
+  itinerary?: boolean;
 }) {
+  if (visual) {
+    const category = categoryOf(event.category);
+    const Icon = category.icon;
+    return <button className={`event-row experience-row tone-${category.tone} ${event.status === "cancelado" ? "cancelled" : ""}`} onClick={onClick}>
+      <span className="event-time">{event.startTime}<small>{event.endTime}</small></span>
+      {itinerary ? <span className="experience-rail" aria-hidden="true"><span className="timeline-dot" /></span> : <span className="timeline-dot" aria-hidden="true" />}
+      <span className="event-experience">
+        <span className="experience-visual" aria-hidden="true"><Icon size={28} strokeWidth={1.6} /></span>
+        <span className="experience-copy">
+          <strong>{event.title}</strong>
+          <span className="event-meta"><CategoryChip name={event.category} />{event.priority === "imperdível" && <span className="priority-label"><Star size={12} aria-hidden="true" />Imperdível</span>}</span>
+          <span className="location"><MapPin size={12} aria-hidden="true" />{event.location || "Local a definir"}</span>
+          <span className="experience-footer"><span>{eventPriceLabel(event, currency)}</span><span className={`timeline-status status-${event.status}`}>{eventLabels[event.status]}</span></span>
+        </span>
+        <ChevronRight className="experience-arrow" size={16} aria-hidden="true" />
+      </span>
+    </button>;
+  }
   return (
     <button
       className={`event-row tone-${categoryOf(event.category).tone} ${event.status === "cancelado" ? "cancelled" : ""}`}
@@ -104,11 +128,11 @@ export function EventDetails({
         <div className="event-when">
           <CalendarDays size={18} aria-hidden="true" />
           <span>
-            {formatDate(event.date, {
+            {hasProgramDate(event) ? formatDate(event.date, {
               weekday: "long",
               day: "numeric",
               month: "long",
-            })}
+            }) : "Sem dia definido"}
           </span>
           <span className="event-clock">
             <Clock3 size={18} aria-hidden="true" />

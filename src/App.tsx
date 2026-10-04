@@ -26,6 +26,7 @@ import { SeedMelPage } from "./pages/SeedMelPage";
 import { TripForm } from "./components/Forms";
 
 import { useTrip } from "./hooks/useTrip";
+import { tripTabFromSearch } from "./utils/tripView";
 import { tripAccess } from "./utils/access";
 import { demoMode, configured } from "./lib/firebase";
 function Shell() {
@@ -39,8 +40,9 @@ function Shell() {
   const tripId = inTrip
     ? decodeURIComponent(location.pathname.split("/")[2])
     : "";
-  const itineraryAction = inTrip && new URLSearchParams(location.search).get("tab") === "roteiro" && new URLSearchParams(location.search).get("view") !== "lugares";
-  const addLabel = itineraryAction ? "Adicionar programa" : "Adicionar";
+  const tripParams = new URLSearchParams(location.search);
+  const inItinerary = inTrip && tripTabFromSearch(tripParams) === "roteiro";
+  const addLabel = inItinerary ? "Programa" : "Adicionar";
   const currentTrip = useTrip(tripId);
   const canAdd =
     currentTrip.access.canEdit ||
@@ -48,7 +50,7 @@ function Shell() {
   const menu = useRef<HTMLDetailsElement>(null);
   return (
     <>
-      <header className="site-header">
+      <header className={`site-header ${inItinerary ? "itinerary-header" : ""}`}>
         <div className="header-inner">
           <Link className="brand" to="/" aria-label="Rumo, suas viagens">
             <Compass size={29} strokeWidth={1.7} />
@@ -57,7 +59,7 @@ function Shell() {
           <div className="account">
             {(inTrip ? canAdd : admin) && (
               <button
-                className={`ghost new-trip ${itineraryAction ? "itinerary-add" : ""}`}
+                className={`ghost new-trip ${inItinerary ? "itinerary-add" : ""}`}
                 aria-label={inTrip ? addLabel : "Criar viagem"}
                 onClick={async () => {
                   if (inTrip && !user && !demoMode) {

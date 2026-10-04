@@ -1,0 +1,30 @@
+.trip-calendar { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.trip-month { padding: 10px 10px 12px; border-radius: 22px; background: white; box-shadow: var(--shadow-sm); }
+.trip-month-header { display: flex; align-items: center; gap: 1px; margin-bottom: 6px; }
+.trip-month-header h2 { font-size: .95rem; letter-spacing: -.025em; margin: 0; white-space: nowrap; }
+.trip-month-header .icon-button { display: grid; place-items: center; width: 44px; height: 44px; min-width: 44px; padding: 0; border: 0; color: var(--brand-700); background: transparent; }
+.month-view-label { margin-left: auto; font-size: .75rem; color: var(--text-secondary); padding: 7px 9px; background: var(--surface-soft); border-radius: 99px; }
+.trip-month-week,.trip-month-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); }
+.trip-month-week { margin-bottom: 4px; font-size: .625rem; color: var(--text-secondary); text-transform: uppercase; text-align: center; }
+.trip-month-week span { padding-block: 6px; }
+.month-date { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; min-height: 44px; padding: 5px 0; border: 0; border-radius: 50%; color: var(--text-secondary); background: transparent; font-size: .8125rem; font-weight: 450; }
+.month-date.in-trip { font-weight: 700; color: var(--brand-700); background: var(--surface-selected); }
+.month-date.outside-month { opacity: .55; }
+.month-date.selected { color: white; background: var(--brand-700); opacity: 1; box-shadow: 0 3px 8px #173b421a; }
+.calendar-indicators { display: flex; justify-content: center; gap: 3px; min-height: 5px; }
+.calendar-indicators i { width: 4px; height: 4px; border-radius: 50%; background: var(--category-accent); }
+.calendar-period { text-align: center; margin: 9px 0 0; font-size: .625rem; color: var(--text-secondary); }
+.calendar-day-strip { display: flex; gap: 9px; overflow-x: auto; min-width: 0; padding: 3px 2px 5px; scrollbar-width: none; scroll-snap-type: x proximity; }
+.calendar-day-strip::-webkit-scrollbar { display: none; }
+.calendar-day-preview { position: relative; flex: 0 0 99px; height: 151px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 10px 8px; border: 0; border-radius: 16px; background: linear-gradient(155deg,#375969,#0a343b); color: white; text-align: left; scroll-snap-align: start; }
+.brasilia-days .calendar-day-preview { background-image: linear-gradient(180deg,#082e4366,transparent 65%,#082e435c),url('./assets/overview/brasilia-atlas.webp'); background-size: 100% 100%,500% 225.55%; background-position-y: center,bottom; }
+.brasilia-days .day-scene-0 { background-position-x: center,0%; }
+.brasilia-days .day-scene-1 { background-position-x: center,25%; }
+.brasilia-days .day-scene-2 { background-position-x: center,50%; }
+.brasilia-days .day-scene-3 { background-position-x: center,75%; }
+.brasilia-days .day-scene-4 { background-position-x: center,100%; }
+.calendar-day-preview.selected { outline: 2px solid var(--brand-500); outline-offset: 0; box-shadow: 0 3px 9px #173b4226; }
+.calendar-day-date { display: flex; flex-direction: column; text-shadow: 0 1px 5px #0006; }
+.calendar-day-date small { font-size: .75rem; text-transform: capitalize; }
+.calendar-day-date strong { font-size: 1.65rem; line-height: 1.05; letter-spacing: -.04em; }
+.calendar-day-count { border-radius: 99px; padding: 4px 6px; font-size: .625rem; background: #163843b8; backdrop-filter: blur(8px); white-space: nowrap; }
