@@ -6,7 +6,6 @@ import type { Trip, TripEvent } from "../../types";
 import type { ItineraryType } from "../../utils/tripView";
 import { datesBetween, dateKey, formatDate } from "../../utils/dates";
 import { spendingLabel } from "../../utils/spending";
-import { safeUrl } from "../../utils/money";
 import { hasProgramDate, itineraryResults } from "../../utils/itinerary";
 import { collectPlaces } from "../../utils/places";
 import { EventCard } from "../Events";
@@ -16,7 +15,7 @@ import { Places } from "./Places";
 import { TripCalendar } from "../TripCalendar";
 import { exportTrip, type ExportFormat } from "../../services/exportTrip";
 
-export function Programs({ trip, events, admin, selectedDate, onDayChange, initialPriority, onSelect, type, onTypeChange }: {
+export function Programs({ trip, events, admin, selectedDate, onDayChange, initialPriority, onSelect, type, onTypeChange, onMap }: {
   trip: Trip;
   events: TripEvent[];
   admin: boolean;
@@ -26,6 +25,7 @@ export function Programs({ trip, events, admin, selectedDate, onDayChange, initi
   onSelect: (event: TripEvent) => void;
   type: ItineraryType;
   onTypeChange: (type: ItineraryType) => void;
+  onMap: (day: string) => void;
 }) {
   const days = datesBetween(trip.startDate, trip.endDate);
   const today = dateKey();
@@ -50,8 +50,6 @@ export function Programs({ trip, events, admin, selectedDate, onDayChange, initi
   const placeCount = collectPlaces(result.places).length;
   const hasFilters = Object.values(filters).some(Boolean);
   const extra = result.outside.filter(event => (event.date < trip.startDate || event.date > trip.endDate) && event.date !== day);
-  const mapEvent = result.programs.find(event => safeUrl(event.mapsUrl) || event.location);
-  const mapUrl = mapEvent && (safeUrl(mapEvent.mapsUrl) || "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(mapEvent.location + " " + trip.destinationCity));
   const groups = new Map<string, TripEvent[]>();
   for (const event of result.programs) groups.set(event.date, [...(groups.get(event.date) || []), event]);
   function timeline(programs: TripEvent[]) {
@@ -69,7 +67,7 @@ export function Programs({ trip, events, admin, selectedDate, onDayChange, initi
           <h2 id="itinerary-results-title">{type === "places" ? "Lugares salvos" : result.searching ? "Resultados do roteiro" : formatDate(day, { weekday: "long", day: "numeric", month: "long" })}</h2>
           <span aria-live="polite">{type === "places" ? placeCount + (placeCount === 1 ? " lugar" : " lugares") : result.programs.length + (result.programs.length === 1 ? " programa" : " programas") + (result.programs.length ? " · " + spendingLabel(result.programs, trip.currency) : "")}</span>
         </div>
-        {mapUrl && type !== "places" && <a className="calendar-map" href={mapUrl} target="_blank" rel="noreferrer" aria-label={"Ver no mapa: " + mapEvent.location}><MapIcon size={15} aria-hidden="true" />Ver no mapa</a>}
+        {!result.searching && type !== "places" && events.some(event => event.date === day) && <button className="calendar-map" onClick={() => onMap(day)}><MapIcon size={15} aria-hidden="true" />Ver no mapa</button>}
       </header>
       {type !== "places" && (result.programs.length ? result.searching ? [...groups].map(([date, programs]) => <section className="itinerary-search-day" key={date}><h3>{formatDate(date, { weekday: "long", day: "numeric", month: "long" })}</h3>{timeline(programs)}</section>) : timeline(result.programs) : <EmptyState title={hasFilters ? "Nenhum programa encontrado." : events.length ? "Esse dia está em aberto." : "Seu roteiro começa aqui."} description={hasFilters ? "Experimente mudar os filtros." : admin ? "Adicione cafés, restaurantes, passeios e tudo que você não quer esquecer." : "Um dia livre para descobrir a cidade no seu ritmo."} />)}
       {(type === "places" || result.places.length > 0) && <section className="saved-places places-programs" aria-label="Lugares salvos">

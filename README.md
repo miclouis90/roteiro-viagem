@@ -58,6 +58,18 @@ A configuração Web Firebase é pública por natureza e será incluída no Java
 
 ## Modelo de dados e arquitetura
 
+### Mapa do dia (V1)
+
+No Roteiro, **Ver no mapa** abre `#/viagem/ID?tab=roteiro&day=YYYY-MM-DD&map=day`. **Voltar ao roteiro** remove apenas `map`, preservando a viagem, o dia e os demais parâmetros. A ficha do programa continua sendo a mesma sheet, sobre o mapa.
+
+Configure `VITE_GOOGLE_MAPS_API_KEY` no `.env` local e reinicie o Vite. Ative **Maps JavaScript API** e **Geocoding API** no mesmo projeto Google Cloud, com faturamento habilitado e chave restrita aos domínios do app e às duas APIs. Não use uma credencial de servidor. O `.env` está ignorado pelo Git; a chave de navegador é incluída no build e deve ser protegida por essas restrições. Não adicione o valor a código, commits ou logs.
+
+O código e o SDK do mapa carregam somente ao abrir essa tela. Sem chave ou em falha de rede, há um estado informativo e a lista continua disponível. Os dados atuais usam `location` e `mapsUrl`; os lugares são derivados dos programas. A resolução lê coordenadas/Place ID já presentes no registro ou na query de um link Google Maps; na ausência deles, geocodifica apenas endereços do dia selecionado, contextualizados pelo destino. Não interpreta a posição da câmera (`/@...`) como localização do programa. Links encurtados sem endereço não são geocodificados. Não há migração ou escrita de coordenadas no Firestore; o cache é apenas em memória durante a sessão.
+
+Pins e paradas seguem o horário do roteiro, sem otimização de trajeto. **Abrir no Google Maps** usa Maps URLs (não exige Routes API). Dias com mais de cinco locais são divididos em trechos consecutivos, compartilhando a parada de ligação, pois URLs no navegador mobile aceitam até três pontos intermediários. Programas sem localização continuam na lista; programas cancelados seguem a regra existente de exclusão dos totais.
+
+Referências: [carregamento do SDK](https://developers.google.com/maps/documentation/javascript/load-maps-js-api), [Geocoding](https://developers.google.com/maps/documentation/javascript/geocoding), [Maps URLs](https://developers.google.com/maps/documentation/urls/get-started).
+
 ```text
 src/
   components/       formulários, modal e cartões/detalhes

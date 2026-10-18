@@ -43,8 +43,13 @@ export function Home({ onCreate }: { onCreate: () => void }) {
   const { upcoming, others } = filterHomeTrips(trips, query, status, undefined, selectedDate);
   return (
     <main className="home">
-      <section className="home-intro"><h1>{firstName ? `Oi, ${firstName}` : "Oi"} 👋</h1><p>Para onde vamos agora?</p></section>
-      <div className="home-search-row"><label className="search home-search"><Search size={18} aria-hidden="true" /><input type="search" aria-label="Buscar viagem" placeholder="Buscar viagem" value={query} onChange={e => setQuery(e.target.value)} /></label><button className="home-calendar-button" aria-label="Abrir calendário de viagens" aria-haspopup="dialog" onClick={() => setCalendarOpen(true)}><CalendarDays size={20} aria-hidden="true" /></button></div>
+      <section className="home-intro">
+        <div className="home-intro-art" aria-hidden="true" />
+        <p className="home-greeting">{firstName ? `Oi, ${firstName}` : "Oi"} 👋</p>
+        <h1>Para onde vamos <span>agora?</span></h1>
+        <p className="home-intro-note">Novos lugares, boas histórias, sempre à frente.</p>
+      </section>
+      <div className="home-search-row"><label className="search home-search"><Search size={21} aria-hidden="true" /><input type="search" aria-label="Buscar viagem" placeholder="Buscar viagem, destino ou data" value={query} onChange={e => setQuery(e.target.value)} /></label><button className="home-calendar-button" aria-label="Abrir calendário de viagens" aria-haspopup="dialog" onClick={() => setCalendarOpen(true)}><CalendarDays size={21} aria-hidden="true" /></button></div>
       {selectedDate && <button className="home-date-chip" aria-label="Limpar filtro de data" onClick={() => setSelectedDate("")}>{formatDate(selectedDate, {day:"numeric",month:"short",year:"numeric"})}<span aria-hidden="true">×</span></button>}
       <div className="chip-scroll home-status" aria-label="Status das viagens">{([["", "Todas"], ["planejamento", "Planejando"], ["confirmada", "Confirmadas"], ["concluída", "Concluídas"]] as const).map(([id,label]) => <button key={id} className={`filter-chip ${status === id ? "active" : ""}`} aria-pressed={status === id} onClick={() => setStatus(id)}>{label}</button>)}</div>      {loading ? (
         <LoadingState label="Preparando suas viagens…" />
@@ -70,8 +75,8 @@ export function Home({ onCreate }: { onCreate: () => void }) {
         </EmptyState>
       ) : (
         <>
-          {upcoming.length > 0 && <section className="home-section"><h2>Próximas viagens</h2><div className="home-carousel" tabIndex={0} aria-label="Próximas viagens">{upcoming.map(t => <TripCard key={t.id} trip={t} />)}</div></section>}
-          {others.length > 0 && <section className="home-section"><h2>Outras viagens</h2><div className="home-trip-list">{others.map(t => <TripCard key={t.id} trip={t} compact />)}</div></section>}
+          {upcoming.length > 0 && <section className="home-section home-upcoming"><h2>{upcoming.length === 1 ? "Próxima viagem" : "Próximas viagens"}</h2><div className="home-carousel" tabIndex={0} aria-label="Próximas viagens">{upcoming.map(t => <TripCard key={t.id} trip={t} />)}</div></section>}
+          {others.length > 0 && <section className="home-section home-others"><h2>Outras viagens</h2><div className="home-trip-list">{others.map(t => <TripCard key={t.id} trip={t} compact />)}</div></section>}
           {!upcoming.length && !others.length && <EmptyState title={selectedDate ? "Nenhuma viagem nesta data." : "Nenhuma viagem encontrada."} description="Tente outro nome, destino ou status.">{selectedDate && <button className="secondary" onClick={() => setSelectedDate("")}>Limpar data</button>}</EmptyState>}
         </>
       )}

@@ -50,7 +50,7 @@ function Shell() {
   const menu = useRef<HTMLDetailsElement>(null);
   return (
     <>
-      <header className={`site-header ${inItinerary ? "itinerary-header" : ""}`}>
+      <header className={`site-header ${inItinerary ? "itinerary-header" : ""} ${location.pathname === "/" ? "home-header" : ""}`}>
         <div className="header-inner">
           <Link className="brand" to="/" aria-label="Rumo, suas viagens">
             <Compass size={29} strokeWidth={1.7} />

@@ -107,10 +107,36 @@ it("oculta a barra ao voltar à Home e restaura ao abrir a viagem", async () => 
 });
 it("cumprimenta pelo primeiro nome e preserva fallback sem usuário", async () => {
   await mount("/");
-  expect(container.querySelector("h1")?.textContent).toBe("Oi 👋");
+  expect(container.querySelector(".home-greeting")?.textContent).toBe("Oi 👋");
+  expect(container.querySelector("h1")?.textContent).toBe("Para onde vamos agora?");
   authState.user = {uid:"test-user",displayName:"  Ana Maria  "};
   await mount("/");
-  expect(container.querySelector("h1")?.textContent).toBe("Oi, Ana 👋");
+  expect(container.querySelector(".home-greeting")?.textContent).toBe("Oi, Ana 👋");
+});
+it("mantém o card inteiro navegável e os atalhos fora do link principal", async () => {
+  await mount("/");
+  const card = container.querySelector(".home-trip")!;
+  expect(card.querySelector(".home-trip-link")?.getAttribute("href")).toBe(`#/viagem/${trip.id}`);
+  expect(card.querySelector(".home-trip-link summary")).toBeNull();
+  const menu = card.querySelector("details")!;
+  menu.open = true;
+  await click(menu.querySelector('a[href$="?tab=roteiro"]'));
+  expect(window.location.hash).toBe(`#/viagem/${trip.id}?tab=roteiro`);
+  expect(container.querySelector('h1')?.textContent).toBe('Roteiro');
+});
+it("mantém a ordem e separação das viagens com a nova composição visual", async () => {
+  vi.useFakeTimers({toFake:["Date"]}); vi.setSystemTime(new Date(2026,9,4,12));
+  try {
+    const past = {...trip,id:'sp',title:'SPzinho + DIIV',destinationCity:'São Paulo',startDate:'2026-09-26',endDate:'2026-09-28',status:'concluída' as const};
+    const later = {...trip,id:'later',title:'Férias em janeiro',startDate:'2027-01-10',endDate:'2027-01-14'};
+    vi.mocked(watchTrips).mockImplementation((_admin,next) => { next([later,past,trip]); return () => {}; });
+    await mount('/');
+    expect([...container.querySelectorAll('.home-carousel h3')].map(h=>h.textContent)).toEqual([trip.title,later.title]);
+    expect(container.querySelector('.home-trip-list h3')?.textContent).toBe(past.title);
+    expect(container.querySelector('.home-trip-list .status-chip')?.textContent).toBe('Concluída');
+    expect(container.querySelectorAll('.home-destination-brasilia')).toHaveLength(2);
+    expect(container.querySelector('.home-trip-list .home-destination-abstract')).not.toBeNull();
+  } finally { vi.useRealTimers(); }
 });
 it("abre e fecha o calendário sem alterar filtros ou rota", async () => {
   Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable:true, value() { this.setAttribute("open", ""); } });
@@ -306,6 +332,58 @@ it.each(["all", "places"])("preserva contexto de %s ao abrir, editar, cancelar/s
   expect(container.querySelector('.trip-tabs [aria-current="page"]')?.textContent).toBe('Roteiro');
   expect(container.querySelector('h1')?.textContent).toBe('Roteiro');
   if (type === "places") expect(window.location.hash).toContain('type=places');
+});
+
+it("Ver no mapa abre o dia correto; ficha e retorno preservam dia, convite e filtros", async () => {
+  vi.stubEnv("VITE_GOOGLE_MAPS_API_KEY", "");
+  try {
+    vi.mocked(watchEvents).mockImplementation((_id, next) => { next(demoEvents); return () => {}; });
+    await mount('/viagem/' + trip.id + '?tab=roteiro&day=2026-10-30&invite=shared');
+    const subscriptions = vi.mocked(watchEvents).mock.calls.length;
+    await click(filtersButton());
+    await select('Status', 'confirmado');
+    await click(dialogButton('Ver resultados'));
+    await click(container.querySelector('.calendar-map'));
+    await act(async () => { await import('./components/trip/DayMap'); });
+    expect(container.querySelector('h1')?.textContent).toBe('Mapa do dia');
+    expect(window.location.hash).toContain('day=2026-10-30');
+    expect(window.location.hash).toContain('map=day');
+    expect(window.location.hash).toContain('invite=shared');
+    expect(container.querySelectorAll('.day-map-stop')).toHaveLength(2);
+    expect(container.querySelector('.day-map')?.textContent).toContain('30 de outubro');
+    expect(document.querySelector('#rumo-google-maps')).toBeNull();
+    await click(container.querySelector('.day-map-stop'));
+    expect(container.querySelector('dialog')?.textContent).toContain(demoEvents[4].title);
+    await click(container.querySelector('dialog [aria-label="Fechar"]'));
+    expect(container.querySelector('.day-map-stop.selected')?.textContent).toContain(demoEvents[4].title);
+    expect(window.location.hash).toContain('map=day');
+    await click(container.querySelector('.day-map-back'));
+    expect(window.location.hash).not.toContain('map=');
+    expect(container.querySelector('h1')?.textContent).toBe('Roteiro');
+    expect(container.querySelector('.month-date.selected')?.textContent).toBe('30');
+    expect(container.querySelector('.clear-filters')).not.toBeNull();
+    expect(watchEvents).toHaveBeenCalledTimes(subscriptions);
+  } finally { vi.unstubAllEnvs(); }
+});
+
+it("deep link do mapa mantém bottom nav e volta ao mesmo roteiro sem depender do histórico", async () => {
+  vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', '');
+  try {
+    vi.mocked(watchEvents).mockImplementation((_id, next) => { next(demoEvents); return () => {}; });
+    await mount('/viagem/' + trip.id + '?tab=roteiro&day=2026-10-31&map=day&invite=shared');
+    await act(async () => { await import('./components/trip/DayMap'); });
+    expect(container.querySelectorAll('.trip-tabs button')).toHaveLength(3);
+    expect(container.querySelector('.trip-tabs [aria-current="page"]')?.textContent).toBe('Roteiro');
+    await click(container.querySelector('.day-map-back'));
+    expect(window.location.hash).toBe('#/viagem/' + trip.id + '?tab=roteiro&day=2026-10-31&invite=shared');
+    await click(container.querySelector('.calendar-map'));
+    await click(container.querySelectorAll('.trip-tabs button')[2]);
+    expect(window.location.hash).toContain('tab=gastos');
+    expect(window.location.hash).not.toContain('map=');
+    await click(container.querySelectorAll('.trip-tabs button')[1]);
+    expect(container.querySelector('h1')?.textContent).toBe('Roteiro');
+    expect(window.location.hash).toContain('day=2026-10-31');
+  } finally { vi.unstubAllEnvs(); }
 });
 
 it("normaliza Calendário legado, troca mês/data e abre a ficha mantendo o dia", async () => {

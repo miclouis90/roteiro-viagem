@@ -1,43 +1,113 @@
-/* Home composition. Shared foundation and trip screens remain unchanged. */
-.home .home-intro { padding: 24px 0 25px; }
-.home .home-intro h1 { font-size: .9375rem; font-weight: 550; color: var(--text-secondary); margin: 0 0 8px; }
-.home .home-intro p { max-width: 310px; font-size: clamp(1.9rem, 7.8vw, 2.5rem); line-height: 1.12; letter-spacing: -.045em; font-weight: var(--weight-heading); color: var(--text-primary); margin: 0; }
-.home .home-search-row { gap: 0; padding: 5px; background: var(--surface-raised); border-radius: var(--radius-pill); box-shadow: var(--shadow-sm); }
-.home .home-search { border: 0; box-shadow: none; background: transparent; height: 44px; padding: 0 12px; }
-.home .home-search input { font-size: .875rem; }
-.home .home-calendar-button { border: 0; border-radius: 50%; background: var(--brand-50); color: var(--brand-700); width: 44px; height: 44px; flex-basis: 44px; }
-.home .home-status { gap: 5px; padding: 14px 0 25px; }
-.home .home-status .filter-chip { min-height: 40px; border: 0; padding: 8px 11px; border-radius: var(--radius-pill); background: transparent; font-size: .75rem; color: var(--text-secondary); }
+/* Home-only composition: global tokens and trip screens stay untouched. */
+.site-header.home-header { position: relative; z-index: 2; background: transparent; }
+.home-header .header-inner { min-height: 58px; padding-block: 6px; gap: 12px; }
+.home-header .brand { font-size: 1.75rem; letter-spacing: -.065em; gap: 6px; }
+.home-header .brand svg { display: block; width: 27px; height: 27px; }
+.home-header .account { gap: 8px; }
+.home-header .account .new-trip { width: auto; min-height: 42px; padding: 9px 14px; font-size: .8125rem; white-space: nowrap; }
+.home-header .new-trip span { display: inline; }
+.home-header .account-menu summary { padding: 0; min-height: 44px; }
+.home-header .account-menu .avatar { width: 40px; height: 40px; background: #e9eff0dd; }
+.home-header .account-menu :is(.user-name, summary > svg) { display: none; }
+.home { position: relative; padding-top: 0; }
+.home .home-intro { position: relative; isolation: isolate; padding: 14px 0 18px; }
+.home .home-intro-art { position: absolute; pointer-events: none; z-index: -1; right: -16px; top: -80px; width: 55%; height: 202px; border-radius: 0 0 0 100%; background-image: linear-gradient(115deg, #f8f9f9ed, transparent 85%), url('./assets/overview/brasilia-atlas.webp'); background-size: 100% 100%, 500% 225.55%; background-position: center, 50% bottom; opacity: .72; }
+.home .home-greeting { margin: 0 0 7px; font-size: .9375rem; line-height: 1.4; font-weight: 500; color: var(--text-secondary); }
+.home .home-intro h1 { position: relative; max-width: 340px; margin: 0 0 8px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.05rem, 8.85vw, 2.4rem); line-height: 1.04; letter-spacing: -.05em; font-weight: 700; color: #102d35; text-wrap: pretty; }
+.home .home-intro h1 > span { display: block; }
+.home .home-intro-note { position: relative; margin: 0; color: var(--text-secondary); font-size: .75rem; line-height: 1.5; max-width: 355px; }
+.home .home-search-row { display: flex; position: relative; align-items: center; gap: 0; padding: 3px; background: var(--surface-raised); border-radius: var(--radius-pill); box-shadow: 0 5px 18px #19272c09; }
+.home .home-search { display: flex; gap: 10px; flex: 1; min-width: 0; margin: 0; border: 0; box-shadow: none; background: transparent; height: 44px; padding: 0 11px; }
+.home .home-search > svg { color: var(--brand-700); width: 21px; height: 21px; }
+.home .home-search input { flex: 1; width: 100%; min-width: 0; padding: 0; font-size: .8125rem; font-weight: 400; height: 44px; }
+.home .home-search input::placeholder { color: var(--text-secondary); opacity: 1; }
+.home .home-calendar-button { display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--surface-soft); color: var(--brand-700); width: 44px; height: 44px; flex: 0 0 44px; position: relative; }
+.home .home-calendar-button::before { content: ''; position: absolute; height: 24px; width: 1px; background: var(--color-border); left: -5px; }
+.home .home-calendar-button:hover { background: var(--brand-100); }
+.home .home-search-row:focus-within { box-shadow: 0 0 0 2px var(--brand-100), 0 5px 18px #19272c09; }
+.home .home-status { gap: 7px; padding: 12px 0 20px; margin: 0; }
+.home .home-status .filter-chip { min-height: 36px; flex-shrink: 0; border: 0; padding: 8px 13px; border-radius: var(--radius-pill); background: var(--surface-soft); font-size: .75rem; line-height: 1.4; font-weight: 500; color: var(--brand-700); }
+.home .home-status .filter-chip:hover { background: var(--brand-100); }
 .home .home-status .filter-chip.active { background: var(--brand-700); color: white; }
-.home .home-section { margin-bottom: 27px; }
-.home .home-section h2 { font-size: 1.125rem; letter-spacing: -.025em; margin: 0 0 13px; }
-.home .home-carousel { gap: 14px; padding: 2px 2px 10px; }
-.home .home-trip-upcoming { flex: 0 0 87%; max-width: 390px; padding: 0; border: 0; border-radius: var(--radius-xl); overflow: hidden; background: var(--surface-raised); box-shadow: var(--shadow-sm); }
-.home .home-trip-upcoming:only-child { flex-basis: 100%; max-width: 520px; }
-.home .home-trip-art { position: relative; isolation: isolate; overflow: hidden; background: linear-gradient(130deg, var(--trip-soft), color-mix(in srgb, var(--trip-accent) 35%, var(--surface-raised))); }
-.home .home-trip-upcoming .home-trip-art { height: 132px; border-radius: 0; }
-.home .home-art-orbit { position: absolute; width: 205px; height: 205px; border: 1px solid color-mix(in srgb, var(--trip-accent) 24%, transparent); border-radius: 50%; right: -18px; top: -96px; box-shadow: 0 0 0 27px color-mix(in srgb, var(--trip-accent) 5%, transparent), 0 0 0 55px color-mix(in srgb, var(--trip-accent) 4%, transparent); }
-.home .home-art-horizon { position: absolute; width: 240px; height: 150px; border-radius: 50%; background: color-mix(in srgb, var(--trip-accent) 12%, transparent); left: -65px; bottom: -110px; transform: rotate(22deg); }
-.home .home-trip-art > svg { position: absolute; left: 23px; top: 23px; width: 36px; height: 36px; color: var(--trip-accent); opacity: .8; }
-.home .home-trip-art .cover-route { width: 160px; height: 160px; right: 35px; bottom: -65px; transform: rotate(-26deg); opacity: .65; }
-.home .home-trip-upcoming .home-trip-copy { padding: 18px 19px 17px; }
-.home .home-trip-heading { display: flex; align-items: flex-start; gap: 12px; }
-.home .home-trip-heading > svg { flex: 0 0 19px; margin-top: 4px; color: var(--trip-accent); }
-.home .home-trip-upcoming h3 { flex: 1; min-width: 0; font-size: 1.375rem; line-height: 1.18; letter-spacing: -.035em; margin: 0 0 7px; overflow-wrap: anywhere; }
-.home .home-trip-copy > p { font-size: .8125rem; margin: 0 0 8px; color: var(--text-secondary); }
-.home .home-trip-copy .home-trip-period { font-size: .75rem; line-height: 1.5; }
-.home .home-trip-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
-.home .home-trip-meta .status-chip { font-size: .6875rem; padding: 4px 8px; background: var(--surface-soft); color: var(--text-secondary); border: 0; }
-.home .home-trip-meta > span:last-child:not(.status-chip) { font-size: .6875rem; color: var(--action-accent); font-weight: 600; }
-.home .home-trip-list { display: grid; gap: 10px; }
-.home .home-trip-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 13px; padding: 10px; border: 0; border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: none; }
-.home .home-trip-row .home-trip-art { height: 100%; min-height: 88px; border-radius: var(--radius-md); }
-.home .home-trip-row .home-trip-art > svg { top: 18px; left: 18px; width: 27px; height: 27px; }
-.home .home-trip-row .home-trip-copy { display: block; padding: 3px 0; min-width: 0; }
-.home .home-trip-row h3 { flex: 1; margin: 0 0 4px; font-size: .9375rem; line-height: 1.25; overflow-wrap: anywhere; }
-.home .home-trip-row .home-trip-heading > svg { width: 15px; flex-basis: 15px; }
-.home .home-trip-row .home-trip-copy > p { font-size: .75rem; margin: 0 0 4px; }
-.home .home-trip-row .home-trip-copy .home-trip-period { font-size: .6875rem; }
-.home .home-trip-row .home-trip-meta { margin-top: 4px; }
-.home .home-trip-row .home-trip-meta .status-chip { padding: 0; background: transparent; font-size: .625rem; }
-@media (max-width: 700px) { .home { padding-bottom: calc(32px + env(safe-area-inset-bottom)); } }
+.home .home-section { margin: 0 0 22px; min-width: 0; }
+.home .home-section h2 { font-size: 1.25rem; line-height: 1.3; letter-spacing: -.035em; margin: 0 0 12px; color: #122e36; }
+.home .home-upcoming h2 { font-weight: 700; }
+.home .home-carousel { gap: 12px; padding: 2px 1px 7px; overflow-x: auto; scroll-snap-type: x proximity; }
+.home .home-trip { position: relative; isolation: isolate; border: 0; color: inherit; min-width: 0; padding: 0; border-radius: var(--radius-xl); overflow: visible; box-shadow: none; }
+.home .home-trip-upcoming { flex: 0 0 91%; max-width: 540px; scroll-snap-align: start; background: var(--brand-700); box-shadow: 0 4px 12px #173b4210; }
+.home .home-trip-upcoming:only-child { flex-basis: 100%; max-width: none; }
+.home .home-trip-link { position: relative; display: flex; min-width: 0; height: 100%; border-radius: inherit; overflow: hidden; }
+.home .home-trip-upcoming .home-trip-link { min-height: 205px; flex-direction: column; justify-content: flex-end; padding: 76px 16px 15px; color: white; }
+.home .home-trip-art { position: absolute; inset: 0; height: auto; border-radius: inherit; overflow: hidden; background: linear-gradient(145deg, color-mix(in srgb, var(--trip-accent) 75%, var(--brand-700)), color-mix(in srgb, var(--trip-soft) 72%, var(--action-accent))); }
+.home .home-trip-upcoming .home-trip-art { height: 100%; border-radius: inherit; }
+.home .home-destination-brasilia .home-trip-art { background-image: url('./assets/overview/brasilia-atlas.webp'); background-size: auto 179.65%; background-position: 57% top; background-repeat: no-repeat; }
+.home .home-trip-upcoming.home-destination-brasilia .home-trip-art { background-size: auto 205%; background-position: right top; }
+.home .home-trip-upcoming .home-trip-link::after { content: ''; pointer-events: none; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, #082e3621, transparent 34%, #092b3566 63%, #082c37dc 100%); }
+.home .home-trip-copy { position: relative; z-index: 1; min-width: 0; }
+.home .home-trip-upcoming .home-trip-copy { padding: 0; }
+.home .home-cover-status { position: absolute; z-index: 1; top: 14px; left: 14px; display: inline-flex; align-items: center; gap: 7px; max-width: calc(100% - 78px); color: white; background: #113b45cc; backdrop-filter: blur(12px); padding: 8px 11px; border-radius: var(--radius-pill); font-size: .6875rem; font-weight: 550; line-height: 1.3; }
+.home .home-trip-upcoming h3 { margin: 0 0 7px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.55rem, 6.7vw, 1.8rem); font-weight: 700; line-height: 1.08; letter-spacing: -.04em; overflow-wrap: anywhere; text-wrap: balance; color: white; }
+.home .home-trip-copy .home-trip-destination { display: flex; align-items: flex-start; gap: 6px; color: inherit; margin: 0 0 9px; font-size: .8125rem; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.home .home-trip-destination svg { margin-top: 1px; }
+.home .home-trip-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.home .home-trip-copy .home-trip-period { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: inherit; font-size: .6875rem; line-height: 1.5; }
+.home .home-trip-period svg { margin-top: 2px; }
+.home .home-trip-duration { display: block; }
+.home .home-trip-countdown { display: flex; align-items: center; flex-shrink: 0; gap: 8px; padding: 9px 10px; border: 1px solid #ffffff55; border-radius: 14px; background: #ffffff24; backdrop-filter: blur(15px); color: white; font-size: .6875rem; line-height: 1.4; }
+.home .home-trip-countdown strong { display: block; color: white; font-size: .8125rem; font-weight: 650; }
+.home .home-trip-menu { position: absolute; top: 9px; right: 9px; z-index: 3; }
+.home .home-trip-menu summary { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 50%; display: grid; place-items: center; color: white; background: #ffffff26; box-shadow: inset 0 0 0 1px #ffffff8c; backdrop-filter: blur(12px); list-style: none; }
+.home .home-trip-menu summary::-webkit-details-marker { display: none; }
+.home .home-trip-menu summary:hover { background: #ffffff45; }
+.home .home-trip-menu .menu-popover { min-width: 175px; width: max-content; max-width: calc(100vw - 48px); padding: 6px; }
+.home .home-trip-menu .menu-popover a { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 9px 12px; border-radius: 10px; font-size: .8125rem; color: var(--brand-700); }
+.home .home-trip-menu .menu-popover a:hover { background: var(--surface-soft); }
+.home .home-trip-link:active { filter: brightness(.94); }
+.home .home-destination-graphic { position: absolute; width: 100%; height: 100%; inset: 0; }
+.home .home-graphic-sun { fill: var(--action-accent-soft); opacity: .7; }
+.home .home-graphic-ridge { fill: var(--trip-accent); opacity: .4; }
+.home .home-graphic-water { fill: var(--trip-soft); opacity: .25; }
+.home .home-graphic-route { fill: none; stroke: white; stroke-width: 1; stroke-dasharray: 5 6; opacity: .65; }
+.home .home-graphic-point { fill: white; }
+.home .home-trip-list { display: grid; gap: 11px; }
+.home .home-trip-row { display: block; padding: 0; background: var(--surface-raised); border-radius: 20px; }
+.home .home-trip-row .home-trip-link { display: grid; grid-template-columns: 31% minmax(0, 1fr); gap: 13px; padding: 8px; min-height: 116px; }
+.home .home-trip-row .home-trip-art { position: relative; height: 100%; min-height: 100px; border-radius: 14px; }
+.home .home-trip-row .home-trip-copy { display: block; padding: 6px 43px 3px 0; align-self: center; }
+.home .home-trip-row h3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0 0 5px; font-size: .9375rem; font-weight: 700; line-height: 1.2; letter-spacing: -.03em; overflow-wrap: anywhere; color: var(--text-primary); }
+.home .home-trip-row .home-trip-copy .home-trip-destination { color: var(--text-secondary); font-weight: 400; font-size: .6875rem; gap: 4px; margin: 0 0 5px; }
+.home .home-trip-row .home-trip-destination svg { width: 12px; height: 12px; }
+.home .home-trip-row .home-trip-bottom { display: block; }
+.home .home-trip-row .home-trip-copy .home-trip-period { color: var(--text-secondary); font-size: .625rem; gap: 4px; }
+.home .home-trip-row .home-trip-period svg { display: none; }
+.home .home-trip-row .home-trip-duration { display: inline; }
+.home .home-trip-row .status-chip { display: inline-flex; margin-top: 6px; color: var(--brand-700); background: var(--brand-100); padding: 3px 7px; font-size: .625rem; font-weight: 500; }
+.home .home-trip-row .status-concluída { color: var(--text-secondary); background: var(--surface-soft); }
+.home .home-trip-row .home-trip-open { position: absolute; right: 14px; bottom: 16px; color: var(--brand-600); }
+.home .home-trip-row .home-trip-menu { top: 7px; right: 6px; }
+.home .home-trip-row .home-trip-menu summary { color: var(--brand-700); background: var(--surface-soft); box-shadow: none; backdrop-filter: none; }
+@media (max-width: 700px) {
+  .home { padding: 0 16px calc(28px + env(safe-area-inset-bottom)); }
+  .home-header .header-inner { padding-inline: 16px; }
+}
+@media (min-width: 701px) {
+  .home .home-intro { padding-block: 35px 28px; }
+  .home .home-intro h1 { font-size: 3.5rem; max-width: 540px; }
+  .home .home-intro-art { right: -40px; width: 50%; height: 290px; top: -66px; }
+  .home .home-trip-upcoming .home-trip-link { min-height: 310px; padding-inline: 24px; }
+  .home .home-trip-upcoming h3 { font-size: 2.5rem; }
+  .home .home-trip-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home .home-trip-duration { display: inline; }
+}
+@media (max-width: 374px) {
+  .home-header .brand { font-size: 1.7rem; gap: 5px; }
+  .home-header .account { gap: 6px; }
+  .home-header .account .new-trip { padding-inline: 11px; font-size: .75rem; }
+  .home .home-search { gap: 7px; padding-inline: 8px; }
+  .home .home-search input { font-size: .75rem; }
+  .home .home-status { gap: 6px; }
+  .home .home-status .filter-chip { padding-inline: 11px; font-size: .6875rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home .home-trip-link { transition: none; }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   Link,
   useNavigate,
@@ -17,6 +17,8 @@ import { tripAccess } from "../utils/access";
 import { datesBetween, daysBetween, formatDate, dateKey } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
 import { tripTabFromSearch, itineraryTypeFromSearch, normalizeItinerarySearch } from "../utils/tripView";
+import { mapSearch } from "../utils/dayMap";
+import { hasProgramDate } from "../utils/itinerary";
 import { TripOverview, OverviewArtwork, OverviewSummary } from "../components/trip/TripOverview";
 import { themeStyle } from "../data/themes";
 
@@ -34,6 +36,7 @@ import { TripSummary } from "../components/TripSummary";
 import { TripForm, EventForm } from "../components/Forms";
 import { EventDetails } from "../components/Events";
 import { Modal } from "../components/Modal";
+const DayMap = lazy(() => import("../components/trip/DayMap"));
 export function TripPage() {
   const { id = "" } = useParams();
   const data = useTrip(id);
@@ -89,6 +92,19 @@ function TripWorkspace({
   const [params, setParams] = useSearchParams();
   const tab = tripTabFromSearch(params);
   const itineraryType = itineraryTypeFromSearch(params);
+  const mapOpen = tab === "roteiro" && params.get("map") === "day";
+  const requestedDay = params.get("day") || "";
+  const selectedDay = hasProgramDate({ date: requestedDay }) ? requestedDay : dateKey() >= trip.startDate && dateKey() <= trip.endDate ? dateKey() : trip.startDate;
+  const itineraryScroll = useRef(0);
+  function openDayMap(day: string) {
+    itineraryScroll.current = window.scrollY;
+    setParams(mapSearch(params, day, true));
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  function closeDayMap() {
+    setParams(mapSearch(params, selectedDay, false));
+    requestAnimationFrame(() => window.scrollTo({ top: itineraryScroll.current, behavior: "instant" }));
+  }
   useEffect(() => {
     const next = normalizeItinerarySearch(params);
     if (next.toString() !== params.toString()) setParams(next, { replace: true });
@@ -110,6 +126,7 @@ function TripWorkspace({
   function changeTab(value: TripTab, date?: string) {
     scrollPositions.current[tab] = window.scrollY;
     const next = new URLSearchParams(params);
+    next.delete("map");
     if (value === "geral") next.delete("tab");
     else next.set("tab", value);
     // Keep the selected day and result type when visiting another section.
@@ -203,7 +220,7 @@ function TripWorkspace({
   }
   return (
     <main
-      className={`trip-page theme-trip ${tab === "roteiro" ? "itinerary-view itinerary-workspace unified-itinerary" : ""} ${admin ? "" : "public-trip"}`}
+      className={`trip-page theme-trip ${tab === "roteiro" ? "itinerary-view itinerary-workspace unified-itinerary" : ""} ${mapOpen ? "day-map-workspace" : ""} ${admin ? "" : "public-trip"}`}
       style={themeStyle(trip.theme) as React.CSSProperties}
     >
       {tab !== "geral" && <div className="trip-context">
@@ -275,7 +292,7 @@ function TripWorkspace({
           </header>
         </>
       ) : tab === "roteiro" ? (
-        <header className="internal-heading itinerary-title"><h1>Roteiro</h1></header>
+        <header className="internal-heading itinerary-title"><h1>{mapOpen ? "Mapa do dia" : "Roteiro"}</h1></header>
       ) : (
         <header className="internal-heading"><h1>Gastos</h1></header>
       )}
@@ -302,6 +319,7 @@ function TripWorkspace({
           </>
         ) : (
           <>
+            <div hidden={mapOpen}>
             <Programs
               key={params.get("priority") || ""}
               trip={trip}
@@ -314,6 +332,7 @@ function TripWorkspace({
                 setParams(next, { replace: true });
               }}
               admin={admin}
+              onMap={openDayMap}
               selectedDate={params.get("day") || ""}
               onDayChange={(date) => {
                 const next = new URLSearchParams(params);
@@ -328,6 +347,10 @@ function TripWorkspace({
                 setSelected(event);
               }}
             />
+            </div>
+            {mapOpen && <Suspense fallback={<LoadingState label="Preparando o mapa do dia…" />}>
+              <DayMap trip={trip} events={events} day={selectedDay} onBack={closeDayMap} onSelect={(event) => { setJustSaved(false); setSelected(event); }} />
+            </Suspense>}
           </>
         )}
       </div>
