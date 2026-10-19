@@ -1,0 +1,27 @@
+/* One stable trip header/navigation, independent of the selected tab's content. */
+html:has(.trip-shell) { scrollbar-gutter: stable; }
+.trip-shell { --trip-shell-gutter: 40px; }
+.trip-shell-chrome { position: sticky; top: 0; z-index: var(--z-navigation); background: var(--surface-base); }
+.trip-shell .site-header .header-inner { box-sizing: border-box; height: 52px; min-height: 52px; padding-block: 4px; }
+.trip-shell .site-header .account { gap: 8px; }
+.trip-shell .site-header .new-trip { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; gap: 6px; flex: 0 0 112px; width: 112px; height: 44px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 99px; box-shadow: none; font-size: .8125rem; line-height: 1; }
+.trip-shell .site-header .new-trip span { display: inline; max-width: none; white-space: nowrap; line-height: 1; }
+.trip-shell .site-header .new-trip svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.trip-shell-controls { max-width: var(--page-width); margin: 0 auto; padding: 0 var(--trip-shell-gutter) 12px; }
+.trip-shell-chrome .trip-context { height: 44px; min-height: 44px; gap: 10px; margin: 0; }
+.trip-shell-chrome .trip-home-link { min-height: 44px; font-size: .75rem; }
+.trip-shell-chrome .trip-context-name { border-left: 1px solid var(--color-border); padding-left: 10px; font-size: .75rem; color: var(--brand-700); }
+.trip-shell-chrome .trip-tabs { position: static; inset: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); box-sizing: border-box; width: 480px; max-width: 100%; height: 52px; min-height: 52px; gap: 4px; padding: 4px; margin: 0; border: 0; border-radius: 99px; background: var(--surface-selected); backdrop-filter: none; box-shadow: none; }
+.trip-shell-chrome .trip-tabs button { position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; min-width: 0; height: 44px; min-height: 44px; gap: 6px; padding: 8px; border: 0; border-radius: 99px; background: transparent; color: var(--text-secondary); box-shadow: none; font-size: .8125rem; font-weight: 600; line-height: 1; white-space: nowrap; }
+.trip-shell-chrome .trip-tabs button.active { background: var(--brand-700); color: white; box-shadow: none; border-radius: 99px; }
+.trip-shell-chrome .trip-tabs button::before { content: none; }
+.trip-shell-chrome .trip-tabs button svg { width: 18px; height: 18px; flex: 0 0 18px; stroke-width: 2; }
+.trip-shell-chrome .trip-tabs button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.trip-shell-chrome .trip-tabs button:active { opacity: .8; transform: none; }
+.trip-shell .trip-page.trip-shell-page { padding-top: 4px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+@media (max-width: 900px) { .trip-shell { --trip-shell-gutter: 28px; } }
+@media (max-width: 600px) {
+  .trip-shell { --trip-shell-gutter: 16px; }
+  .trip-shell-chrome .trip-tabs button { gap: 5px; padding-inline: 4px; font-size: .75rem; }
+  .trip-shell-chrome .trip-tabs button svg { width: 16px; height: 16px; flex-basis: 16px; }
+}

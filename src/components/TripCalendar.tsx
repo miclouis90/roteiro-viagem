@@ -1,36 +1,46 @@
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
-import { spendingLabel } from "../utils/spending";
 import { dateKey, formatDate, localDate } from "../utils/dates";
 import { categoryOf } from "../data/categories";
 
-export function TripCalendar({ trip, days, events, selectedDate, onDayChange }: {
+export function TripCalendar({ trip, days, events, selectedDate, onDayChange, visible = true }: {
   trip: Trip;
   days: string[];
   events: TripEvent[];
   selectedDate: string;
   onDayChange: (date: string) => void;
+  visible?: boolean;
 }) {
   const [month, setMonth] = useState(() => selectedDate.slice(0, 7));
+  const [expanded, setExpanded] = useState(false);
+  const calendarId = useId();
   const selectedCard = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     setMonth(selectedDate.slice(0, 7));
+  }, [selectedDate]);
+  useEffect(() => {
+    if (!visible) return;
     const card = selectedCard.current;
     const strip = card?.parentElement;
     if (card && strip) strip.scrollTo?.({ left: card.offsetLeft - strip.offsetLeft });
-  }, [selectedDate]);
+  }, [selectedDate, visible]);
   const first = localDate(`${month}-01`);
   const count = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
   const cells = Array.from({ length: Math.ceil((first.getDay() + count) / 7) * 7 }, (_, index) =>
     dateKey(new Date(first.getFullYear(), first.getMonth(), index - first.getDay() + 1, 12)));
   const title = formatDate(`${month}-01`, { month: "long", year: "numeric" });
-  const brasilia = trip.destinationCity.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === "brasilia";
   function changeMonth(delta: number) {
     setMonth(dateKey(new Date(first.getFullYear(), first.getMonth() + delta, 1, 12)).slice(0, 7));
   }
   return <div className="trip-calendar">
-    <section className="trip-month" aria-label="Calendário mensal da viagem">
+    <div className="itinerary-period">
+      <span>{formatDate(trip.startDate).replace(" de ", " ")} – {formatDate(trip.endDate).replace(" de ", " ")}</span>
+      <button type="button" className="itinerary-calendar-toggle" aria-expanded={expanded} aria-controls={calendarId} onClick={() => setExpanded(value => !value)}>
+        Calendário<ChevronDown size={16} aria-hidden="true" />
+      </button>
+    </div>
+    <section id={calendarId} hidden={!expanded} className="trip-month" aria-label="Calendário mensal da viagem">
       <header className="trip-month-header">
         <button className="icon-button" aria-label="Mês anterior" onClick={() => changeMonth(-1)}><ChevronLeft size={19} /></button>
         <h2 aria-live="polite">{title.charAt(0).toUpperCase() + title.slice(1)}</h2>
@@ -52,16 +62,12 @@ export function TripCalendar({ trip, days, events, selectedDate, onDayChange }: 
           </button>;
         })}
       </div>
-      <p className="calendar-period">Sua viagem · {formatDate(trip.startDate)} — {formatDate(trip.endDate)}</p>
     </section>
-    <div className={`calendar-day-strip ${brasilia ? "brasilia-days" : ""}`} aria-label="Dias da viagem">
-      {days.map((date, index) => {
-        const programs = events.filter(event => event.date === date);
-        const count = programs.length;
-        return <button key={date} ref={date === selectedDate ? selectedCard : undefined} className={`calendar-day-preview day-scene-${index % 5} ${date === selectedDate ? "selected" : ""}`}
+    <div className="itinerary-day-strip" role="group" aria-label="Dias da viagem">
+      {days.map(date => {
+        return <button type="button" key={date} ref={date === selectedDate ? selectedCard : undefined} className={`itinerary-day ${date === selectedDate ? "selected" : ""}`}
           aria-label={`Ver ${formatDate(date, { day: "numeric", month: "long" })}`} aria-pressed={date === selectedDate} onClick={() => onDayChange(date)}>
-          <span className="calendar-day-date"><small>{formatDate(date, { weekday: "short" }).replace(".", "")}</small><strong>{localDate(date).getDate()}</strong><small>{formatDate(date, { month: "short" }).replace(".", "")}</small></span>
-          <span className="calendar-day-summary"><span className="calendar-day-count">{count} {count === 1 ? "programa" : "programas"}</span><span className="calendar-day-value">{spendingLabel(programs, trip.currency)}</span></span>
+          <span>{formatDate(date, { weekday: "short" }).replace(".", "")}</span><strong>{localDate(date).getDate()}</strong>
         </button>;
       })}
     </div>

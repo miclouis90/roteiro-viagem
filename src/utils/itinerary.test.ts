@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { demoEvents } from "../data/demo";
 import { emptyFilters } from "../components/trip/EventFilters";
 import { filterEvents } from "./filters";
-import { hasProgramDate, itineraryResults } from "./itinerary";
+import { explorationResults, hasProgramDate, itineraryResults } from "./itinerary";
 import { collectPlaces } from "./places";
 import type { TripEvent } from "../types";
 
@@ -39,5 +39,28 @@ describe("roteiro unificado", () => {
     const results = itineraryResults([undated, ...demoEvents], { ...emptyFilters, search: "ipes" }, "2026-10-29", "places");
     expect(results.programs).toEqual([]);
     expect(collectPlaces(results.places)[0].name).toBe("Rua dos Ipês");
+  });
+});
+
+describe("Explorar a viagem inteira", () => {
+  it("ordena todos os programas por data/horário e separa os salvos sem data", () => {
+    const outside = { ...demoEvents[0], id: "outside", date: "2027-01-01" };
+    const events = [outside, saved, ...demoEvents.slice().reverse()];
+    const original = events.slice();
+    const result = explorationResults(events, emptyFilters, "all");
+    expect(result.programs.map(event => event.id)).toEqual([...demoEvents.map(event => event.id), outside.id]);
+    expect(result.places).toEqual([saved]);
+    expect(events).toEqual(original);
+    expect(explorationResults(events, emptyFilters, "programs").places).toEqual([]);
+    expect(explorationResults(events, emptyFilters, "places").places).toHaveLength(events.length);
+  });
+  it("busca nome, local e categoria globalmente, combinando os filtros existentes", () => {
+    const events = [...demoEvents, saved];
+    expect(explorationResults(events, { ...emptyFilters, search: "mesa para dois" }, "all").programs).toEqual([demoEvents[6]]);
+    expect(explorationResults(events, { ...emptyFilters, search: "lago sul" }, "all").programs).toEqual([demoEvents[6]]);
+    expect(explorationResults(events, { ...emptyFilters, search: "cafe" }, "all").places).toEqual([saved]);
+    expect(explorationResults(events, { ...emptyFilters, group: "food" }, "all").programs.map(event => event.date)).toEqual(["2026-10-29", "2026-10-29", "2026-10-31"]);
+    expect(explorationResults(events, { ...emptyFilters, group: "food", status: "confirmado" }, "all").programs).toEqual([demoEvents[0]]);
+    expect(explorationResults(events, { ...emptyFilters, search: "museu" }, "all").programs).toEqual([demoEvents[1]]);
   });
 });

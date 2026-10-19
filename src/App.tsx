@@ -48,7 +48,7 @@ function Shell() {
     currentTrip.access.canEdit ||
     (!!currentTrip.trip && tripAccess(currentTrip.trip) === "PUBLIC_EDIT");
   const menu = useRef<HTMLDetailsElement>(null);
-  return (
+  const header = (
     <>
       <header className={`site-header ${inItinerary ? "itinerary-header" : ""} ${location.pathname === "/" ? "home-header" : ""}`}>
         <div className="header-inner">
@@ -156,9 +156,14 @@ function Shell() {
           {error}
         </div>
       )}
+    </>
+  );
+  return (
+    <>
+      {!inTrip && header}
       <Routes>
         <Route path="/" element={<Home onCreate={() => setCreate(true)} />} />
-        <Route path="/viagem/:id" element={<TripPage />} />
+        <Route path="/viagem/:id" element={<TripPage header={header} />} />
         <Route path="/admin/seed-mel" element={<SeedMelPage />} />
         <Route
           path="*"

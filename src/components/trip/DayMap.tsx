@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock3, ExternalLink, MapPin, Map as MapIcon, Route, Wallet, LoaderCircle } from "lucide-react";
+import { ChevronRight, Clock3, ExternalLink, MapPin, Map as MapIcon, Route, Wallet, LoaderCircle } from "lucide-react";
 import type { Trip, TripEvent } from "../../types";
 import { categoryOf } from "../../data/categories";
 import { CategoryChip } from "../ui/Primitives";
+import { Modal } from "../Modal";
 import { formatDate } from "../../utils/dates";
 import { spendingLabel } from "../../utils/spending";
-import { dayMapStops, geocodeAddress, googleMapsLinks, type LocatedStop } from "../../utils/dayMap";
+import { dayMapStops, geocodeAddress, googleMapsLinks, type LocatedStop, type MapsLink } from "../../utils/dayMap";
 import { loadGoogleMaps, mapsConfigured, resolveLocation, type MapInstance, type MapMarker } from "../../services/googleMaps";
 import "../../day-map.css";
 
@@ -13,8 +14,8 @@ const pinTokens = { food: "--color-food", night: "--color-drink", culture: "--co
 type Status = "loading" | "ready" | "unconfigured" | "error" | "empty";
 interface MapControl { select(id: string): void; destroy(): void }
 
-export default function DayMap({ trip, events, day, onBack, onSelect }: {
-  trip: Trip; events: TripEvent[]; day: string; onBack: () => void; onSelect: (event: TripEvent) => void;
+export default function DayMap({ trip, events, day, onSelect }: {
+  trip: Trip; events: TripEvent[]; day: string; onSelect: (event: TripEvent) => void;
 }) {
   const stops = useMemo(() => dayMapStops(events, day), [events, day]);
   const mapElement = useRef<HTMLDivElement>(null);
@@ -133,10 +134,7 @@ export default function DayMap({ trip, events, day, onBack, onSelect }: {
     error: ["Não foi possível carregar o mapa", "Confira a conexão ou abra as paradas no Google Maps."],
     empty: [stops.length ? "Nenhuma localização disponível" : "Um dia para descobrir", stops.length ? "Os programas continuam na lista abaixo." : "Os programas deste dia aparecerão aqui quando forem adicionados."],
   };
-  return <section className="day-map" aria-label="Mapa do dia">
-    <div className="day-map-intro"><p>{formatDate(day, { weekday: "short", day: "numeric", month: "long" })} · {stops.length} {stops.length === 1 ? "parada" : "paradas"}</p>
-      <button className="day-map-back" onClick={onBack}><ChevronLeft size={15} aria-hidden="true" />Voltar ao roteiro</button>
-    </div>
+  return <section className="day-map" aria-label="Mapa do dia" aria-description={formatDate(day, { weekday: "long", day: "numeric", month: "long" })}>
     <div className="day-map-composition">
       <div className="day-map-stage">
         <div ref={mapElement} className="day-map-canvas" aria-label="Mapa das paradas do dia" />
@@ -145,7 +143,6 @@ export default function DayMap({ trip, events, day, onBack, onSelect }: {
           <strong>{messages[status][0]}</strong><p>{messages[status][1]}</p>
           {status === "error" && <button className="secondary" onClick={() => setRetry(value => value + 1)}>Tentar novamente</button>}
         </div>}
-        {links.length > 0 && <a className="day-map-external" href={links[0].url} target="_blank" rel="noopener noreferrer"><MapPin size={18} aria-hidden="true" />{links.length > 1 ? "Abrir trecho 1 no Google Maps" : "Abrir no Google Maps"}<ExternalLink size={13} aria-hidden="true" /></a>}
       </div>
       <div className="day-map-summary" aria-label="Resumo do dia">
         <div><span className="day-map-summary-icon"><MapPin size={21} aria-hidden="true" /></span><span><strong>{stops.length} {stops.length === 1 ? "parada" : "paradas"}</strong><small>{status === "ready" ? `${validCount} no mapa` : "no seu roteiro"}</small></span></div>
@@ -153,7 +150,7 @@ export default function DayMap({ trip, events, day, onBack, onSelect }: {
         <div><span className="day-map-summary-icon"><Route size={21} aria-hidden="true" /></span><span><strong>Em ordem</strong><small>do roteiro</small></span></div>
       </div>
     </div>
-    {links.length > 1 && <nav className="day-map-segments" aria-label="Trechos no Google Maps">{links.map((link, i) => <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">Trecho {i + 1} · paradas {link.first}–{link.last}<ExternalLink size={12} aria-hidden="true" /></a>)}</nav>}
+    <GoogleMapsAction key={`${day}:${links.map(link => link.url).join("|")}`} links={links} />
     <ol className="day-map-stops" aria-label="Paradas em ordem do roteiro">
       {visibleStops.map(stop => {
         const category = categoryOf(stop.event.category), Icon = category.icon;
@@ -173,4 +170,25 @@ export default function DayMap({ trip, events, day, onBack, onSelect }: {
       })}
     </ol>
   </section>;
+}
+
+function GoogleMapsAction({ links }: { links: MapsLink[] }) {
+  const [open, setOpen] = useState(false);
+  if (!links.length) return null;
+  const multiple = links.length > 1;
+  const singlePlace = !multiple && links[0].first === links[0].last;
+  const label = singlePlace ? "Abrir local no Google Maps" : "Abrir rota no Google Maps";
+  const Icon = singlePlace ? MapPin : Route;
+  return <>
+    <div className="day-map-route-action">
+      {multiple ? <button type="button" className="day-map-external" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}><Icon size={18} aria-hidden="true" />{label}<ExternalLink size={13} aria-hidden="true" /></button>
+        : <a className="day-map-external" href={links[0].url} target="_blank" rel="noopener noreferrer"><Icon size={18} aria-hidden="true" />{label}<ExternalLink size={13} aria-hidden="true" /></a>}
+    </div>
+    {open && multiple && <Modal title="Abrir rota no Google Maps" onClose={() => setOpen(false)}>
+      <p className="muted">Abra os trechos na ordem do roteiro.</p>
+      <nav className="day-map-route-segments" aria-label="Trechos no Google Maps">
+        {links.map((link, index) => <a key={`${link.first}-${link.last}`} href={link.url} target="_blank" rel="noopener noreferrer">Trecho {index + 1} de {links.length} — paradas {link.first}–{link.last}<ExternalLink size={14} aria-hidden="true" /></a>)}
+      </nav>
+    </Modal>}
+  </>;
 }

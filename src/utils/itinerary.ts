@@ -19,3 +19,11 @@ export function itineraryResults(events: TripEvent[], filters: Filters, day: str
     outside: filtered.filter(event => hasProgramDate(event)),
   };
 }
+
+export function explorationResults(events: TripEvent[], filters: Filters, type: ItineraryType) {
+  const filtered = filterEvents(events, filters);
+  return {
+    programs: type === "places" ? [] : filtered.filter(hasProgramDate),
+    places: type === "programs" ? [] : filtered.filter(event => type === "places" || !hasProgramDate(event)),
+  };
+}

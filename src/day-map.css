@@ -1,13 +1,10 @@
 /* Map-owned surface; the shared header, itinerary and bottom nav stay unchanged. */
-.day-map-workspace .itinerary-title { margin-bottom: 8px; }
-.day-map-intro { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2px 10px; margin: 0 0 12px; }
-.day-map-intro p { margin: 0; color: var(--brand-700); font-size: .8125rem; }
-.day-map-intro p::first-letter { text-transform: uppercase; }
-.day-map-back { display: inline-flex; align-items: center; gap: 2px; padding: 3px 0; min-height: 36px; border: 0; background: none; color: var(--text-secondary); font-size: .6875rem; }
 .day-map-composition { isolation: isolate; }
 .day-map-stage { position: relative; height: clamp(240px, 64vw, 360px); overflow: hidden; border-radius: 22px; background: var(--surface-selected); box-shadow: 0 3px 18px #173b4209; }
 .day-map-canvas { width: 100%; height: 100%; }
-.day-map-external { position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 7px; padding: 9px 12px; min-height: 42px; max-width: calc(100% - 24px); box-sizing: border-box; border-radius: 99px; background: #fffffff5; color: var(--brand-700); font-weight: 650; font-size: .75rem; text-decoration: none; box-shadow: 0 3px 14px #173b4217; }
+.day-map-route-action { margin: 0 5px 14px; }
+.day-map-external { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 10px 12px; min-height: 44px; box-sizing: border-box; border: 0; border-radius: var(--radius-control); background: var(--surface-selected); color: var(--brand-700); font-weight: 650; font-size: .75rem; line-height: 1.4; text-align: center; text-decoration: none; box-shadow: none; }
+.day-map-external svg { flex-shrink: 0; }
 .day-map-message { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 11px; padding: 68px 26px 42px; text-align: center; color: var(--brand-700); background: var(--surface-selected); }
 .day-map-message strong { font-size: .9375rem; max-width: 240px; }
 .day-map-message p { margin: 0; max-width: 270px; font-size: .75rem; line-height: 1.5; color: var(--text-secondary); }
@@ -18,8 +15,11 @@
 .day-map-summary-icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 22px; height: 32px; color: var(--brand-700); }
 .day-map-summary strong { display: block; font-size: .75rem; font-weight: 700; line-height: 1.35; color: var(--brand-700); overflow-wrap: anywhere; }
 .day-map-summary small { display: block; font-size: .625rem; line-height: 1.4; margin-top: 2px; color: var(--text-secondary); }
-.day-map-segments { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 5px 15px; }
-.day-map-segments a { display: inline-flex; align-items: center; gap: 5px; color: var(--brand-700); font-size: .6875rem; min-height: 32px; }
+.day-map-route-segments { display: flex; flex-direction: column; gap: 8px; }
+.day-map-route-segments a { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 10px 12px; border-radius: var(--radius-control); background: var(--surface-soft); color: var(--brand-700); font-size: .8125rem; line-height: 1.4; text-decoration: none; }
+.day-map-route-segments a svg { flex-shrink: 0; }
+.day-map-route-segments a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.day-map-external:active, .day-map-route-segments a:active { background: var(--surface-brand); }
 .day-map-stops { display: flex; flex-direction: column; gap: 9px; list-style: none; padding: 0; margin: 0; }
 .day-map-stop { display: flex; align-items: center; position: relative; width: 100%; text-align: left; padding: 9px; gap: 9px; border: 0; border-radius: 18px; background: #ffffffec; box-shadow: 0 4px 18px #173b4205; color: var(--text-primary); min-height: 84px; transition: background 130ms ease, box-shadow 130ms ease; }
 .day-map-stop.selected { background: #f1f7f6; box-shadow: inset 0 0 0 1.5px #6a969966; }
@@ -37,7 +37,7 @@
 .day-map-infowindow { display: flex; flex-direction: column; gap: 5px; max-width: 230px; padding: 2px 0 6px; font-family: inherit; color: #163c45; }
 .day-map-infowindow strong { font-size: 14px; }
 .day-map-infowindow span { font-size: 12px; }
-.day-map-back:focus-visible, .day-map-stop:focus-visible, .day-map-external:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.day-map-stop:focus-visible, .day-map-external:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
 .day-map-stop:active { background: var(--surface-selected); }
 .day-map-spinner { animation: day-map-spin 1s linear infinite; }
 @keyframes day-map-spin { to { transform: rotate(360deg); } }

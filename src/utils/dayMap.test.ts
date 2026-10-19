@@ -58,4 +58,35 @@ describe("mapa do dia", () => {
     expect(links.map(link => [link.first, link.last])).toEqual([[1, 5], [5, 9], [9, 10]]);
     expect(new URL(links[0].url).searchParams.get("waypoints")).toBe("Local 2|Local 3|Local 4");
   });
+  it.each([1, 2, 5, 6, 9, 10, 14])("preserva todas as %i localizações em ordem, com até três pontos intermediários", count => {
+    const stop = dayMapStops(demoEvents, "2026-10-29")[0];
+    const stops = Array.from({ length: count }, (_, index) => ({ ...stop, number: index + 1, address: `Local ${index + 1}` }));
+    const links = googleMapsLinks(stops);
+    if (count === 1) {
+      expect(links).toHaveLength(1);
+      const url = new URL(links[0].url);
+      expect(url.pathname).toBe('/maps/search/');
+      expect(url.searchParams.get('query')).toBe('Local 1');
+      expect(url.searchParams.has('origin')).toBe(false);
+      return;
+    }
+    expect(links).toHaveLength(Math.ceil((count - 1) / 4));
+    const visited: string[] = [];
+    for (const [index, link] of links.entries()) {
+      const url = new URL(link.url);
+      expect(url.pathname).toBe('/maps/dir/');
+      const waypoints = url.searchParams.get('waypoints')?.split('|') || [];
+      expect(waypoints.length).toBeLessThanOrEqual(3);
+      const points = [url.searchParams.get('origin')!, ...waypoints, url.searchParams.get('destination')!];
+      expect(points[0]).toBe(`Local ${link.first}`);
+      expect(points.at(-1)).toBe(`Local ${link.last}`);
+      if (index > 0) {
+        expect(link.first).toBe(links[index - 1].last);
+        expect(points[0]).toBe(visited.at(-1));
+      }
+      visited.push(...(index ? points.slice(1) : points));
+      expect(url.searchParams.has('optimize')).toBe(false);
+    }
+    expect(visited).toEqual(stops.map(stop => stop.address));
+  });
 });
