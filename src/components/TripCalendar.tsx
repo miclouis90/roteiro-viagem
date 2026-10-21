@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Trip, TripEvent } from "../types";
 import { dateKey, formatDate, localDate } from "../utils/dates";
 import { categoryOf } from "../data/categories";
+import { occursOnDay } from "../utils/lodging";
 
 export function TripCalendar({ trip, days, events, selectedDate, onDayChange, visible = true }: {
   trip: Trip;
@@ -52,7 +53,7 @@ export function TripCalendar({ trip, days, events, selectedDate, onDayChange, vi
         {cells.map(date => {
           const inMonth = date.startsWith(month);
           const inTrip = date >= trip.startDate && date <= trip.endDate;
-          const dayEvents = events.filter(event => event.date === date);
+          const dayEvents = events.filter(event => occursOnDay(event, date));
           const tones = [...new Set(dayEvents.map(event => categoryOf(event.category).tone))];
           return <button key={date} className={`month-date ${inMonth ? "" : "outside-month"} ${inTrip ? "in-trip" : ""} ${date === selectedDate ? "selected" : ""}`}
             aria-label={`${formatDate(date, { day: "numeric", month: "long", year: "numeric" })}${inTrip ? ", durante a viagem" : ""}${dayEvents.length ? `, ${dayEvents.length} ${dayEvents.length === 1 ? "programa" : "programas"}` : ""}`}

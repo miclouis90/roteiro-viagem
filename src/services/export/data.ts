@@ -3,6 +3,7 @@ import { categories, categoryGroups } from "../../data/categories";
 import { cost, money } from "../../utils/money";
 import { hasUndefinedPrice } from "../../utils/eventPrice";
 import { eventLabels, priorityLabels } from "../../utils/labels";
+import { isLodging, lodgingPeriod } from "../../utils/lodging";
 
 export const headers = ["Data", "Dia da semana", "Hora início", "Hora fim", "Programa", "Grupo", "Categoria", "Local", "Status", "Prioridade", "Valor", "Gratuito", "Observações"];
 export interface ExportRow {
@@ -30,7 +31,7 @@ export function prepareRows(trip: Trip, events: readonly TripEvent[]): ExportRow
     const value = event.isFree ? 0 : missingPrice ? "" : hasUndefinedPrice(event) ? "A definir" : cost(event);
     return {
       day: event.date || "",
-      cells: [date, weekday, exportTime(event.startTime), exportTime(event.endTime), event.title || "", group, event.category || "", event.location || "", eventLabels[event.status] || event.status || "", priorityLabels[event.priority] || event.priority || "", value, typeof event.isFree === "boolean" ? event.isFree ? "Sim" : "Não" : "", event.notes || ""],
+      cells: [date, weekday, exportTime(event.startTime), exportTime(event.endTime), event.title || "", group, event.category || "", event.location || "", eventLabels[event.status] || event.status || "", priorityLabels[event.priority] || event.priority || "", value, typeof event.isFree === "boolean" ? event.isFree ? "Sim" : "Não" : "", isLodging(event) ? `Estadia: ${lodgingPeriod(event)}. Valor total contabilizado no check-in.` : event.notes || ""],
       valueLabel: typeof value === "number" ? money(value, trip.currency) : value,
     };
   });

@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef } from "react";
 import {
   MoreHorizontal,
   Share2,
@@ -26,59 +27,81 @@ export function TripMenu({
   onVisibility: () => void;
   onDelete: () => void;
 }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const panelId = useId();
+  useEffect(() => {
+    function closeOutside(event: MouseEvent) {
+      const menu = ref.current;
+      if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) {
+        menu.open = false;
+      }
+    }
+    document.addEventListener("click", closeOutside, true);
+    return () => document.removeEventListener("click", closeOutside, true);
+  }, []);
+  function choose(action: () => void) {
+    if (ref.current) {
+      ref.current.open = false;
+      ref.current.querySelector("summary")?.focus({ preventScroll: true });
+    }
+    action();
+  }
   return (
     <details
-      className="context-menu"
+      ref={ref}
+      className="context-menu trip-options"
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget))
           e.currentTarget.open = false;
       }}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
           e.currentTarget.open = false;
-          e.currentTarget.querySelector("summary")?.focus();
+          e.currentTarget.querySelector("summary")?.focus({ preventScroll: true });
         }
       }}
     >
-      <summary aria-label="Mais opções da viagem">
-        <MoreHorizontal size={22} />
+      <summary aria-label="Mais opções da viagem" aria-controls={panelId}>
+        <MoreHorizontal size={22} aria-hidden="true" />
       </summary>
-      <div
-        className="menu-popover"
-        onClick={(e) => {
-          const d = e.currentTarget.closest("details");
-          if (d) d.open = false;
-        }}
-      >
-        <button onClick={onEdit}>
-          <Pencil size={17} />
-          Editar viagem
-        </button>
-        <button onClick={onShare}>
-          <Share2 size={17} />
-          Compartilhar
-        </button>
-        {owner && (
-          <>
-            <button onClick={onVisibility}>
-              <LockKeyhole size={17} />
+      <div className="menu-popover" id={panelId}>
+        <div className="trip-options-group" role="group" aria-label="Ações da viagem">
+          <button type="button" onClick={() => choose(onEdit)}>
+            <Pencil size={17} aria-hidden="true" />
+            Editar viagem
+          </button>
+          <button type="button" onClick={() => choose(onShare)}>
+            <Share2 size={17} aria-hidden="true" />
+            Compartilhar
+          </button>
+          {owner && <>
+            <button type="button" onClick={() => choose(onVisibility)}>
+              <LockKeyhole size={17} aria-hidden="true" />
               Gerenciar acesso
             </button>
-            <button onClick={onDuplicate}>
-              <Copy size={17} />
+            <button type="button" onClick={() => choose(onDuplicate)}>
+              <Copy size={17} aria-hidden="true" />
               Duplicar viagem
             </button>
-            <button className="danger-text" onClick={onDelete}>
-              <Trash2 size={17} />
+          </>}
+        </div>
+        {owner && (
+          <div className="trip-options-group" role="group" aria-label="Ações destrutivas">
+            <button type="button" className="danger-text" onClick={() => choose(onDelete)}>
+              <Trash2 size={17} aria-hidden="true" />
               Excluir viagem
             </button>
-          </>
+          </div>
         )}
         {!owner && canLeave && (
-          <button onClick={onLeave}>
-            <LogOut size={17} />
-            Sair da viagem
-          </button>
+          <div className="trip-options-group" role="group" aria-label="Participação na viagem">
+            <button type="button" onClick={() => choose(onLeave)}>
+              <LogOut size={17} aria-hidden="true" />
+              Sair da viagem
+            </button>
+          </div>
         )}
       </div>
     </details>

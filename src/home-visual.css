@@ -11,7 +11,7 @@
 .home-header .account-menu :is(.user-name, summary > svg) { display: none; }
 .home { position: relative; padding-top: 0; }
 .home .home-intro { position: relative; isolation: isolate; padding: 14px 0 18px; }
-.home .home-intro-art { position: absolute; pointer-events: none; z-index: -1; right: -16px; top: -80px; width: 55%; height: 202px; border-radius: 0 0 0 100%; background-image: linear-gradient(115deg, #f8f9f9ed, transparent 85%), url('./assets/overview/brasilia-atlas.webp'); background-size: 100% 100%, 500% 225.55%; background-position: center, 50% bottom; opacity: .72; }
+.home .home-intro-art { position: absolute; pointer-events: none; z-index: -1; right: -16px; top: -80px; width: 55%; height: 202px; border-radius: 0 0 0 100%; }
 .home .home-greeting { margin: 0 0 7px; font-size: .9375rem; line-height: 1.4; font-weight: 500; color: var(--text-secondary); }
 .home .home-intro h1 { position: relative; max-width: 340px; margin: 0 0 8px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.05rem, 8.85vw, 2.4rem); line-height: 1.04; letter-spacing: -.05em; font-weight: 700; color: #102d35; text-wrap: pretty; }
 .home .home-intro h1 > span { display: block; }
@@ -38,10 +38,8 @@
 .home .home-trip-upcoming:only-child { flex-basis: 100%; max-width: none; }
 .home .home-trip-link { position: relative; display: flex; min-width: 0; height: 100%; border-radius: inherit; overflow: hidden; }
 .home .home-trip-upcoming .home-trip-link { min-height: 205px; flex-direction: column; justify-content: flex-end; padding: 76px 16px 15px; color: white; }
-.home .home-trip-art { position: absolute; inset: 0; height: auto; border-radius: inherit; overflow: hidden; background: linear-gradient(145deg, color-mix(in srgb, var(--trip-accent) 75%, var(--brand-700)), color-mix(in srgb, var(--trip-soft) 72%, var(--action-accent))); }
+.home .home-trip-art { position: absolute; inset: 0; height: auto; border-radius: inherit; overflow: hidden; background: var(--brand-700); }
 .home .home-trip-upcoming .home-trip-art { height: 100%; border-radius: inherit; }
-.home .home-destination-brasilia .home-trip-art { background-image: url('./assets/overview/brasilia-atlas.webp'); background-size: auto 179.65%; background-position: 57% top; background-repeat: no-repeat; }
-.home .home-trip-upcoming.home-destination-brasilia .home-trip-art { background-size: auto 205%; background-position: right top; }
 .home .home-trip-upcoming .home-trip-link::after { content: ''; pointer-events: none; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, #082e3621, transparent 34%, #092b3566 63%, #082c37dc 100%); }
 .home .home-trip-copy { position: relative; z-index: 1; min-width: 0; }
 .home .home-trip-upcoming .home-trip-copy { padding: 0; }
@@ -63,12 +61,6 @@
 .home .home-trip-menu .menu-popover a { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 9px 12px; border-radius: 10px; font-size: .8125rem; color: var(--brand-700); }
 .home .home-trip-menu .menu-popover a:hover { background: var(--surface-soft); }
 .home .home-trip-link:active { filter: brightness(.94); }
-.home .home-destination-graphic { position: absolute; width: 100%; height: 100%; inset: 0; }
-.home .home-graphic-sun { fill: var(--action-accent-soft); opacity: .7; }
-.home .home-graphic-ridge { fill: var(--trip-accent); opacity: .4; }
-.home .home-graphic-water { fill: var(--trip-soft); opacity: .25; }
-.home .home-graphic-route { fill: none; stroke: white; stroke-width: 1; stroke-dasharray: 5 6; opacity: .65; }
-.home .home-graphic-point { fill: white; }
 .home .home-trip-list { display: grid; gap: 11px; }
 .home .home-trip-row { display: block; padding: 0; background: var(--surface-raised); border-radius: 20px; }
 .home .home-trip-row .home-trip-link { display: grid; grid-template-columns: 31% minmax(0, 1fr); gap: 13px; padding: 8px; min-height: 116px; }

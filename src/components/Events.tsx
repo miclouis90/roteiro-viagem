@@ -21,6 +21,7 @@ import { CategoryChip } from "./ui/Primitives";
 import { categoryOf } from "../data/categories";
 import { Modal } from "./Modal";
 import { EventSpecificDetails } from "./EventSpecificDetails";
+import { isLodging, lodgingPeriod } from "../utils/lodging";
 export function EventCard({
   event,
   currency,
@@ -128,7 +129,7 @@ export function EventDetails({
         <div className="event-when">
           <CalendarDays size={18} aria-hidden="true" />
           <span>
-            {hasProgramDate(event) ? formatDate(event.date, {
+            {isLodging(event) ? lodgingPeriod(event) : hasProgramDate(event) ? formatDate(event.date, {
               weekday: "long",
               day: "numeric",
               month: "long",
@@ -137,7 +138,7 @@ export function EventDetails({
           <span className="event-clock">
             <Clock3 size={18} aria-hidden="true" />
             <strong>
-              {event.startTime}
+              {isLodging(event) ? `Check-in ${event.startTime || "a definir"} · Check-out ${event.details?.checkOutTime || "a definir"}` : event.startTime}
               {event.endTime && ` — ${event.endTime}`}
             </strong>
           </span>
@@ -212,11 +213,11 @@ export function EventDetails({
         </div>
         {justSaved && admin && (
           <p className="field-help">
-            Programa salvo. Em Editar, você pode adicionar mais detalhes.
+            {isLodging(event) ? "Hospedagem salva." : "Programa salvo."} Em Editar, você pode adicionar mais detalhes.
           </p>
         )}
         <details className="expandable event-extra">
-          <summary>Detalhes do programa <ChevronDown size={18} aria-hidden="true" /></summary>
+          <summary>{isLodging(event) ? "Detalhes da hospedagem" : "Detalhes do programa"} <ChevronDown size={18} aria-hidden="true" /></summary>
           <div className="event-extra-body">
             <section className="detail-block">
               <h3>Informações</h3>
@@ -228,14 +229,15 @@ export function EventDetails({
               details={event.details}
               admin={admin}
               part="info"
+              departureTime={event.category === "Voo" ? event.startTime : undefined}
+              arrivalTime={event.category === "Voo" ? String(event.details?.type === "flight" && event.details.arrivalTime || event.endTime || "") : undefined}
             />
             <section className="detail-cost">
               <span className="muted">Gasto estimado</span>
               <h3>{eventPriceLabel(event, trip.currency)}</h3>
               {!event.isFree && !hasUndefinedPrice(event) && (
                 <p>
-                  {money(event.pricePerPerson, trip.currency)} por pessoa ·{" "}
-                  {event.peopleCount} pessoa(s)
+                  {isLodging(event) ? `${money(event.pricePerPerson, trip.currency)} no total da estadia${event.details?.guests ? ` · ${event.details.guests} ${event.details.guests === 1 ? "hóspede" : "hóspedes"}` : ""}` : <>{money(event.pricePerPerson, trip.currency)} por pessoa · {event.peopleCount} pessoa(s)</>}
                   {event.status === "cancelado" ? " · fora do total" : ""}
                 </p>
               )}

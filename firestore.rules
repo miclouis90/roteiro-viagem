@@ -153,9 +153,32 @@ service cloud.firestore {
         && detailText(d, 'ticket');
     }
 
+    function lodgingCategory(c) {
+      return c in ['Hotel', 'Airbnb/aluguel', 'Pousada', 'Hostel', 'Casa de amigos', 'Outro (hospedagem)'];
+    }
+    function details_lodging(d) {
+      return d.type == 'lodging' && d.keys().hasAll(['checkOutDate'])
+        && d.keys().hasOnly(['type','checkOutDate','checkOutTime','guests'])
+        && date(d.checkOutDate)
+        && detailText(d, 'checkOutTime')
+        && (d.get('checkOutTime','') == '' || d.checkOutTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'))
+        && (!('guests' in d) || (d.guests is int && d.guests >= 1 && d.guests <= 10000));
+    }
+    function lodgingEvent(d) { return d.get('details', {}).get('type', '') == 'lodging'; }
+    function privateLodgingAccess(tripId) {
+      return isOwner(tripId) || legacyAdmin(trip(tripId)) || isEditor(tripId);
+    }
+    function validLodgingReservation(d, tripId, eventId) {
+      return d.keys().hasAll(['updatedAt'])
+        && d.keys().hasOnly(['bookingReference','bookingUrl','notes','updatedAt'])
+        && detailText(d, 'bookingReference') && detailText(d, 'bookingUrl') && url(d.get('bookingUrl',''))
+        && detailText(d, 'notes') && d.updatedAt == request.time
+        && getAfter(/databases/$(database)/documents/trips/$(tripId)/events/$(eventId)).data.details.type == 'lodging';
+    }
+
     function validDetails(d) {
       return d is map && d.keys().hasAll(['type'])
-        && (d.type == 'flight' ? details_flight(d) : d.type == 'restaurant' ? details_restaurant(d) : d.type == 'bar' ? details_bar(d) : d.type == 'culture' ? details_culture(d) : d.type == 'outdoor' ? details_outdoor(d) : d.type == 'transfer' ? details_transfer(d) : d.type == 'car' ? details_car(d) : d.type == 'rail' ? details_rail(d) : false);
+        && (d.type == 'lodging' ? details_lodging(d) : d.type == 'flight' ? details_flight(d) : d.type == 'restaurant' ? details_restaurant(d) : d.type == 'bar' ? details_bar(d) : d.type == 'culture' ? details_culture(d) : d.type == 'outdoor' ? details_outdoor(d) : d.type == 'transfer' ? details_transfer(d) : d.type == 'car' ? details_car(d) : d.type == 'rail' ? details_rail(d) : false);
     }
 
     function validTrip(d) {
@@ -289,9 +312,9 @@ service cloud.firestore {
         && d.date >= trip.startDate
         && d.date <= trip.endDate
         && d.startTime is string
-        && d.startTime.matches(
+        && ((lodgingEvent(d) && d.startTime == '') || d.startTime.matches(
           '^([01][0-9]|2[0-3]):[0-5][0-9]$'
-        )
+        ))
         && d.endTime is string
         && (
           d.endTime == ''
@@ -312,6 +335,9 @@ service cloud.firestore {
         && d.peopleCount is int
         && d.peopleCount >= 1
         && d.peopleCount <= 10000
+        && (!lodgingEvent(d) || (lodgingCategory(d.category)
+          && d.details.checkOutDate > d.date && d.details.checkOutDate <= trip.endDate
+          && d.endTime == '' && d.peopleCount == 1 && d.location.size() > 0))
         && d.isFree is bool
         && (!d.isFree || d.pricePerPerson == 0)
         && d.status in [
@@ -372,6 +398,11 @@ service cloud.firestore {
         allow update: if canEditTrip(tripId) && validEvent(request.resource.data, tripId)
           && request.resource.data.createdAt == resource.data.createdAt;
         allow delete: if canEditTrip(tripId);
+      }
+      match /lodgingReservations/{eventId} {
+        allow read: if privateLodgingAccess(tripId);
+        allow create, update: if privateLodgingAccess(tripId) && validLodgingReservation(request.resource.data, tripId, eventId);
+        allow delete: if privateLodgingAccess(tripId);
       }
       match /members/{uid} {
         allow get: if isOwner(tripId) || (signedIn() && uid == request.auth.uid);

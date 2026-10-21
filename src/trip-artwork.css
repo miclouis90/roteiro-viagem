@@ -1,0 +1,39 @@
+/* Decorative artwork sits inside the existing covers; it owns no layout dimensions. */
+.trip-artwork {
+  --art-ink: #103441;
+  --art-sky: color-mix(in srgb, var(--trip-accent, #25505b) 32%, #416973);
+  --art-distant: #527b7d;
+  --art-land: #345b60;
+  --art-water: #1c4555;
+  --art-stone: #cfbda2;
+  --art-paper: #f3e9d6;
+  --art-sun: #ddb08a;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--art-ink);
+}
+.trip-artwork[data-palette="1"] { --art-ink: #25384b; --art-sky: #567282; --art-distant: #6b8793; --art-land: #3e596c; --art-water: #263f56; --art-stone: #d9c8ad; --art-sun: #e1b598; }
+.trip-artwork[data-palette="2"] { --art-ink: #35384d; --art-sky: #756b86; --art-distant: #88859b; --art-land: #565b72; --art-water: #3c425e; --art-stone: #d8c5bc; --art-sun: #dfb49e; }
+.trip-artwork[data-palette="3"] { --art-ink: #263e3d; --art-sky: #6b8074; --art-distant: #889889; --art-land: #4d6960; --art-water: #2c504d; --art-stone: #d5c9ac; --art-sun: #e0bc8e; }
+.trip-artwork .trip-artwork-vector { display: block; width: 100%; height: 100%; max-width: none; }
+.trip-artwork-photo, .trip-artwork-shade { position: absolute; inset: 0; border-radius: inherit; }
+.trip-artwork-photo { background-size: var(--photo-size); background-position: var(--photo-position); background-repeat: no-repeat; }
+.trip-artwork-loader { display: none; }
+.trip-artwork.is-illustrated .trip-artwork-shade { background: linear-gradient(90deg, #092733b8, #0927331a 75%), linear-gradient(0deg, #09273355, transparent 45%); }
+.trip-artwork-day .trip-artwork-shade, .trip-artwork-day.is-illustrated .trip-artwork-shade { background: linear-gradient(180deg, #102c3bcc, #102c3b4d 42%, transparent 70%); }
+.home .home-trip-upcoming .trip-artwork-photo { background-size: auto 205%; background-position: right top; }
+.home .home-intro-art { background: none; opacity: 1; overflow: hidden; }
+.home-intro-art .trip-artwork {
+  --art-ink: #dce7e5; --art-sky: #c9d6d0; --art-distant: #abbfba;
+  --art-land: #9db6b0; --art-water: #a1bfc2; --art-stone: #e6d8bd;
+  --art-paper: #fdf9ed; --art-sun: #eac9a6;
+  opacity: .85;
+}
+.home-intro-art .trip-artwork-shade { display: none; }
+.home-intro-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, var(--surface-base) 5%, #f8f9f9a8 42%, #f8f9f91a); }
+@media (min-width: 701px) {
+  .overview-destination-art .trip-artwork-photo { background-size: 100% 179.65%; }
+}

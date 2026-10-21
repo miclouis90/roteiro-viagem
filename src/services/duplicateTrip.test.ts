@@ -40,6 +40,28 @@ beforeEach(() => {
   });
 });
 describe("Duplicação sem alterar origem", () => {
+  it("copia reservas protegidas separadas dos eventos em lotes limitados", async () => {
+    const stays = Array.from({ length: 9 }, (_, index) => ({
+      ...demoEvents[0], id: `stay-${index}`, category: "Hotel", startTime: "", endTime: "",
+      peopleCount: 1, details: { type: "lodging", checkOutDate: demoTrip.endDate },
+    }));
+    mocks.readEvents
+      .mockResolvedValueOnce({ docs: stays.map(event => ({ id: event.id, data: () => event })) })
+      .mockResolvedValueOnce({ docs: stays.map(event => ({ id: event.id, data: () => ({ bookingReference: "SECRET" }) })) });
+    const batches = Array.from({ length: 3 }, () => ({ set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) }));
+    batches.forEach(batch => mocks.batch.mockReturnValueOnce(batch));
+    await duplicateTrip(demoTrip, []);
+    expect(batches.map(batch => batch.set.mock.calls.length)).toEqual([1, 16, 2]);
+    for (const batch of batches.slice(1)) {
+      const calls = batch.set.mock.calls;
+      for (let index = 0; index < calls.length; index += 2) {
+        expect(calls[index][1].details).not.toHaveProperty("bookingReference");
+        expect(calls[index + 1][0].path).toContain("lodgingReservations");
+        expect(calls[index + 1][1].bookingReference).toBe("SECRET");
+      }
+      expect(batch.commit).toHaveBeenCalledOnce();
+    }
+  });
   it("cria uma cópia privada e novos programas após o documento pai", async () => {
     const order: string[] = [];
     const parent = {

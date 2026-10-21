@@ -5,6 +5,7 @@ import { money } from "../utils/money";
 import { spending, spendingLabel } from "../utils/spending";
 import { formatDate } from "../utils/dates";
 import { categoryOf, categoryGroups } from "../data/categories";
+import { isLodging } from "../utils/lodging";
 
 const ringLength = 2 * Math.PI * 48;
 
@@ -125,6 +126,6 @@ export function TripSummary({ trip, events, days, count, onDay }: {
       </div>
     </section>
 
-    <p className="footnote"><Info size={18} aria-hidden="true" /><span>Estimativas para todas as pessoas informadas. Programas cancelados não entram no total. Você pode ajustar os valores na ficha de cada programa.</span></p>
+    <p className="footnote"><Info size={18} aria-hidden="true" /><span>Estimativas para todas as pessoas informadas. Programas cancelados não entram no total. Você pode ajustar os valores na ficha de cada programa.{active.some(isLodging) && " Hospedagem contabilizada integralmente no dia do check-in, sem multiplicar pelo número de hóspedes ou noites."}</span></p>
   </section>;
 }

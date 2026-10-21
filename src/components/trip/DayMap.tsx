@@ -6,11 +6,12 @@ import { CategoryChip } from "../ui/Primitives";
 import { Modal } from "../Modal";
 import { formatDate } from "../../utils/dates";
 import { spendingLabel } from "../../utils/spending";
+import { isLodging, timeOnDay } from "../../utils/lodging";
 import { dayMapStops, geocodeAddress, googleMapsLinks, type LocatedStop, type MapsLink } from "../../utils/dayMap";
 import { loadGoogleMaps, mapsConfigured, resolveLocation, type MapInstance, type MapMarker } from "../../services/googleMaps";
 import "../../day-map.css";
 
-const pinTokens = { food: "--color-food", night: "--color-drink", culture: "--color-culture", outdoor: "--color-outdoor", transport: "--color-transport", other: "--color-other" };
+const pinTokens = { food: "--color-food", night: "--color-drink", culture: "--color-culture", outdoor: "--color-outdoor", transport: "--color-transport", lodging: "--color-lodging", other: "--color-other" };
 type Status = "loading" | "ready" | "unconfigured" | "error" | "empty";
 interface MapControl { select(id: string): void; destroy(): void }
 
@@ -25,8 +26,14 @@ export default function DayMap({ trip, events, day, onSelect }: {
   const [located, setLocated] = useState<LocatedStop[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [retry, setRetry] = useState(0);
+  const geocodingTrip = useRef(trip);
+
+  // Unrelated trip edits must not rebuild the map; only destination fields do.
+  useEffect(() => { geocodingTrip.current = trip; }, [trip]);
 
   useEffect(() => {
+    const canvas = mapElement.current;
+    const destinationTrip = geocodingTrip.current;
     let cancelled = false;
     let authenticationFailed = false;
     setLocated([]);
@@ -51,17 +58,17 @@ export default function DayMap({ trip, events, day, onSelect }: {
             const index = cursor++, stop = stops[index];
             let position = stop.position;
             if (!position && stop.placeId) position = await resolveLocation(api, { placeId: stop.placeId });
-            if (!cancelled && !position && stop.address) position = await resolveLocation(api, { address: geocodeAddress(stop, trip) });
+            if (!cancelled && !position && stop.address) position = await resolveLocation(api, { address: geocodeAddress(stop, destinationTrip) });
             resolved[index] = { ...stop, position };
           }
         }
         await Promise.all(Array.from({ length: Math.min(3, stops.length) }, worker));
-        if (cancelled || !mapElement.current) return;
+        if (cancelled || !canvas) return;
         if (authenticationFailed) throw new Error("maps-authentication");
         setLocated(resolved);
         const valid = resolved.filter(stop => stop.position);
         if (!valid.length) { setStatus("empty"); return; }
-        const map: MapInstance = new api.Map(mapElement.current, {
+        const map: MapInstance = new api.Map(canvas, {
           center: valid[0].position, zoom: 13, mapTypeControl: false, streetViewControl: false,
           fullscreenControl: false, gestureHandling: "cooperative", clickableIcons: false,
           zoomControlOptions: { position: 7 },
@@ -120,7 +127,7 @@ export default function DayMap({ trip, events, day, onSelect }: {
       cancelled = true;
       controls.current?.destroy(); controls.current = null;
       if (host.gm_authFailure === authFailure) host.gm_authFailure = previousAuthFailure;
-      mapElement.current?.replaceChildren();
+      canvas?.replaceChildren();
     };
   }, [stops, trip.destinationCity, trip.destinationState, trip.country, retry]);
 
@@ -146,11 +153,12 @@ export default function DayMap({ trip, events, day, onSelect }: {
       </div>
       <div className="day-map-summary" aria-label="Resumo do dia">
         <div><span className="day-map-summary-icon"><MapPin size={21} aria-hidden="true" /></span><span><strong>{stops.length} {stops.length === 1 ? "parada" : "paradas"}</strong><small>{status === "ready" ? `${validCount} no mapa` : "no seu roteiro"}</small></span></div>
-        <div><span className="day-map-summary-icon"><Wallet size={20} aria-hidden="true" /></span><span><strong>{spendingLabel(stops.map(stop => stop.event), trip.currency)}</strong><small>estimativa do dia</small></span></div>
+        <div><span className="day-map-summary-icon"><Wallet size={20} aria-hidden="true" /></span><span><strong>{spendingLabel(stops.map(stop => stop.event).filter(event => event.date === day), trip.currency)}</strong><small>estimativa do dia</small></span></div>
         <div><span className="day-map-summary-icon"><Route size={21} aria-hidden="true" /></span><span><strong>Em ordem</strong><small>do roteiro</small></span></div>
       </div>
     </div>
     <GoogleMapsAction key={`${day}:${links.map(link => link.url).join("|")}`} links={links} />
+    {stops.some(stop => isLodging(stop.event)) && <p className="field-help">Hospedagem contabilizada uma única vez, no dia do check-in.</p>}
     <ol className="day-map-stops" aria-label="Paradas em ordem do roteiro">
       {visibleStops.map(stop => {
         const category = categoryOf(stop.event.category), Icon = category.icon;
@@ -162,7 +170,7 @@ export default function DayMap({ trip, events, day, onSelect }: {
             <span className="day-map-number">{stop.number}</span>
             <span className="day-map-stop-visual" aria-hidden="true"><Icon size={29} strokeWidth={1.6} /></span>
             <span className="day-map-stop-copy"><strong>{stop.event.title}</strong>
-              <span className="day-map-stop-meta"><CategoryChip name={stop.event.category} /><span><Clock3 size={12} aria-hidden="true" />{stop.event.startTime || "A definir"}</span></span>
+              <span className="day-map-stop-meta"><CategoryChip name={stop.event.category} /><span><Clock3 size={12} aria-hidden="true" />{timeOnDay(stop.event, day) || (isLodging(stop.event) ? "Estadia" : "A definir")}</span></span>
               <span className="day-map-stop-address"><MapPin size={13} aria-hidden="true" />{unavailable ? "Localização indisponível" : stop.address || "Local do programa"}</span>
             </span><ChevronRight className="day-map-stop-arrow" size={17} aria-hidden="true" />
           </button>

@@ -1,5 +1,6 @@
 import type { Trip, TripEvent } from "../types";
 import { hasProgramDate } from "./itinerary";
+import { occursOnDay, timeOnDay } from "./lodging";
 
 export interface Coordinates { lat: number; lng: number }
 export interface MapStop {
@@ -40,8 +41,8 @@ function locationSource(event: TripEvent) {
   return { position, placeId: placeId || undefined, address: address || query };
 }
 export function dayMapStops(events: readonly TripEvent[], day: string): MapStop[] {
-  return events.filter(event => hasProgramDate(event) && event.date === day)
-    .sort((a, b) => (a.startTime || "99:99").localeCompare(b.startTime || "99:99") || a.id.localeCompare(b.id))
+  return events.filter(event => hasProgramDate(event) && occursOnDay(event, day))
+    .sort((a, b) => (timeOnDay(a, day) || "99:99").localeCompare(timeOnDay(b, day) || "99:99") || a.id.localeCompare(b.id))
     .map((event, index) => ({ event, number: index + 1, ...locationSource(event) }));
 }
 export function mapSearch(params: URLSearchParams, day: string, open: boolean) {

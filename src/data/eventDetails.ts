@@ -1,9 +1,10 @@
 import { categoryOf } from "./categories";
+import { dateKey, localDate } from "../utils/dates";
 export interface DetailField {
   key: string;
   label: string;
   private?: boolean;
-  input?: "time" | "url" | "checkbox";
+  input?: "time" | "url" | "checkbox" | "date" | "number";
 }
 const field = (
   key: string,
@@ -12,6 +13,17 @@ const field = (
   input?: DetailField["input"],
 ): DetailField => ({ key, label, private: privateField, input });
 export const detailSchemas = {
+  lodging: {
+    title: "Informações da hospedagem",
+    fields: [
+      field("checkOutDate", "Data de check-out", false, "date"),
+      field("checkOutTime", "Horário de check-out", false, "time"),
+      field("guests", "Quantidade de hóspedes", false, "number"),
+      field("bookingReference", "Código de reserva", true),
+      field("bookingUrl", "Link da reserva", true, "url"),
+      field("notes", "Observações da hospedagem", true),
+    ],
+  },
   flight: {
     title: "Informações do voo",
     fields: [
@@ -115,9 +127,10 @@ export const detailSchemas = {
 export type DetailType = keyof typeof detailSchemas;
 export interface EventDetailsData {
   type: DetailType;
-  [key: string]: string | boolean;
+  [key: string]: string | boolean | number;
 }
 export function detailTypeFor(category: string): DetailType | undefined {
+  if (categoryOf(category).group === "lodging") return "lodging";
   if (category === "Voo" || category === "Aeroporto") return "flight";
   if (category === "Transfer" || category === "Táxi / app") return "transfer";
   if (category === "Carro") return "car";
@@ -140,12 +153,15 @@ export function validDetails(details: unknown): details is EventDetailsData {
   if (typeof value.type !== "string" || !Object.prototype.hasOwnProperty.call(detailSchemas, value.type))
     return false;
   const fields = detailSchemas[value.type as DetailType].fields;
+  if (value.type === "lodging" && !value.checkOutDate) return false;
   return Object.entries(value).every(([key, entry]) => {
     if (key === "type") return true;
     const spec = fields.find((f) => f.key === key);
     if (!spec) return false;
     if (spec.input === "checkbox") return typeof entry === "boolean";
+    if (spec.input === "number") return typeof entry === "number" && Number.isInteger(entry) && entry >= 1 && entry <= 10000;
     if (typeof entry !== "string" || entry.length > 1000) return false;
+    if (spec.input === "date") return /^\d{4}-\d{2}-\d{2}$/.test(entry) && dateKey(localDate(entry)) === entry;
     if (spec.input === "time")
       return entry === "" || /^([01]\d|2[0-3]):[0-5]\d$/.test(entry);
     if (spec.input === "url") return entry === "" || /^https?:\/\//.test(entry);

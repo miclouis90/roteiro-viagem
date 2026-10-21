@@ -51,7 +51,7 @@ export function CategoryPicker({
             onClick={() => onChange(category.name)}
           >
             <category.icon size={19} />
-            {category.name}
+            {category.label ?? category.name}
           </button>
         ))}
       </div>

@@ -82,6 +82,10 @@
   --color-other: var(--color-slate);
   --color-other-ink: #44566b;
   --color-other-bg: var(--color-slate-light);
+  --color-lodging: #b08b45;
+  --color-lodging-ink: #735921;
+  --color-lodging-bg: #f8f1e1;
+  --color-lodging-border: #d9c59a;
   /* Context borders and neutral surfaces shared by every screen. */
   --color-food-border: #e7ad99;
   --color-drink-border: #c6b4e8;

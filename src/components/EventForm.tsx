@@ -14,6 +14,9 @@ import {
   type EventDetailsData,
 } from "../data/eventDetails";
 import { EventSpecificFields } from "./EventSpecificFields";
+import { isLodgingCategory, lodgingCheckOut } from "../utils/lodging";
+import { hasProgramDate } from "../utils/itinerary";
+import { eventSaveFailure } from "../utils/eventSaveError";
 export function EventForm({
   defaultDate,
   trip,
@@ -22,23 +25,63 @@ export function EventForm({
   kind = "program",
   expandDetails = false,
   onSaved,
+  privateReservationAllowed = true,
 }: {
   trip: Trip;
   defaultDate?: string;
   event?: TripEvent;
   onClose: () => void;
   firstEvent?: boolean;
-  kind?: "program" | "transport" | "place";
+  kind?: "program" | "transport" | "place" | "lodging";
   expandDetails?: boolean;
   onSaved: (event: TripEvent) => void;
+  privateReservationAllowed?: boolean;
 }) {
   const [showDetails, setShowDetails] = useState(expandDetails);
   const [free, setFree] = useState(event?.isFree ?? false);
   const [category, setCategory] = useState(
     event?.category ??
-      (kind === "transport" ? "Voo" : kind === "place" ? "Outro" : "Café"),
+      (kind === "lodging" ? "Hotel" : kind === "transport" ? "Voo" : kind === "place" ? "Outro" : "Café"),
   );
   const [details, setDetails] = useState(event?.details);
+  const [startTime, setStartTime] = useState(event?.startTime ?? "09:00");
+  const [endTime, setEndTime] = useState(event?.endTime ?? "");
+  const [checkOutDate, setCheckOutDate] = useState(event ? lodgingCheckOut(event) : "");
+  const [checkInTime, setCheckInTime] = useState(event?.details?.type === "lodging" ? event.startTime : "");
+  const isStay = isLodgingCategory(category);
+  const [arrivalTime, setArrivalTime] = useState(() =>
+    String(
+      (event?.details?.type === "flight" && event.details.arrivalTime) ||
+        event?.endTime || "",
+    ),
+  );
+  const [departureEdited, setDepartureEdited] = useState(false);
+  const [arrivalEdited, setArrivalEdited] = useState(false);
+  const isFlight = category === "Voo";
+  const legacyDeparture = details?.type === "flight"
+    ? String(details.departureTime || "") : "";
+  const departureConflict = isFlight && !departureEdited &&
+    !!legacyDeparture && legacyDeparture !== startTime;
+  const arrivalConflict = isFlight && !arrivalEdited &&
+    !!endTime && !!arrivalTime && endTime !== arrivalTime;
+  const legacyOvernight = isFlight && !arrivalEdited && !departureEdited &&
+    !!endTime && endTime < startTime;
+  function changeDeparture(time: string) {
+    setStartTime(time);
+    if (isFlight) setDepartureEdited(true);
+  }
+  function changeArrival(time: string) {
+    setArrivalTime(time);
+    setArrivalEdited(true);
+    setDetails((current) => {
+      const next: EventDetailsData = {
+        ...(current?.type === "flight" ? current : { type: "flight" }),
+        arrivalTime: time,
+      };
+      if (!time) delete next.arrivalTime;
+      return Object.keys(next).length > 1 ? next : undefined;
+    });
+  }
   const [detailDrafts, setDetailDrafts] = useState<
     Partial<Record<DetailType, EventDetailsData>>
   >({});
@@ -73,13 +116,49 @@ export function EventForm({
       priority: (s("priority") || "gostaria de ir") as EventInput["priority"],
       ...(details ? { details } : {}),
     };
+    if (isStay) {
+      input.startTime = checkInTime;
+      input.endTime = "";
+      // The existing price field holds the whole stay. Guests never multiply its cost.
+      input.peopleCount = 1;
+      input.details = { ...(details?.type === "lodging" ? details : {}), type: "lodging", checkOutDate };
+      if (!hasProgramDate({ date: input.date }) || input.date < trip.startDate || input.date > trip.endDate) {
+        setError("Informe uma data de check-in válida dentro do período da viagem.");
+        return;
+      }
+      if (!hasProgramDate({ date: checkOutDate }) || checkOutDate <= input.date || checkOutDate > trip.endDate) {
+        setError("O check-out deve ser posterior ao check-in e estar dentro do período da viagem.");
+        return;
+      }
+      if (!input.location) { setError("Informe o local ou endereço da hospedagem."); return; }
+      if (!Number.isFinite(input.pricePerPerson) || input.pricePerPerson < 0 || input.pricePerPerson > 10000000) {
+        setError("Informe um valor total válido entre zero e 10.000.000.");
+        return;
+      }
+      if (checkInTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(checkInTime)) {
+        setError("Informe um horário de check-in válido.");
+        return;
+      }
+    }
+    if (isFlight) {
+      input.endTime = endTime;
+      // Only an explicit edit/choice reconciles legacy duplicates. Unrelated saves preserve them.
+      if (departureEdited && legacyDeparture && input.details?.type === "flight") {
+        input.details = { ...input.details, departureTime: input.startTime };
+      }
+      if (endTime && (arrivalEdited || departureEdited) && !arrivalConflict) {
+        input.endTime = arrivalTime >= input.startTime ? arrivalTime : "";
+        if (arrivalTime) input.details = { ...(input.details ?? { type: "flight" }), arrivalTime };
+      }
+    }
     if (!input.title) {
       setError("Informe o nome do programa.");
       return;
     }
-    if (details && !validDetails(details)) {
+    if (input.details && !validDetails(input.details)) {
       setError(
-        "Confira os detalhes opcionais. Use textos de até 1.000 caracteres e links válidos.",
+        isStay ? "Confira os detalhes da hospedagem: horários válidos, quantidade inteira de hóspedes entre 1 e 10.000 e links http(s). Use textos de até 1.000 caracteres."
+          : "Confira os detalhes opcionais. Use textos de até 1.000 caracteres e links válidos.",
       );
       return;
     }
@@ -88,7 +167,9 @@ export function EventForm({
       requestAnimationFrame(() =>
         form.querySelectorAll("details").forEach((d) => (d.open = true)),
       );
-      setError("O horário final deve ser posterior ao inicial no mesmo dia.");
+      setError(isFlight
+        ? "Confira e confirme a chegada do voo antes de salvar. O horário final antigo conflita com a partida."
+        : "O horário final deve ser posterior ao inicial no mesmo dia.");
       return;
     }
     setBusy(true);
@@ -100,12 +181,12 @@ export function EventForm({
         event?.id,
         event ? eventInput(event) : undefined,
       );
-      toast(event ? "Alterações salvas." : "Programa adicionado.");
+      toast(event ? "Alterações salvas." : isStay ? "Hospedagem adicionada." : "Programa adicionado.");
       onSaved({ ...input, id });
-    } catch {
-      setError(
-        "Não foi possível salvar. Verifique a conexão e suas permissões.",
-      );
+    } catch (cause) {
+      const failure = eventSaveFailure(cause, isStay);
+      console.warn("Rumo: falha ao salvar programa", failure.diagnostic);
+      setError(failure.message);
     } finally {
       setBusy(false);
     }
@@ -114,8 +195,8 @@ export function EventForm({
     <Modal
       title={
         event
-          ? "Editar programa"
-          : kind === "transport"
+          ? isStay ? "Editar hospedagem" : "Editar programa"
+          : isStay ? "Adicionar hospedagem" : kind === "transport"
             ? "Adicionar transporte"
             : kind === "place"
               ? "Lugar para lembrar"
@@ -134,32 +215,42 @@ export function EventForm({
         </p>
         <div className="form-grid">
           <label className="wide">
-            Nome *
+            {isStay ? "Nome da hospedagem *" : "Nome *"}
             <input
               name="title"
               required
               maxLength={120}
               defaultValue={event?.title}
-              placeholder="O que vamos fazer?"
+              placeholder={isStay ? "Onde vamos ficar?" : "O que vamos fazer?"}
             />
           </label>
           <CategoryPicker
             value={category}
             onChange={(next) => {
               const nextType = detailTypeFor(next);
-              if (nextType !== detailTypeFor(category)) {
+              const currentType = detailTypeFor(category);
+              const nextDetails = nextType === currentType
+                ? details : nextType ? detailDrafts[nextType] : undefined;
+              if (nextType !== currentType) {
                 if (details)
                   setDetailDrafts((drafts) => ({
                     ...drafts,
                     [details.type]: details,
                   }));
-                setDetails(nextType ? detailDrafts[nextType] : undefined);
+                setDetails(nextDetails);
+              }
+              if (next === "Voo" && category !== "Voo") {
+                setArrivalTime(String(
+                  (nextDetails?.type === "flight" && nextDetails.arrivalTime) ||
+                    endTime || "",
+                ));
+                setArrivalEdited(false);
               }
               setCategory(next);
             }}
           />
           <label>
-            Data *
+            {isStay ? "Data de check-in *" : isFlight ? "Data da partida *" : "Data *"}
             <input
               name="date"
               type="date"
@@ -169,30 +260,74 @@ export function EventForm({
               required
             />
           </label>
+          {isStay ? <label>
+            Data de check-out *
+            <input name="checkOutDate" type="date" min={trip.startDate} max={trip.endDate} required
+              value={checkOutDate} onChange={e => setCheckOutDate(e.target.value)} />
+          </label> :
           <label>
-            Horário *
+            {isFlight ? "Horário da partida *" : "Horário *"}
             <input
               name="startTime"
               type="time"
               required
-              defaultValue={event?.startTime ?? "09:00"}
+              value={startTime}
+              onChange={(e) => changeDeparture(e.target.value)}
             />
-          </label>
+          </label>}
           <label className="wide">
-            Local / endereço · opcional
+            {isStay ? "Local / endereço *" : "Local / endereço · opcional"}
             <input
               name="location"
+              required={isStay}
               defaultValue={event?.location}
               placeholder="Nome do lugar, bairro ou endereço"
             />
           </label>
         </div>
+        {(departureConflict || arrivalConflict || legacyOvernight) && (
+          <section className="flight-time-review" aria-label="Conferir horários do voo">
+            <p className="field-help">
+              Este voo tem horários antigos para conferir. Escolha qual usar para
+              unificar. Sem uma escolha ou edição do horário, os valores anteriores
+              serão preservados.
+            </p>
+            {departureConflict && <div>
+              <p>Partida no roteiro: <strong>{startTime}</strong>. Partida nas informações do voo: <strong>{legacyDeparture}</strong>.</p>
+              <div className="quick-actions">
+                <button type="button" className="ghost" onClick={() => setDepartureEdited(true)}>
+                  Usar partida {startTime}
+                </button>
+                <button type="button" className="ghost" onClick={() => changeDeparture(legacyDeparture)}>
+                  Usar partida {legacyDeparture}
+                </button>
+              </div>
+            </div>}
+            {arrivalConflict && <div>
+              <p>Chegada nas informações do voo: <strong>{arrivalTime}</strong>. Horário final antigo: <strong>{endTime}</strong>.</p>
+              <div className="quick-actions">
+                <button type="button" className="ghost" onClick={() => changeArrival(arrivalTime)}>
+                  Usar chegada {arrivalTime}
+                </button>
+                <button type="button" className="ghost" onClick={() => changeArrival(endTime)}>
+                  Usar chegada {endTime}
+                </button>
+              </div>
+            </div>}
+            {legacyOvernight && !arrivalConflict && <div>
+              <p>A chegada antiga é anterior à partida no relógio. Confira também a data e o fuso nas Notas do voo.</p>
+              <button type="button" className="ghost" onClick={() => changeArrival(arrivalTime)}>
+                Confirmar chegada {arrivalTime}
+              </button>
+            </div>}
+          </section>
+        )}
         {!event && (
           <p className="field-help">
             Salve o essencial. Depois, você pode adicionar mais detalhes.
           </p>
         )}
-        {event && !showDetails && (
+        {(event || isStay) && !showDetails && (
           <button
             type="button"
             className="secondary more-details"
@@ -215,19 +350,24 @@ export function EventForm({
               category={category}
               value={details}
               onChange={setDetails}
+              flightArrivalTime={isFlight ? arrivalTime : undefined}
+              onFlightArrivalChange={isFlight ? changeArrival : undefined}
+              privateReservationAllowed={privateReservationAllowed}
+              leadingFields={isStay ? <label>Horário de check-in<input type="time" value={checkInTime} onChange={e => setCheckInTime(e.target.value)} /></label> : undefined}
             />
             <Disclosure
               title="Preferências"
-              description="Duração, status e prioridade"
+              description={isFlight || isStay ? "Status e prioridade" : "Duração, status e prioridade"}
             >
-              <label>
+              {!isFlight && !isStay && <label>
                 Horário final
                 <input
                   type="time"
                   name="endTime"
-                  defaultValue={event?.endTime}
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
                 />
-              </label>
+              </label>}
               <label>
                 Status
                 <select name="status" defaultValue={event?.status ?? "ideia"}>
@@ -262,7 +402,7 @@ export function EventForm({
             </Disclosure>
             <Disclosure
               title="Custos"
-              description="Preço e número de pessoas"
+              description={isStay ? "Valor total da estadia" : "Preço e número de pessoas"}
               initialOpen={!!event?.pricePerPerson}
             >
               <label className="check wide">
@@ -271,10 +411,10 @@ export function EventForm({
                   checked={free}
                   onChange={(e) => setFree(e.target.checked)}
                 />
-                Programa grátis
+                {isStay ? "Hospedagem gratuita" : "Programa grátis"}
               </label>
               <label>
-                Valor por pessoa ({trip.currency})
+                {isStay ? "Valor total da hospedagem" : "Valor por pessoa"} ({trip.currency})
                 <input
                   name="price"
                   type="number"
@@ -286,7 +426,7 @@ export function EventForm({
                   defaultValue={event?.pricePerPerson ?? 0}
                 />
               </label>
-              <label>
+              {!isStay && <label>
                 Pessoas
                 <input
                   name="people"
@@ -297,14 +437,14 @@ export function EventForm({
                   required
                   defaultValue={event?.peopleCount ?? 1}
                 />
-              </label>
+              </label>}
             </Disclosure>
             {!free && (
               <p className="muted">
-                Preço zero em um programa pago significa “Valor a definir”.
+                {isStay ? "O valor total é contado uma única vez, no dia do check-in. Zero sem marcar gratuita significa valor a definir." : "Preço zero em um programa pago significa “Valor a definir”."}
               </p>
             )}
-            <Disclosure title="Links" description="Mapa, site e Instagram">
+            {!isStay && <Disclosure title="Links" description="Mapa, site e Instagram">
               {[
                 ["websiteUrl", "Site oficial"],
                 ["mapsUrl", "Google Maps"],
@@ -322,8 +462,8 @@ export function EventForm({
                   />
                 </label>
               ))}
-            </Disclosure>
-            <Disclosure title="Observações" description="O que vale lembrar">
+            </Disclosure>}
+            {!isStay && <Disclosure title="Observações" description="O que vale lembrar">
               <label className="wide">
                 Observações
                 <textarea
@@ -333,7 +473,7 @@ export function EventForm({
                   placeholder="Reservas, dicas e outras boas ideias"
                 />
               </label>
-            </Disclosure>
+            </Disclosure>}
           </>
         )}
         {error && (
@@ -355,7 +495,7 @@ export function EventForm({
               ? "Salvando…"
               : event
                 ? "Salvar alterações"
-                : "Salvar programa"}
+                : isStay ? "Salvar hospedagem" : "Salvar programa"}
           </button>
         </div>
       </form>

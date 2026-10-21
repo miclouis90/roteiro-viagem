@@ -10,6 +10,7 @@ import { auth, db, demoMode } from "../lib/firebase";
 import { saveTrip, saveEvent } from "./repository";
 import { tripInput, eventInput } from "../utils/inputs";
 import type { Trip, TripEvent } from "../types";
+import { isLodging, reservationData, splitLodgingReservation } from "../utils/lodging";
 export async function duplicateTrip(
   trip: Trip,
   events: TripEvent[],
@@ -26,12 +27,17 @@ export async function duplicateTrip(
       collection(db, "trips", trip.id, "events"),
     );
     programs = rows.docs.map((e) => ({ ...e.data(), id: e.id }) as TripEvent);
+    if (programs.some(isLodging)) {
+      const reservations = await getDocsFromServer(collection(db, "trips", trip.id, "lodgingReservations"));
+      const privateById = new Map(reservations.docs.map(d => [d.id, reservationData(d.data())]));
+      programs = programs.map(event => isLodging(event) ? { ...event, details: { ...event.details!, ...privateById.get(event.id) } } : event);
+    }
   }
   if (
     programs.some((e) => e.date < source.startDate || e.date > source.endDate)
   )
     throw new Error("Ajuste os programas fora do período antes de duplicar.");
-  if (programs.length > 498)
+  if (programs.length + programs.filter(event => Object.keys(splitLodgingReservation(event).reservation).length > 0).length > 498)
     throw new Error(
       "Esta viagem tem muitos programas para duplicar de uma só vez.",
     );
@@ -58,17 +64,28 @@ export async function duplicateTrip(
   // Keep the existing rules: the parent must exist before events are written.
   await batch.commit();
   try {
-    const programsBatch = writeBatch(database);
-    for (const event of programs)
-      programsBatch.set(
-        doc(collection(database, "trips", target.id, "events")),
-        {
-          ...eventInput(event),
+    // Private reservations validate their associated event with getAfter.
+    // Keep lodging batches below the rules document-access limit.
+    const batchSize = programs.some(isLodging) ? 8 : Math.max(1, programs.length);
+    for (let offset = 0; offset < programs.length; offset += batchSize) {
+      const programsBatch = writeBatch(database);
+      for (const event of programs.slice(offset, offset + batchSize)) {
+        const eventRef = doc(collection(database, "trips", target.id, "events"));
+        const { publicInput, reservation } = splitLodgingReservation(eventInput(event));
+        programsBatch.set(eventRef, {
+          ...publicInput,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-        },
-      );
-    if (programs.length) await programsBatch.commit();
+        });
+        if (Object.keys(reservation).length) {
+          programsBatch.set(
+            doc(database, "trips", target.id, "lodgingReservations", eventRef.id),
+            { ...reservation, updatedAt: serverTimestamp() },
+          );
+        }
+      }
+      await programsBatch.commit();
+    }
   } catch {
     throw new Error(
       `A cópia privada foi criada, mas seus programas não foram copiados. Abra #/viagem/${target.id} para conferir antes de tentar novamente.`,

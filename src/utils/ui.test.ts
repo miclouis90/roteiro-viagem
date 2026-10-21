@@ -64,8 +64,9 @@ describe("Preservação de dados na nova interface", () => {
       "cancelado",
     ]);
     expect(eventLabels.realizado).toBe("Feito");
-    expect(categories).toHaveLength(26);
-    expect(new Set(categories.map((c) => c.name)).size).toBe(26);
+    expect(categories).toHaveLength(32);
+    expect(new Set(categories.map((c) => c.name)).size).toBe(32);
+    expect(categories.filter(category => category.group === "lodging")).toHaveLength(6);
     expect(categories.every((c) => !!c.icon && !!c.tone)).toBe(true);
   });
 });

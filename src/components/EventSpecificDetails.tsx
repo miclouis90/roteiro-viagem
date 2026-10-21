@@ -2,14 +2,19 @@ import { ArrowRight } from "lucide-react";
 import type { EventDetailsData } from "../data/eventDetails";
 import { detailSchemas, visibleDetails } from "../data/eventDetails";
 import { safeUrl } from "../utils/money";
+import { formatDate } from "../utils/dates";
 export function EventSpecificDetails({
   details,
   admin,
   part = "all",
+  departureTime,
+  arrivalTime,
 }: {
   details?: EventDetailsData;
   admin: boolean;
   part?: "all" | "info" | "reservation" | "links" | "notes";
+  departureTime?: string;
+  arrivalTime?: string;
 }) {
   const entries = visibleDetails(details, admin).filter((entry) => {
     if (part === "all") return true;
@@ -42,12 +47,12 @@ export function EventSpecificDetails({
         {part === "reservation"
           ? "Reserva"
           : part === "links"
-            ? "Ingresso"
+            ? details.type === "lodging" ? "Reserva" : "Ingresso"
             : part === "notes"
               ? "Observações específicas"
               : detailSchemas[details.type].title}
       </h3>
-      {flight && entries.some((entry) => routeKeys.includes(entry.key)) && (
+      {flight && (departureTime || arrivalTime || entries.some((entry) => routeKeys.includes(entry.key))) && (
         <div className="flight-route">
           <div>
             <strong>
@@ -56,7 +61,7 @@ export function EventSpecificDetails({
             {details.originAirport && details.originCity && (
               <small>{details.originCity}</small>
             )}
-            <span>{details.departureTime}</span>
+            <span>{departureTime ?? details.departureTime}</span>
           </div>
           <ArrowRight size={24} />
           <div>
@@ -68,7 +73,7 @@ export function EventSpecificDetails({
             {details.destinationAirport && details.destinationCity && (
               <small>{details.destinationCity}</small>
             )}
-            <span>{details.arrivalTime}</span>
+            <span>{arrivalTime ?? details.arrivalTime}</span>
           </div>
         </div>
       )}
@@ -87,10 +92,10 @@ export function EventSpecificDetails({
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Abrir ingresso
+                        {details.type === "lodging" ? "Abrir reserva" : "Abrir ingresso"}
                       </a>
                     )
-                  : typeof entry.value === "boolean"
+                  : entry.input === "date" ? formatDate(String(entry.value), { day: "numeric", month: "long", year: "numeric" }) : typeof entry.value === "boolean"
                     ? entry.value
                       ? "Sim"
                       : "Não"

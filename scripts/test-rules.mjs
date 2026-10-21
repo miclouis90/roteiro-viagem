@@ -5,7 +5,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator, doc, setDoc, getDoc, getDocs, collection, collectionGroup, query, where, onSnapshot, deleteDoc, updateDoc, serverTimestamp, terminate, setLogLevel } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, doc, setDoc, getDoc, getDocs, collection, collectionGroup, query, where, onSnapshot, deleteDoc, updateDoc, writeBatch, serverTimestamp, terminate, setLogLevel } from 'firebase/firestore';
 setLogLevel('silent');
 const project = 'demo-rumo-local';
 const port = 8089;
@@ -105,6 +105,37 @@ try {
   await check('link visitor cannot change permissions',()=>deny(()=>updateDoc(doc(outsider,'trips',tripId),{access:'PUBLIC',updatedAt:serverTimestamp()})));
   await check('link visitor cannot delete trip',()=>deny(()=>deleteDoc(doc(outsider,'trips',tripId))));
   await check('anonymous cannot write PUBLIC_EDIT',()=>deny(()=>setDoc(eventRef(guest,'anonymous'),event)));
+  const stayEvent={...event,category:'Hotel',date:trip.startDate,startTime:'',endTime:'',pricePerPerson:1200,peopleCount:1,isFree:false,details:{type:'lodging',checkOutDate:trip.endDate,checkOutTime:'11:00',guests:4}};
+  const reservationRef=(db,id='lodging')=>doc(db,'trips',tripId,'lodgingReservations',id);
+  const reservation={bookingReference:'PRIVATE-CODE',bookingUrl:'https://example.com/PRIVATE',notes:'PRIVATE-NOTE',updatedAt:serverTimestamp()};
+  await check('lodging and protected reservation save atomically',async()=>{
+    const batch=writeBatch(admin);batch.set(eventRef(admin,'lodging'),stayEvent);batch.set(reservationRef(admin),reservation);await batch.commit();
+  });
+  await check('public lodging contains no reservation credentials',async()=>{
+    const data=(await getDoc(eventRef(guest,'lodging'))).data();assert.equal(data.details.checkOutDate,trip.endDate);assert.equal(JSON.stringify(data).includes('PRIVATE'),false);
+  });
+  await check('public cannot read or list lodging reservations',async()=>{await deny(()=>getDoc(reservationRef(guest)));await deny(()=>getDocs(collection(guest,'trips',tripId,'lodgingReservations')));});
+  await check('PUBLIC_EDIT visitor cannot read, overwrite or delete reservations',async()=>{
+    await deny(()=>getDoc(reservationRef(outsider)));await deny(()=>updateDoc(reservationRef(outsider),{notes:'attack',updatedAt:serverTimestamp()}));await deny(()=>deleteDoc(reservationRef(outsider)));
+  });
+  await check('editor reads and updates protected lodging reservation',async()=>{
+    assert.equal((await getDoc(reservationRef(member))).data().bookingReference,'PRIVATE-CODE');await updateDoc(reservationRef(member),{notes:'Editor private note',updatedAt:serverTimestamp()});
+  });
+  await check('lodging allows check-in later than next-day checkout time',()=>updateDoc(eventRef(admin,'lodging'),{startTime:'15:00',updatedAt:serverTimestamp()}));
+  for(const patch of [
+    {details:{...stayEvent.details,checkOutDate:trip.startDate}},
+    {details:{...stayEvent.details,checkOutDate:'2099-01-01'}},
+    {details:{...stayEvent.details,guests:0}},
+    {details:{...stayEvent.details,guests:1.5}},
+    {details:{...stayEvent.details,checkOutTime:'25:00'}},
+    {details:{...stayEvent.details,bookingReference:'PUBLIC-LEAK'}},
+    {peopleCount:4}, {category:'Café'}, {endTime:'23:00'}
+  ])await check('invalid or publicly sensitive lodging rejected',()=>deny(()=>setDoc(eventRef(admin,'invalid-stay-'+passed),{...stayEvent,...patch})));
+  await check('legacy Hotel without lodging details still accepted',()=>setDoc(eventRef(admin,'legacy-hotel'),{...event,category:'Hotel'}));
+  for(const patch of [{bookingUrl:'javascript:alert(1)'},{bookingReference:'x'.repeat(1001)},{unexpected:true}])await check('invalid private lodging fields rejected',()=>deny(()=>setDoc(reservationRef(admin),{...reservation,...patch})));
+  await check('invalid reservation does not leave a partial lodging',async()=>{
+    const batch=writeBatch(admin);batch.set(eventRef(admin,'atomic-invalid'),stayEvent);batch.set(reservationRef(admin,'atomic-invalid'),{...reservation,bookingReference:12});await deny(()=>batch.commit());assert.equal((await getDoc(eventRef(admin,'atomic-invalid'))).exists(),false);
+  });
   const anonymousApp=initializeApp({projectId:project,apiKey:'local-only'},'anonymous-auth');
   const anonymousDb=getFirestore(anonymousApp); connectFirestoreEmulator(anonymousDb,'127.0.0.1',port,{mockUserToken:{sub:'anonymous',firebase:{sign_in_provider:'anonymous'}}}); databases.push({db:anonymousDb,app:anonymousApp});
   await check('Firebase anonymous Auth cannot write',()=>deny(()=>setDoc(eventRef(anonymousDb,'anonymous-auth'),event)));
@@ -118,6 +149,7 @@ try {
   await check('left member loses write access',()=>deny(()=>setDoc(eventRef(outsider,'after-leave'),event)));
   await check('owner removes editor',()=>deleteDoc(membership));
   await check('removed editor loses access',()=>deny(()=>getDoc(doc(member,'trips',tripId))));
+  await check('removed editor loses private reservation access',()=>deny(()=>getDoc(reservationRef(member))));
   await check('malformed access rejected',()=>deny(()=>updateDoc(tripRef,{access:'EVERYONE',updatedAt:serverTimestamp()})));
   await check('isPublic/access inconsistency rejected',()=>deny(()=>updateDoc(tripRef,{isPublic:true,updatedAt:serverTimestamp()})));
   await check('owned home query',async()=>assert.ok((await getDocs(query(collection(admin,'trips'),where('ownerId','==','local-admin')))).size>=1));

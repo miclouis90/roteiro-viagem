@@ -34,4 +34,23 @@ describe("ficha rápida polida",()=>{
     expect(notes).toContain('PRIVATE-NOTE'); expect(notes).not.toContain('PRIVATE-REF');
     expect(renderToStaticMarkup(<EventSpecificDetails details={{type:"restaurant",neighborhood:"Asa Norte"}} admin part="reservation"/>)).toBe('');
   });
+  it("usa a partida essencial na ficha do Voo e preserva o embarque distinto",()=>{
+    const flight = { ...event, category: "Voo", startTime: "23:40", endTime: "", details: { ...details, departureTime: "23:55", boardingTime: "23:00", arrivalTime: "01:20" } };
+    const baseline = structuredClone(flight);
+    const html = renderToStaticMarkup(<EventDetails event={flight} trip={demoTrip} admin {...actions}/>);
+    expect(html).toContain('<span>23:40</span>');
+    expect(html).toContain('<span>01:20</span>');
+    expect(html).toContain('23:00');
+    expect(html).not.toContain('23:55');
+    expect(flight).toEqual(baseline);
+  });
+  it("mostra voos novos sem duplicar partida e mantém o fallback de chegada dos antigos",()=>{
+    const fresh = { ...event, category: "Voo", startTime: "07:45", endTime: "", details: { ...details, arrivalTime: "09:20" } };
+    const old = { ...fresh, endTime: "09:20", details };
+    for (const flight of [fresh, old]) {
+      const html = renderToStaticMarkup(<EventDetails event={flight} trip={demoTrip} admin {...actions}/>);
+      expect(html).toContain('<span>07:45</span>');
+      expect(html).toContain('<span>09:20</span>');
+    }
+  });
 });

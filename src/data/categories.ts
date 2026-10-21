@@ -23,6 +23,7 @@ import {
   BusFront,
   TrainFront,
   Train,
+  BedDouble,
   type LucideIcon,
 } from "lucide-react";
 export const categoryGroups = [
@@ -31,11 +32,13 @@ export const categoryGroups = [
   { id: "culture", label: "Cultura", tone: "culture", icon: Landmark },
   { id: "outdoor", label: "Passear", tone: "outdoor", icon: Trees },
   { id: "transport", label: "Transporte", tone: "transport", icon: Plane },
+  { id: "lodging", label: "Hospedagem", tone: "lodging", icon: BedDouble },
   { id: "other", label: "Outro", tone: "other", icon: Compass },
 ] as const;
 export type CategoryGroup = (typeof categoryGroups)[number]["id"];
 export interface Category {
   name: string;
+  label?: string;
   icon: LucideIcon;
   group: CategoryGroup;
   tone: string;
@@ -81,6 +84,12 @@ export const categories: Category[] = [
     group: "transport",
     tone: "airport",
   },
+  { name: "Hotel", icon: BedDouble, group: "lodging", tone: "lodging" },
+  { name: "Airbnb/aluguel", icon: BedDouble, group: "lodging", tone: "lodging" },
+  { name: "Pousada", icon: BedDouble, group: "lodging", tone: "lodging" },
+  { name: "Hostel", icon: BedDouble, group: "lodging", tone: "lodging" },
+  { name: "Casa de amigos", icon: BedDouble, group: "lodging", tone: "lodging" },
+  { name: "Outro (hospedagem)", label: "Outro", icon: BedDouble, group: "lodging", tone: "lodging" },
   { name: "Outro", icon: MapPin, group: "other", tone: "other" },
 ];
 export const categoryOf = (name: string) =>

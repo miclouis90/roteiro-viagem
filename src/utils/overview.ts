@@ -1,6 +1,7 @@
 import type { Trip, TripEvent } from "../types";
 import { categoryOf } from "../data/categories";
 import { dateKey, datesBetween, daysBetween } from "./dates";
+import { occursOnDay, isLodging } from "./lodging";
 export function tripOverview(
   trip: Trip,
   events: readonly TripEvent[],
@@ -31,11 +32,12 @@ export function tripOverview(
       : active.find(
           (e) =>
             categoryOf(e.category).group !== "transport" &&
+            !isLodging(e) &&
             e.status !== "realizado" &&
             (e.date > today ||
               (e.date === today && (e.endTime || e.startTime) >= time)),
         );
-  const todayEvents = active.filter((e) => e.date === today);
+  const todayEvents = active.filter((e) => occursOnDay(e, today));
   const todayPreview =
     phase === "during"
       ? todayEvents
@@ -50,11 +52,11 @@ export function tripOverview(
     active,
     days: datesBetween(trip.startDate, trip.endDate).map((date) => ({
       date,
-      count: active.filter((e) => e.date === date).length,
+      count: active.filter((e) => occursOnDay(e, date)).length,
       tones: [
         ...new Set(
           active
-            .filter((e) => e.date === date)
+            .filter((e) => occursOnDay(e, date))
             .map((e) => categoryOf(e.category).tone),
         ),
       ].slice(0, 3),

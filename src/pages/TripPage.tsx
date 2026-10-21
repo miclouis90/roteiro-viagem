@@ -19,6 +19,7 @@ import { dayCountLabel, tripLabels } from "../utils/labels";
 import { tripTabFromSearch, itineraryTypeFromSearch, normalizeItinerarySearch } from "../utils/tripView";
 import { mapSearch } from "../utils/dayMap";
 import { hasProgramDate } from "../utils/itinerary";
+import { isLodging } from "../utils/lodging";
 import { TripOverview, OverviewArtwork, OverviewSummary } from "../components/trip/TripOverview";
 import { TripShell } from "../components/trip/TripShell";
 
@@ -109,7 +110,7 @@ function TripWorkspace({
     if (next.toString() !== params.toString()) setParams(next, { replace: true });
   }, [params, setParams]);
   const [addSheet, setAddSheet] = useState(false);
-  const [addKind, setAddKind] = useState<"program" | "transport" | "place">(
+  const [addKind, setAddKind] = useState<"program" | "transport" | "place" | "lodging">(
     "program",
   );
   const [expandDetails, setExpandDetails] = useState(false);
@@ -195,7 +196,7 @@ function TripWorkspace({
         navigate("/");
         toast("Viagem excluída.");
       } else if (confirm === "delete-event" && selected) {
-        await removeEvent(trip.id, selected.id);
+        await removeEvent(trip.id, selected.id, isLodging(selected) && (access.owner || access.legacy || editor));
         setSelected(null);
         toast("Programa removido.");
       } else if (confirm === "leave" && user) {
@@ -259,7 +260,7 @@ function TripWorkspace({
                 <JourneyMoment trip={trip} events={events} now={now} />
               )}
             </div>
-            <OverviewArtwork city={trip.destinationCity} />
+            <OverviewArtwork trip={trip} />
             <div className="heading-actions">
               {!admin && (
                 <button
@@ -349,6 +350,7 @@ function TripWorkspace({
               [
                 { id: "program", label: "Programa" },
                 { id: "transport", label: "Transporte" },
+                { id: "lodging", label: "Hospedagem" },
                 { id: "place", label: "Lugar para lembrar" },
               ] as const
             ).map(({ id, label }) => (
@@ -379,6 +381,7 @@ function TripWorkspace({
       {editEvent && admin && (
         <EventForm
           trip={trip}
+          privateReservationAllowed={access.owner || access.legacy || editor}
           event={editEvent === "new" ? undefined : editEvent}
           defaultDate={newDate}
           firstEvent={events.length === 0}

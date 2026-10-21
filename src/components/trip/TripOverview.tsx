@@ -1,17 +1,20 @@
 import { useState } from "react";
 import type { Trip, TripEvent } from "../../types";
-import { Sparkles, ChevronRight, CalendarDays, MapPin, Wallet } from "lucide-react";
+import { Sparkles, ChevronRight, CalendarDays, MapPin, Wallet, BedDouble } from "lucide-react";
 import { tripOverview } from "../../utils/overview";
 import { spendingLabel } from "../../utils/spending";
 import { formatDate } from "../../utils/dates";
 import { collectPlaces } from "../../utils/places";
 import { SectionHeader } from "../ui/Primitives";
+import { TripArtwork } from "../TripArtwork";
+import { isLodging, lodgingPeriod } from "../../utils/lodging";
 export function TripOverview({
   trip,
   events,
   now,
   onDay,
   onAdd,
+  onSelect,
 }: {
   trip: Trip;
   events: TripEvent[];
@@ -42,6 +45,7 @@ export function TripOverview({
               className={`glance-day day-scene-${index % 5} ${index === 0 ? "is-first" : ""} ${date === view.today ? "is-today" : ""}`}
               onClick={() => onDay(date)}
             >
+              <TripArtwork trip={trip} dayIndex={index} />
               <span className="glance-date">
                 <small>{formatDate(date, { weekday: "short" }).replace(".", "")}</small>
                 <strong>{formatDate(date, { day: "numeric" })}</strong>
@@ -55,6 +59,12 @@ export function TripOverview({
           ))}
         </div>
       </section>
+      {view.active.some(isLodging) && <section className="overview-stays" aria-label="Hospedagens da viagem">
+        <h2>Hospedagem</h2>
+        {view.active.filter(isLodging).map(event => <button key={event.id} type="button" className="overview-stay tone-lodging" disabled={!onSelect} onClick={() => onSelect?.(event)}>
+          <BedDouble size={23} aria-hidden="true" /><span><strong>{event.title}</strong><small>{lodgingPeriod(event)}</small><small>{event.location}</small></span><ChevronRight size={17} aria-hidden="true" />
+        </button>)}
+      </section>}
       <section className="trip-brief">
         {about && (
           <section className="trip-about" aria-labelledby="trip-about-title">
@@ -111,7 +121,6 @@ export function OverviewSummary({ trip, events, now }: { trip: Trip; events: Tri
   );
 }
 
-export function OverviewArtwork({ city }: { city: string }) {
-  const isBrasilia = city.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === "brasilia";
-  return <div className={`overview-destination-art ${isBrasilia ? "destination-brasilia" : "destination-neutral"}`} aria-hidden="true" />;
+export function OverviewArtwork({ trip }: { trip: Trip }) {
+  return <div className="overview-destination-art" aria-hidden="true"><TripArtwork trip={trip} /></div>;
 }

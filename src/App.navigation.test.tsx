@@ -4,7 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { demoTrip, demoEvents } from "./data/demo";
-import { watchEvents, watchTrip, watchTrips } from "./services/repository";
+import { removeTrip, watchEvents, watchTrip, watchTrips } from "./services/repository";
 import { exportTrip } from "./services/exportTrip";
 
 const authState = vi.hoisted(() => ({ admin: false, user: null as null | {uid: string; displayName: string} }));
@@ -13,7 +13,7 @@ vi.mock("./hooks/useAuth", () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
   useAuth: () => ({ user: authState.user, admin: authState.admin, loading: false, error: "", login: vi.fn(), logout: vi.fn() }),
 }));
-vi.mock("./services/repository", () => ({ watchTrips: vi.fn(), watchTrip: vi.fn(), watchEvents: vi.fn(), saveEvent: vi.fn().mockResolvedValue("demo-6") }));
+vi.mock("./services/repository", () => ({ watchTrips: vi.fn(), watchTrip: vi.fn(), watchEvents: vi.fn(), saveEvent: vi.fn().mockResolvedValue("demo-6"), removeTrip: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("./services/exportTrip", () => ({ exportTrip: vi.fn().mockResolvedValue(undefined) }));
 const trip = { ...demoTrip, id: "brasilia-da-mel-2026", title: "Brasília da Mel", isPublic: true };
 let container: HTMLDivElement;
@@ -96,6 +96,31 @@ it("preserva a criação na Home sem bottom navigation", async () => {
   await click(container.querySelector('button[aria-label="Criar viagem"]'));
   expect(container.querySelector('dialog')?.textContent).toContain("Uma nova viagem");
 });
+it("mantém a confirmação de exclusão após fechar o menu da viagem", async () => {
+  authState.user = { uid: "trip-owner", displayName: "Ana" };
+  vi.mocked(watchTrip).mockImplementation((_id, next) => {
+    next({ ...trip, ownerId: "trip-owner" }); return () => {};
+  });
+  await mount(`/viagem/${trip.id}`);
+  const menu = container.querySelector<HTMLDetailsElement>(".trip-options")!;
+  const trigger = menu.querySelector("summary")!;
+  const deleteAction = [...menu.querySelectorAll("button")].find(button => button.textContent === "Excluir viagem")!;
+  await click(trigger);
+  await click(deleteAction);
+  expect(menu.open).toBe(false);
+  expect(container.querySelector("dialog h2")?.textContent).toBe("Excluir viagem?");
+  expect(container.querySelector("dialog")?.textContent).toContain("Esta ação não pode ser desfeita.");
+  expect(removeTrip).not.toHaveBeenCalled();
+  await click([...container.querySelectorAll("dialog button")].find(button => button.textContent === "Cancelar")!);
+  expect(container.querySelector("dialog")).toBeNull();
+  expect(removeTrip).not.toHaveBeenCalled();
+  expect(document.activeElement).toBe(trigger);
+  await click(trigger);
+  await click(deleteAction);
+  await click([...container.querySelectorAll("dialog button")].find(button => button.textContent === "Excluir")!);
+  expect(removeTrip).toHaveBeenCalledExactlyOnceWith(trip.id);
+  expectHome();
+});
 it("oculta a barra ao voltar à Home e restaura ao abrir a viagem", async () => {
   await mount(`/viagem/${trip.id}`);
   expect(container.querySelector('.trip-tabs')).not.toBeNull();
@@ -148,6 +173,24 @@ it("abre e fecha o calendário sem alterar filtros ou rota", async () => {
   expect(container.querySelector("dialog")).toBeNull();
   expectHome();
   expect(window.location.hash).toBe("#/");
+});
+it("mantém navegação e conteúdo de viagens sem foto, com título longo e dias ilustrados", async () => {
+  const noPhoto = { ...trip, id: "lolla-2027", title: "Lolla 2027 — uma viagem com amigos para descobrir a cidade e aproveitar o festival", destinationCity: "São Paulo", destinationState: "SP", startDate: "2027-03-19", endDate: "2027-03-21" };
+  vi.mocked(watchTrips).mockImplementation((_admin, next) => { next([noPhoto]); return () => {}; });
+  vi.mocked(watchTrip).mockImplementation((_id, next) => { next(noPhoto); return () => {}; });
+  await mount("/");
+  expect(container.querySelector(".home-trip .is-illustrated svg")).not.toBeNull();
+  expect(container.querySelector(".home-intro-art img")).toBeNull();
+  await click(container.querySelector(".home-trip-link"));
+  expect(container.querySelector("h1")?.textContent).toBe(noPhoto.title);
+  expect(container.querySelector(".overview-destination-art .is-illustrated svg")).not.toBeNull();
+  const days = container.querySelectorAll<HTMLButtonElement>(".glance-day");
+  expect(days).toHaveLength(3);
+  expect([...days].every(day => day.querySelector(".is-illustrated svg"))).toBe(true);
+  await click(days[1]);
+  expect(window.location.hash).toContain("tab=roteiro");
+  expect(window.location.hash).toContain("day=2027-03-20");
+  expect(container.querySelector(".trip-context-name")?.textContent).toBe(noPhoto.title);
 });
 it("seleciona data, combina filtros e limpa sem nova assinatura de viagens", async () => {
   vi.useFakeTimers({toFake:["Date"]}); vi.setSystemTime(new Date(2026,8,26,12));
@@ -271,7 +314,7 @@ it("Explorar filtra categorias de vários dias, busca global e preserva tudo ao 
     vi.mocked(watchEvents).mockImplementation((_id, next) => { next([saved, ...demoEvents.slice().reverse()]); return () => {}; });
     await mount('/viagem/' + trip.id + '?tab=roteiro&day=2026-10-30&invite=shared');
     const subscriptions = vi.mocked(watchEvents).mock.calls.length;
-    expect([...container.querySelectorAll('.explore-categories button')].map(button => button.textContent)).toEqual(['Todos', 'Comer', 'Beber', 'Cultura', 'Passear', 'Transporte', 'Outro']);
+    expect([...container.querySelectorAll('.explore-categories button')].map(button => button.textContent)).toEqual(['Todos', 'Comer', 'Beber', 'Cultura', 'Passear', 'Transporte', 'Hospedagem', 'Outro']);
     expect([...container.querySelectorAll('.explore-program-copy > strong')].map(title => title.textContent)).toEqual(demoEvents.map(event => event.title));
     expect(container.querySelector('.trip-calendar')?.closest('[hidden]')).not.toBeNull();
     expect(container.querySelector('.timeline')).toBeNull();
@@ -342,7 +385,7 @@ it.each([false, true])("mantém um único Trip Shell e a mesma navegação antes
     expect(window.location.hash).toContain('invite=shared');
     if (label === 'Visão geral') {
       expect(container.querySelector('.overview-hero h1')?.textContent).toBe(currentTrip.title);
-      expect(container.querySelector('.overview-destination-art.destination-brasilia')).not.toBeNull();
+      expect(container.querySelector('.overview-destination-art .has-photo img')).not.toBeNull();
     }
     if (label === 'Gastos') {
       expect(container.querySelector('.expense-donut svg')).not.toBeNull();

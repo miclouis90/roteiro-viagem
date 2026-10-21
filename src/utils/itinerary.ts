@@ -3,6 +3,7 @@ import { dateKey, localDate } from "./dates";
 import { filterEvents } from "./filters";
 import type { Filters } from "../components/trip/EventFilters";
 import type { ItineraryType } from "./tripView";
+import { occursOnDay } from "./lodging";
 
 // Undated records remain available as places; no persisted discriminator is added.
 export function hasProgramDate(event: Pick<TripEvent, "date">) {
@@ -14,7 +15,7 @@ export function itineraryResults(events: TripEvent[], filters: Filters, day: str
   const searching = Boolean(filters.search.trim());
   return {
     searching,
-    programs: type === "places" ? [] : filtered.filter(event => hasProgramDate(event) && (searching || event.date === day)),
+    programs: type === "places" ? [] : filtered.filter(event => hasProgramDate(event) && (searching || occursOnDay(event, day))),
     places: type === "programs" ? [] : filtered.filter(event => type === "places" || !hasProgramDate(event)),
     outside: filtered.filter(event => hasProgramDate(event)),
   };

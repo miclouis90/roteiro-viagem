@@ -7,6 +7,7 @@ import { HomeCalendar } from "../components/HomeCalendar";
 import { Modal } from "../components/Modal";
 import { formatDate } from "../utils/dates";
 import { TripCard } from "../components/TripCard";
+import { DestinationArtwork } from "../components/TripArtwork";
 import { EmptyState } from "../components/ui/Primitives";
 import type { Trip, TripStatus } from "../types";
 import { filterHomeTrips } from "../utils/filterHomeTrips";
@@ -44,7 +45,7 @@ export function Home({ onCreate }: { onCreate: () => void }) {
   return (
     <main className="home">
       <section className="home-intro">
-        <div className="home-intro-art" aria-hidden="true" />
+        <div className="home-intro-art" aria-hidden="true"><DestinationArtwork seed="rumo-home-landscape" /></div>
         <p className="home-greeting">{firstName ? `Oi, ${firstName}` : "Oi"} 👋</p>
         <h1>Para onde vamos <span>agora?</span></h1>
         <p className="home-intro-note">Novos lugares, boas histórias, sempre à frente.</p>

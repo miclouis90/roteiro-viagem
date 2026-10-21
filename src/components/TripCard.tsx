@@ -4,9 +4,11 @@ import type { Trip } from "../types";
 import { dateKey, daysBetween, formatDate } from "../utils/dates";
 import { dayCountLabel, tripLabels } from "../utils/labels";
 import { themeStyle } from "../data/themes";
+import { TripArtwork } from "./TripArtwork";
+import { tripArtworkPhoto } from "../utils/tripArtwork";
 export function TripCard({ trip, compact = false }: { trip: Trip; compact?: boolean }) {
   const remaining = daysBetween(dateKey(), trip.startDate) - 1;
-  const isBrasilia = trip.destinationCity.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() === "brasilia";
+  const isBrasilia = !!tripArtworkPhoto(trip.destinationCity);
   const destination = `${trip.destinationCity}${trip.destinationState ? ` · ${trip.destinationState}` : ""}`;
   const tripUrl = `/viagem/${trip.id}`;
 
@@ -14,14 +16,7 @@ export function TripCard({ trip, compact = false }: { trip: Trip; compact?: bool
     <article className={`home-trip theme-trip ${compact ? "home-trip-row" : "home-trip-upcoming"} ${isBrasilia ? "home-destination-brasilia" : "home-destination-abstract"}`} style={themeStyle(trip.theme) as React.CSSProperties}>
       <Link to={tripUrl} className="home-trip-link" aria-label={`Abrir viagem ${trip.title}`}>
         <div className="home-trip-art" aria-hidden="true">
-          {!isBrasilia && <svg className="home-destination-graphic" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-            <circle className="home-graphic-sun" cx="300" cy="80" r="54" />
-            <path className="home-graphic-ridge" d="M-30 205Q55 82 136 176T295 138T445 164V320H-30Z" />
-            <path className="home-graphic-water" d="M-20 249Q112 190 237 239T430 209V320H-20Z" />
-            <path className="home-graphic-route" d="M55 208C124 75 252 252 343 103" />
-            <circle className="home-graphic-point" cx="55" cy="208" r="5" />
-            <circle className="home-graphic-point" cx="343" cy="103" r="5" />
-          </svg>}
+          <TripArtwork trip={trip} />
         </div>
         {!compact && <span className={`home-cover-status status-${trip.status}`}><Compass size={19} aria-hidden="true" />{tripLabels[trip.status]}</span>}
         <div className="home-trip-copy">

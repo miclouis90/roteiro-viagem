@@ -80,8 +80,9 @@ export function useTrip(id: string) {
         );
         setEventsLoading(false);
       },
+      access.owner || access.legacy || editor,
     );
-  }, [id, access.canRead, user, admin, editor, authLoading]);
+  }, [id, access.canRead, access.owner, access.legacy, user, admin, editor, authLoading]);
   return {
     trip: id ? trip : null,
     events,

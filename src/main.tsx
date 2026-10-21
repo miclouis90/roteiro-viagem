@@ -13,6 +13,7 @@ import "./itinerary-shell.css";
 import "./expenses-visual.css";
 import "./itinerary-unified.css";
 import "./trip-shell.css";
+import "./trip-artwork.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

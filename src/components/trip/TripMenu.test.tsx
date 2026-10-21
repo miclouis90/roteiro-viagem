@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+// @vitest-environment jsdom
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TripMenu } from "./TripMenu";
 const actions = {
@@ -36,5 +39,93 @@ describe("menu por papel na viagem", () => {
       "Excluir viagem",
     ])
       expect(html).not.toContain(label);
+  });
+  it("não oferece saída quando o colaborador não pode sair", () => {
+    const html = renderToStaticMarkup(<TripMenu owner={false} canLeave={false} {...actions} />);
+    expect(html).toContain("Editar viagem");
+    expect(html).not.toContain("Sair da viagem");
+    expect(html).not.toContain("Excluir viagem");
+  });
+});
+
+describe("interação do menu da viagem", () => {
+  let root: Root;
+  let container: HTMLDivElement;
+  beforeEach(() => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    container = document.createElement("div");
+    document.body.append(container);
+    root = createRoot(container);
+  });
+  afterEach(async () => {
+    await act(async () => root.unmount());
+    container.remove();
+    vi.unstubAllGlobals();
+  });
+  async function mount(owner = true, overrides = {}) {
+    await act(async () => root.render(
+      <><TripMenu owner={owner} canLeave={!owner} {...actions} {...overrides} /><p>Fora do menu</p><button>Outra ação</button></>,
+    ));
+    const menu = container.querySelector("details")!;
+    const trigger = menu.querySelector("summary")!;
+    await act(async () => { trigger.focus(); trigger.click(); });
+    expect(menu.open).toBe(true);
+    return { menu, trigger };
+  }
+  it("fecha ao clicar fora, inclusive em uma área sem foco", async () => {
+    const { menu } = await mount();
+    await act(async () => container.querySelector("p")!.click());
+    expect(menu.open).toBe(false);
+  });
+  it("fecha com Escape e devolve o foco ao acionador", async () => {
+    const { menu, trigger } = await mount();
+    await act(async () => {
+      const button = menu.querySelector("button")!;
+      button.focus();
+      button.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    });
+    expect(menu.open).toBe(false);
+    expect(document.activeElement).toBe(trigger);
+  });
+  it("mantém aberto ao navegar nos itens e fecha quando o foco sai", async () => {
+    const { menu } = await mount();
+    await act(async () => menu.querySelector("button")!.focus());
+    expect(menu.open).toBe(true);
+    await act(async () => container.querySelector<HTMLButtonElement>("details + p + button")!.focus());
+    expect(menu.open).toBe(false);
+  });
+  it.each([
+    ["Editar viagem", "onEdit"],
+    ["Compartilhar", "onShare"],
+    ["Gerenciar acesso", "onVisibility"],
+    ["Duplicar viagem", "onDuplicate"],
+    ["Excluir viagem", "onDelete"],
+  ] as const)("fecha antes de executar %s", async (label, action) => {
+    const callback = vi.fn(() => {
+      expect(container.querySelector("details")!.open).toBe(false);
+      expect(document.activeElement).toBe(container.querySelector("summary"));
+    });
+    const { menu } = await mount(true, { [action]: callback });
+    const button = [...menu.querySelectorAll("button")].find(item => item.textContent === label)!;
+    await act(async () => { button.focus(); button.click(); });
+    expect(callback).toHaveBeenCalledOnce();
+  });
+  it("separa a exclusão das ações comuns", async () => {
+    const { menu } = await mount();
+    const common = menu.querySelector('[aria-label="Ações da viagem"]')!;
+    const destructive = menu.querySelector('[aria-label="Ações destrutivas"]')!;
+    expect(common.querySelectorAll("button")).toHaveLength(4);
+    expect(common.textContent).not.toContain("Excluir viagem");
+    expect(destructive.querySelectorAll("button")).toHaveLength(1);
+    expect(destructive.textContent).toBe("Excluir viagem");
+  });
+  it("preserva a ação de sair exclusiva do colaborador", async () => {
+    const onLeave = vi.fn();
+    const { menu } = await mount(false, { onLeave });
+    expect(menu.querySelector('[aria-label="Ações destrutivas"]')).toBeNull();
+    const button = [...menu.querySelectorAll("button")].find(item => item.textContent === "Sair da viagem")!;
+    await act(async () => button.click());
+    expect(onLeave).toHaveBeenCalledOnce();
+    expect(menu.open).toBe(false);
   });
 });

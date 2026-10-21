@@ -836,6 +836,12 @@ main {
   --category-bg: var(--color-other-bg);
   --category-border: var(--color-other-border);
 }
+.tone-lodging {
+  --category-accent: var(--color-lodging);
+  --category-ink: var(--color-lodging-ink);
+  --category-bg: var(--color-lodging-bg);
+  --category-border: var(--color-lodging-border);
+}
 
 .priority-label {
   display: inline-flex;
@@ -2874,3 +2880,7 @@ dialog[open] { animation: polished-sheet-in 180ms ease-out; }
 .member-row span { min-width:0; overflow-wrap:anywhere; }
 .member-row small { display:block; color:var(--muted); }
 .share-content section { text-align:left; }
+@media (min-width: 601px) {
+  .category-picker .category-groups { flex-wrap: wrap; overflow: visible; mask-image: none; }
+  .category-picker .category-groups .filter-chip { flex: 0 0 auto; }
+}

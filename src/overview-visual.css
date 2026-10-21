@@ -1,8 +1,8 @@
 /* Trip cover uses the reference-inspired image atlas; no shared tokens change. */
 .trip-page .overview-hero { position: relative; isolation: isolate; display: block; overflow: visible; min-height: 410px; margin: 0 0 35px; padding: 20px 22px 140px; border: 0; border-radius: 28px; background: #204d5c; color: white; box-shadow: var(--shadow-sm); }
-.overview-destination-art { position: absolute; inset: 0; border-radius: inherit; z-index: -2; background: linear-gradient(130deg, #174653, #b4c7c3); }
-.overview-destination-art.destination-brasilia { background-image: url("./assets/overview/brasilia-atlas.webp"); background-size: auto 179.65%; background-position: 54% top; }
-.trip-page .overview-hero::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, #042e4085, #123c4b1c 58%, transparent); z-index: -1; pointer-events: none; }
+.overview-destination-art { position: absolute; inset: 0; border-radius: inherit; z-index: -2; background: #174653; }
+.trip-page .overview-hero::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(110deg, #082c3bba, #123c4b33 65%, transparent); z-index: -1; pointer-events: none; }
+.trip-page .overview-hero:has(.is-illustrated)::after { background: linear-gradient(100deg, #082c3bd4, #082c3b9c 65%, #082c3b33); }
 .trip-page .overview-hero > .overview-hero-copy { padding: 0; }
 .overview-hero .overview-home-link { display: inline-flex; color: white; margin: -7px 0 13px -7px; padding: 7px; min-height: 44px; }
 .trip-page .overview-hero .eyebrow { display: flex; width: fit-content; padding: 7px 12px; background: #ffffff26; border-radius: 99px; color: white; font-size: .75rem; letter-spacing: 0; margin-bottom: 18px; }
@@ -45,13 +45,7 @@
 .overview-simple .trip-about .ghost { padding: 0; color: var(--brand-600); min-height: 44px; }
 
 
-.overview-simple .overview-days .glance-day { flex-basis: 128px; width: 128px; min-width: 128px; min-height: 202px; padding: 12px 12px 10px; background-size: 500% 225.55%; background-position-y: bottom; }
-.trip-page:has(.destination-brasilia) .glance-day { background-image: linear-gradient(180deg, #082e435c, transparent 70%), url("./assets/overview/brasilia-atlas.webp"); }
-.overview-simple .glance-day.day-scene-0 { background-position-x: 0%; }
-.overview-simple .glance-day.day-scene-1 { background-position-x: 25%; }
-.overview-simple .glance-day.day-scene-2 { background-position-x: 50%; }
-.overview-simple .glance-day.day-scene-3 { background-position-x: 75%; }
-.overview-simple .glance-day.day-scene-4 { background-position-x: 100%; }
+.overview-simple .overview-days .glance-day { flex-basis: 128px; width: 128px; min-width: 128px; min-height: 202px; padding: 12px 12px 10px; }
 .overview-simple .overview-days .glance-date :is(small, strong) { color: white; text-shadow: 0 1px 8px #092e4b66; }
 .overview-simple .glance-description { width: auto; max-width: 100%; margin: 0; padding: 6px 8px; background: #fffffff0; border-radius: 99px; }
 .overview-simple .glance-description span { font-size: .625rem; }
@@ -70,4 +64,52 @@ body:has(.overview-hero) .site-header .new-trip { min-height: 44px; padding: 8px
 .overview-simple .trip-about-header .ghost { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; margin: 0; font-size: .75rem; min-height: 44px; }
 .trip-about-body { display: grid; grid-template-columns: 32px minmax(0,1fr); gap: 12px; align-items: start; }
 .trip-about-body > svg { color: var(--action-accent); margin-top: 4px; }
+.overview-stays { display: grid; gap: 8px; margin-top: 18px; }
+.overview-stays h2 { font-size: 1.125rem; margin: 0 0 3px; }
+.overview-stay { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; padding: 14px; background: var(--color-lodging-bg); color: var(--color-lodging-ink); border-radius: 16px; text-align: left; }
+.overview-stay > span { display: grid; gap: 4px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.overview-stay strong { color: var(--text-primary); }
+.overview-stay small { font-size: .75rem; }
 .overview-simple .trip-about-body p { margin: 0; line-height: 1.6; font-size: .8125rem; }
+
+/* Keep trip actions independent of the white text and artwork of the cover. */
+.trip-page .trip-options .menu-popover {
+  top: calc(100% + 8px);
+  right: 0;
+  bottom: auto;
+  width: 224px;
+  max-width: calc(100vw - 48px);
+  height: auto;
+  min-height: 0;
+  max-height: min(320px, calc(100dvh - 220px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  color: var(--text-primary);
+  background: var(--color-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-overlay);
+}
+.trip-options-group + .trip-options-group {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--color-border);
+}
+.trip-page .trip-options .menu-popover button {
+  min-height: 44px;
+  padding: 10px 12px;
+  color: inherit;
+  font-size: .8125rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.trip-options .menu-popover button svg { flex-shrink: 0; }
+.trip-options .menu-popover button:focus-visible {
+  outline-offset: -2px;
+  background: var(--surface-selected);
+}
+.trip-page .overview-hero .trip-options[open] > summary,
+.trip-page .overview-hero .trip-options > summary:hover {
+  color: white;
+  background: #ffffff38;
+}
