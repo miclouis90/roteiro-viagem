@@ -110,6 +110,48 @@ describe("interação do menu da viagem", () => {
     await act(async () => { button.focus(); button.click(); });
     expect(callback).toHaveBeenCalledOnce();
   });
+  it.each([
+    ["Editar viagem", "onEdit"],
+    ["Compartilhar", "onShare"],
+    ["Gerenciar acesso", "onVisibility"],
+    ["Duplicar viagem", "onDuplicate"],
+    ["Excluir viagem", "onDelete"],
+  ] as const)("preserva %s após blur mobile sem próximo foco", async (label, action) => {
+    const callback = vi.fn();
+    const { menu, trigger } = await mount(true, { [action]: callback });
+    const button = [...menu.querySelectorAll("button")].find(item => item.textContent === label)!;
+    await act(async () => {
+      button.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+      trigger.dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: null }));
+    });
+    expect(menu.open).toBe(true);
+    await act(async () => button.click());
+    expect(callback).toHaveBeenCalledOnce();
+    expect(menu.open).toBe(false);
+  });
+  it("fecha ao começar um toque fora e não propaga a ação para o card", async () => {
+    const onCardPointer = vi.fn(), onCardClick = vi.fn(), onShare = vi.fn();
+    await act(async () => root.render(
+      <div onPointerDown={onCardPointer} onClick={onCardClick}>
+        <TripMenu owner canLeave={false} {...actions} onShare={onShare} />
+        <p>Fora do menu</p>
+      </div>,
+    ));
+    const menu = container.querySelector("details")!;
+    const trigger = menu.querySelector("summary")!;
+    await act(async () => trigger.click());
+    const button = [...menu.querySelectorAll("button")].find(item => item.textContent === "Compartilhar")!;
+    await act(async () => {
+      button.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+      button.click();
+    });
+    expect(onShare).toHaveBeenCalledOnce();
+    expect(onCardPointer).not.toHaveBeenCalled();
+    expect(onCardClick).not.toHaveBeenCalled();
+    await act(async () => trigger.click());
+    await act(async () => container.querySelector("p")!.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(menu.open).toBe(false);
+  });
   it("separa a exclusão das ações comuns", async () => {
     const { menu } = await mount();
     const common = menu.querySelector('[aria-label="Ações da viagem"]')!;

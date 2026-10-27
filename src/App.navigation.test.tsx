@@ -121,6 +121,38 @@ it("mantém a confirmação de exclusão após fechar o menu da viagem", async (
   expect(removeTrip).toHaveBeenCalledExactlyOnceWith(trip.id);
   expectHome();
 });
+it.each([
+  ["Editar viagem", "Editar viagem"],
+  ["Compartilhar", "Compartilhar Brasília da Mel"],
+  ["Gerenciar acesso", "Compartilhar Brasília da Mel"],
+  ["Duplicar viagem", "Duplicar viagem?"],
+  ["Excluir viagem", "Excluir viagem?"],
+])("abre %s após a sequência de foco de um toque mobile", async (label, title) => {
+  authState.user = { uid: "trip-owner", displayName: "Ana" };
+  vi.mocked(watchTrip).mockImplementation((_id, next) => {
+    next({ ...trip, ownerId: "trip-owner" }); return () => {};
+  });
+  await mount(`/viagem/${trip.id}`);
+  const menu = container.querySelector<HTMLDetailsElement>(".trip-options")!;
+  const trigger = menu.querySelector("summary")!;
+  await click(trigger);
+  const option = [...menu.querySelectorAll("button")].find(button => button.textContent === label)!;
+  await act(async () => {
+    trigger.focus();
+    option.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    trigger.dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: null }));
+  });
+  expect(menu.open).toBe(true);
+  await click(option);
+  expect(menu.open).toBe(false);
+  expect(container.querySelector("dialog h2")?.textContent).toBe(title);
+  expect(container.querySelector("dialog")?.hasAttribute("open")).toBe(true);
+  expect(removeTrip).not.toHaveBeenCalled();
+  await click(container.querySelector('dialog [aria-label="Fechar"]'));
+  expect(container.querySelector("dialog")).toBeNull();
+  expect(document.body.style.overflow).not.toBe("hidden");
+  expect(document.activeElement).toBe(trigger);
+});
 it("oculta a barra ao voltar à Home e restaura ao abrir a viagem", async () => {
   await mount(`/viagem/${trip.id}`);
   expect(container.querySelector('.trip-tabs')).not.toBeNull();

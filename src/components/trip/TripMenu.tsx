@@ -30,14 +30,18 @@ export function TripMenu({
   const ref = useRef<HTMLDetailsElement>(null);
   const panelId = useId();
   useEffect(() => {
-    function closeOutside(event: MouseEvent) {
+    function closeOutside(event: Event) {
       const menu = ref.current;
       if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) {
         menu.open = false;
       }
     }
+    document.addEventListener("pointerdown", closeOutside, true);
     document.addEventListener("click", closeOutside, true);
-    return () => document.removeEventListener("click", closeOutside, true);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside, true);
+      document.removeEventListener("click", closeOutside, true);
+    };
   }, []);
   function choose(action: () => void) {
     if (ref.current) {
@@ -50,8 +54,12 @@ export function TripMenu({
     <details
       ref={ref}
       className="context-menu trip-options"
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget))
+        // Mobile browsers can blur the summary with no relatedTarget before
+        // clicking an option. Outside pointer/click events handle that case.
+        if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget))
           e.currentTarget.open = false;
       }}
       onKeyDown={(e) => {
