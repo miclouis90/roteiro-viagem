@@ -47,7 +47,7 @@ export function TripForm({
       notes: String(f.get("notes")),
       status: String(f.get("status")) as TripInput["status"],
       isPublic: trip?.isPublic ?? false,
-      currency: String(f.get("currency")),
+      currency: trip?.currency ?? String(f.get("currency")),
       ...(theme !== "green" || trip?.theme ? { theme: { accent: theme } } : {}),
     };
     if (!input.title || !input.destinationCity || !input.country) {
@@ -173,7 +173,7 @@ export function TripForm({
             </label>
             <label>
               Moeda
-              <select name="currency" defaultValue={trip?.currency ?? "BRL"}>
+              <select name="currency" defaultValue={trip?.currency ?? "BRL"} disabled={!!trip}>
                 {[
                   "BRL",
                   "USD",
@@ -196,6 +196,7 @@ export function TripForm({
                 ))}
               </select>
             </label>
+            {trip && <p className="field-help wide">A moeda original dos programas é preservada. Para mudar a referência financeira, use Gastos → Planejamento → Moedas e câmbio.</p>}
             <label className="wide">
               Descrição
               <textarea

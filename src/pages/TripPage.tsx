@@ -32,7 +32,7 @@ import {
 import { TripMenu } from "../components/trip/TripMenu";
 import { Programs } from "../components/trip/Programs";
 import { ShareTrip } from "../components/trip/ShareTrip";
-import { TripSummary } from "../components/TripSummary";
+import { TripExpenses } from "../components/expenses/TripExpenses";
 import { TripForm, EventForm } from "../components/Forms";
 import { EventDetails } from "../components/Events";
 import { Modal } from "../components/Modal";
@@ -304,11 +304,13 @@ function TripWorkspace({
           />
         ) : tab === "gastos" ? (
           <>
-            <TripSummary
+            <TripExpenses
               trip={trip}
               events={events}
               days={days}
               count={count}
+              canPlan={access.owner || access.legacy || (editor && access.canEdit)}
+              onProgram={(event) => { setJustSaved(false); setSelected(event); }}
               onDay={(date) => changeTab("roteiro", date)}
             />
           </>

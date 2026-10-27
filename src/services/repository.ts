@@ -364,11 +364,21 @@ export async function removeTrip(id: string) {
     snapshot.docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
     await batch.commit();
   }
-  const reservations = await getDocs(collection(db, "trips", id, "lodgingReservations"));
-  for (let i = 0; i < reservations.docs.length; i += 450) {
-    const batch = writeBatch(db);
-    reservations.docs.slice(i, i + 450).forEach(d => batch.delete(d.ref));
-    await batch.commit();
+  for (const name of ["lodgingReservations", "financialExpenses", "financialDailyBudgets", "financialPayments", "financialSettings"]) {
+    const privateRows = await getDocs(collection(db, "trips", id, name));
+    if (name === "financialPayments") for (const payment of privateRows.docs) {
+      const history = await getDocs(collection(payment.ref, "history"));
+      for (let i = 0; i < history.docs.length; i += 450) {
+        const batch = writeBatch(db);
+        history.docs.slice(i, i + 450).forEach(change => batch.delete(change.ref));
+        await batch.commit();
+      }
+    }
+    for (let i = 0; i < privateRows.docs.length; i += 450) {
+      const batch = writeBatch(db);
+      privateRows.docs.slice(i, i + 450).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
   }
   const members = await getDocs(collection(db, "trips", id, "members"));
   for (let i = 0; i < members.docs.length; i += 450) {

@@ -13,7 +13,7 @@ vi.mock("../lib/firebase", () => ({
 }));
 vi.mock("firebase/firestore", () => ({
   doc: (_db: unknown, ...path: string[]) => path.join("/"),
-  collection: vi.fn(),
+  collection: (_db: unknown, ...path: string[]) => path.join("/"),
   collectionGroup: vi.fn(),
   onSnapshot: vi.fn(),
   query: vi.fn(),
@@ -32,6 +32,13 @@ import { demoEvents } from "../data/demo";
 import { eventInput } from "../utils/inputs";
 beforeEach(() => vi.clearAllMocks());
 describe("proteção no repositório", () => {
+  it("exclusão pelo proprietário inclui as coleções financeiras privadas antes da viagem", async () => {
+    mock.get.mockResolvedValue({ exists: () => true, data: () => ({ ownerId: "editor" }) });
+    mock.rows.mockResolvedValue({ docs: [] });
+    await removeTrip("trip");
+    expect(mock.rows.mock.calls.map(([path]) => path)).toEqual(["trips/trip/events", "trips/trip/lodgingReservations", "trips/trip/financialExpenses", "trips/trip/financialDailyBudgets", "trips/trip/financialPayments", "trips/trip/financialSettings", "trips/trip/members"]);
+    expect(mock.remove).toHaveBeenCalledExactlyOnceWith("trips/trip");
+  });
   it("editor não apaga filhos ao tentar excluir uma viagem", async () => {
     mock.get.mockResolvedValue({
       exists: () => true,

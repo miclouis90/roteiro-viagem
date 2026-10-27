@@ -176,6 +176,124 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/trips/$(tripId)/events/$(eventId)).data.details.type == 'lodging';
     }
 
+    // Private financial planning. Reuse existing owner/member semantics,
+    // never PUBLIC_EDIT by itself. No changes to public trip/event rules.
+    function financialCategory(c) {
+      return c in ['food','night','culture','outdoor','transport','lodging','other','insurance','connectivity','fees','shopping'];
+    }
+    function programCurrency(tripId) {
+      let path = /databases/$(database)/documents/trips/$(tripId)/financialSettings/exchange;
+      return exists(path) ? get(path).data.programCurrency : trip(tripId).currency;
+    }
+    function financialCurrency(c, tripId) { return c in ['BRL','USD',trip(tripId).currency,programCurrency(tripId)]; }
+    function rateValue(v) { return v is int && v >= 0 && v <= 1000000000000; }
+    function validExchange(d, tripId, previous) {
+      return d.keys().hasAll(['referenceCurrency','programCurrency','rates','cashFeeBps','cardFeeBps','updatedAt'])
+        && d.keys().hasOnly(['referenceCurrency','programCurrency','rates','cashFeeBps','cardFeeBps','updatedAt'])
+        && d.programCurrency == previous.get('programCurrency',trip(tripId).currency)
+        && d.referenceCurrency in ['BRL','USD',d.programCurrency,trip(tripId).currency]
+        && d.rates is map && d.rates.keys().hasOnly(['BRL','USD',d.programCurrency,trip(tripId).currency])
+        && d.rates.get('BRL',1000000) == 1000000
+        && rateValue(d.rates.get('USD',0)) && (!('USD' in d.rates) || d.rates.USD > 0)
+        && rateValue(d.rates.get(d.programCurrency,0)) && (!(d.programCurrency in d.rates) || d.rates[d.programCurrency] > 0)
+        && rateValue(d.rates.get(trip(tripId).currency,0)) && (!(trip(tripId).currency in d.rates) || d.rates[trip(tripId).currency] > 0)
+        && d.cashFeeBps is int && d.cashFeeBps >= 0 && d.cashFeeBps <= 10000
+        && d.cardFeeBps is int && d.cardFeeBps >= 0 && d.cardFeeBps <= 10000 && d.updatedAt == request.time;
+    }
+    function validDisbursement(d, tripId) {
+      return !d.keys().hasAny(['settlementCurrency','settledCents','feesCents','effectiveRateMicros'])
+        || (d.keys().hasAll(['settlementCurrency','settledCents','feesCents','effectiveRateMicros'])
+        && financialCurrency(d.settlementCurrency,tripId)
+        && d.settledCents is int && d.settledCents >= 0 && d.settledCents <= 10000000000000
+        && d.feesCents is int && d.feesCents >= 0 && d.feesCents <= 10000000000000
+        && d.effectiveRateMicros is int && d.effectiveRateMicros > 0 && d.effectiveRateMicros <= 1000000000000
+        && (d.paidCents > 0 || (d.settledCents == 0 && d.feesCents == 0)));
+    }
+    function expenseCurrencyUnchanged(d, tripId, expenseId) {
+      let paymentPath = /databases/$(database)/documents/trips/$(tripId)/financialPayments/$('expense:' + expenseId);
+      return !exists(paymentPath) || get(paymentPath).data.paidCents == 0 || d.currency == resource.data.currency;
+    }
+
+    function validFinancialExpense(d, tripId) {
+      return d.keys().hasAll(['name','category','amountCents','quantity','notes','currency','createdAt','updatedAt'])
+        && d.keys().hasOnly(['name','category','amountCents','quantity','notes','currency','createdAt','updatedAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 120
+        && financialCategory(d.category)
+        && d.amountCents is int && d.amountCents >= 0 && d.amountCents <= 1000000000
+        && d.quantity is int && d.quantity >= 1 && d.quantity <= 10000
+        && d.notes is string && d.notes.size() <= 1000
+        && financialCurrency(d.currency,tripId)
+        && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    function validDailyBudget(d, tripId, category) {
+      return d.keys().hasAll(['category','dailyAmountCents','currency','updatedAt'])
+        && d.keys().hasOnly(['category','dailyAmountCents','currency','updatedAt','paymentMethod'])
+        && d.category == category && financialCategory(d.category) && d.category != 'lodging'
+        && d.dailyAmountCents is int && d.dailyAmountCents >= 0 && d.dailyAmountCents <= 1000000000
+        && paymentMethod(d.get('paymentMethod','undefined'))
+        && financialCurrency(d.currency,tripId) && d.updatedAt == request.time;
+    }
+
+    function paymentMethod(m) { return m in ['undefined','cash','card','pix']; }
+    function financialPaymentStatus(d, total, unknown) {
+      return (d.status in ['planned','reserved'] && d.paidCents == 0)
+        || (d.status == 'partial' && d.paidCents > 0 && (unknown || d.paidCents < total))
+        || (d.status == 'paid' && !unknown && d.paidCents >= total);
+    }
+    function validFinancialPayment(d, tripId, paymentId, previous) {
+      let collectionName = d.source == 'program' ? 'events' : 'financialExpenses';
+      let sourcePath = /databases/$(database)/documents/trips/$(tripId)/$(collectionName)/$(d.sourceId);
+      let sourceExists = exists(sourcePath);
+      let source = sourceExists ? get(sourcePath).data : {};
+      let total = !sourceExists ? 0 : d.source == 'expense' ? source.amountCents * source.quantity
+        : source.isFree || source.status == 'cancelado' ? 0 : int(source.pricePerPerson * source.peopleCount * 100 + 0.5);
+      let unknown = sourceExists && d.source == 'program' && !source.isFree && source.pricePerPerson == 0;
+      let changePath = /databases/$(database)/documents/trips/$(tripId)/financialPayments/$(paymentId)/history/$(d.lastChangeId);
+      let change = getAfter(changePath).data;
+      return d.keys().hasAll(['source','sourceId','label','currency','paidCents','status','paymentMethod','createdAt','updatedAt','lastChangeId'])
+        && d.keys().hasOnly(['source','sourceId','label','currency','paidCents','status','paymentMethod','createdAt','updatedAt','lastChangeId','settlementCurrency','settledCents','feesCents','effectiveRateMicros'])
+        && d.source in ['program','expense'] && d.sourceId is string && d.sourceId.size() > 0 && d.sourceId.size() <= 128 && d.sourceId.matches('^[^/]+$')
+        && paymentId == d.source + ':' + d.sourceId && (sourceExists || previous.size() > 0)
+        && d.label is string && d.label.size() > 0 && d.label.size() <= 120
+        && financialCurrency(d.currency,tripId) && (previous.get('paidCents',0) == 0 || d.currency == previous.get('currency',d.currency))
+        && (d.source != 'program' || !sourceExists || d.currency == programCurrency(tripId))
+        && (previous.get('paidCents',0) == 0 || d.paidCents == 0 || d.get('settlementCurrency',d.currency) == previous.get('settlementCurrency',previous.currency))
+        && (!('settlementCurrency' in previous) || d.keys().hasAll(['settlementCurrency','settledCents','feesCents','effectiveRateMicros']))
+        && validDisbursement(d,tripId)
+        && (d.source == 'program' || !sourceExists || source.currency == d.currency)
+        && d.paidCents is int && d.paidCents >= 0 && d.paidCents <= 10000000000000
+        && (d.paidCents <= total || d.paidCents <= previous.get('paidCents',0))
+        && paymentMethod(d.paymentMethod) && financialPaymentStatus(d,total,unknown)
+        && d.createdAt is timestamp && d.updatedAt == request.time
+        && d.lastChangeId is string && d.lastChangeId.size() > 0 && d.lastChangeId.size() <= 64 && d.lastChangeId.matches('^[^/]+$')
+        && d.lastChangeId != previous.get('lastChangeId','') && !exists(changePath)
+        && change.previousPaidCents == previous.get('paidCents',0)
+        && change.paidCents == d.paidCents && change.paymentMethod == d.paymentMethod && change.status == d.status
+        && change.source == d.source && change.sourceId == d.sourceId && change.label == d.label && change.currency == d.currency
+        && change.get('settlementCurrency',d.currency) == d.get('settlementCurrency',d.currency)
+        && change.get('settledCents',d.paidCents) == d.get('settledCents',d.paidCents)
+        && change.get('feesCents',0) == d.get('feesCents',0) && change.get('effectiveRateMicros',1000000) == d.get('effectiveRateMicros',1000000)
+        && change.get('previousSettlementCurrency',previous.get('currency',d.currency)) == previous.get('settlementCurrency',previous.get('currency',d.currency))
+        && change.get('previousSettledCents',previous.get('paidCents',0)) == previous.get('settledCents',previous.get('paidCents',0))
+        && change.get('previousFeesCents',0) == previous.get('feesCents',0)
+        && change.changedAt == request.time && change.changedBy == request.auth.uid;
+    }
+    function validFinancialChange(d, tripId, paymentId, changeId) {
+      let payment = getAfter(/databases/$(database)/documents/trips/$(tripId)/financialPayments/$(paymentId)).data;
+      return d.keys().hasAll(['source','sourceId','label','currency','paidCents','status','paymentMethod','previousPaidCents','changedAt','changedBy'])
+        && d.keys().hasOnly(['source','sourceId','label','currency','paidCents','status','paymentMethod','previousPaidCents','changedAt','changedBy','settlementCurrency','settledCents','feesCents','effectiveRateMicros','previousSettlementCurrency','previousSettledCents','previousFeesCents'])
+        && payment.lastChangeId == changeId && payment.updatedAt == request.time
+        && d.source == payment.source && d.sourceId == payment.sourceId && d.label == payment.label && d.currency == payment.currency
+        && d.paidCents == payment.paidCents && d.status == payment.status && d.paymentMethod == payment.paymentMethod
+        && d.previousPaidCents is int && d.previousPaidCents >= 0 && d.previousPaidCents <= 10000000000000
+        && validDisbursement(d,tripId)
+        && d.get('settlementCurrency',d.currency) == payment.get('settlementCurrency',payment.currency)
+        && d.get('settledCents',d.paidCents) == payment.get('settledCents',payment.paidCents)
+        && d.get('feesCents',0) == payment.get('feesCents',0)
+        && d.get('effectiveRateMicros',1000000) == payment.get('effectiveRateMicros',1000000)
+        && d.changedAt == request.time && d.changedBy == request.auth.uid;
+    }
+
     function validDetails(d) {
       return d is map && d.keys().hasAll(['type'])
         && (d.type == 'lodging' ? details_lodging(d) : d.type == 'flight' ? details_flight(d) : d.type == 'restaurant' ? details_restaurant(d) : d.type == 'bar' ? details_bar(d) : d.type == 'culture' ? details_culture(d) : d.type == 'outdoor' ? details_outdoor(d) : d.type == 'transfer' ? details_transfer(d) : d.type == 'car' ? details_car(d) : d.type == 'rail' ? details_rail(d) : false);
@@ -379,6 +497,9 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
       allow update: if signedIn() && validTrip(request.resource.data)
         && request.resource.data.createdAt == resource.data.createdAt
+        // Currency is the original unit of programs; reference changes use private exchange settings.
+        && (!exists(/databases/$(database)/documents/trips/$(tripId)/financialSettings/exchange)
+          || request.resource.data.currency == resource.data.currency)
         && (
           (owner(resource.data) && request.resource.data.ownerId == resource.data.ownerId)
           || (legacyAdmin(resource.data) && request.resource.data.get('ownerId', '') == request.auth.uid
@@ -403,6 +524,40 @@ service cloud.firestore {
         allow read: if privateLodgingAccess(tripId);
         allow create, update: if privateLodgingAccess(tripId) && validLodgingReservation(request.resource.data, tripId, eventId);
         allow delete: if privateLodgingAccess(tripId);
+      }
+      match /financialExpenses/{expenseId} {
+        allow read: if privateLodgingAccess(tripId);
+        allow create: if privateLodgingAccess(tripId) && validFinancialExpense(request.resource.data, tripId)
+          && request.resource.data.createdAt == request.time;
+        allow update: if privateLodgingAccess(tripId) && validFinancialExpense(request.resource.data, tripId)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && expenseCurrencyUnchanged(request.resource.data,tripId,expenseId);
+        allow delete: if privateLodgingAccess(tripId);
+      }
+      match /financialDailyBudgets/{category} {
+        allow read: if privateLodgingAccess(tripId);
+        allow create, update: if privateLodgingAccess(tripId) && validDailyBudget(request.resource.data, tripId, category);
+        allow delete: if privateLodgingAccess(tripId);
+      }
+      match /financialSettings/{settingId} {
+        allow read: if privateLodgingAccess(tripId);
+        allow create: if settingId == 'exchange' && privateLodgingAccess(tripId) && validExchange(request.resource.data,tripId,{});
+        allow update: if settingId == 'exchange' && privateLodgingAccess(tripId) && validExchange(request.resource.data,tripId,resource.data);
+        allow delete: if isOwner(tripId);
+      }
+      match /financialPayments/{paymentId} {
+        allow read: if privateLodgingAccess(tripId);
+        allow create: if privateLodgingAccess(tripId) && validFinancialPayment(request.resource.data, tripId, paymentId, {})
+          && request.resource.data.createdAt == request.time;
+        allow update: if privateLodgingAccess(tripId) && validFinancialPayment(request.resource.data, tripId, paymentId, resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner(tripId);
+        match /history/{changeId} {
+          allow read: if privateLodgingAccess(tripId);
+          allow create: if privateLodgingAccess(tripId) && validFinancialChange(request.resource.data, tripId, paymentId, changeId);
+          allow update: if false;
+          allow delete: if isOwner(tripId);
+        }
       }
       match /members/{uid} {
         allow get: if isOwner(tripId) || (signedIn() && uid == request.auth.uid);
