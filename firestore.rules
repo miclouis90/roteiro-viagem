@@ -474,6 +474,41 @@ service cloud.firestore {
         && d.updatedAt == request.time;
     }
 
+    // Personal events are independent from trip programs, costs and collaboration.
+    function personalEventDate(v) {
+      return date(v) && (
+        v.matches('^[1-9][0-9]{3}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))$')
+        || v.matches('^([1-9][0-9](0[48]|[2468][048]|[13579][26])|([2468][048]|[13579][26])00)-02-29$')
+      );
+    }
+    function personalEventText(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max && v.matches('.*[^\\s].*');
+    }
+    function validPersonalEvent(d) {
+      return d.keys().hasAll(['ownerId','title','category','date','startTime','city','location','createdAt','updatedAt'])
+        && d.keys().hasOnly(['ownerId','title','category','date','startTime','city','location','endTime','priceCents','ticketUrl','notes','createdAt','updatedAt'])
+        && d.ownerId is string && d.ownerId.size() > 0 && d.ownerId.size() <= 128
+        && personalEventText(d.title,120) && personalEventText(d.city,120) && personalEventText(d.location,300)
+        && d.category in ['show','theater','sport','cultural','other']
+        && personalEventDate(d.date)
+        && d.startTime is string && d.startTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && d.get('endTime','') is string && (d.get('endTime','') == '' || d.endTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'))
+        && (!('priceCents' in d) || (d.priceCents is int && d.priceCents >= 0 && d.priceCents <= 1000000000))
+        && d.get('ticketUrl','') is string && d.get('ticketUrl','').size() <= 2048
+        && (d.get('ticketUrl','') == '' || d.ticketUrl.matches('^https?://[^\\s]+$'))
+        && d.get('notes','') is string && d.get('notes','').size() <= 3000
+        && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /personalEvents/{eventId} {
+      allow get, list: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if signedIn() && validPersonalEvent(request.resource.data)
+        && request.resource.data.ownerId == request.auth.uid && request.resource.data.createdAt == request.time;
+      allow update: if signedIn() && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.createdAt == resource.data.createdAt && validPersonalEvent(request.resource.data);
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
     // Cada usuário autenticado pode consultar apenas
     // seu próprio status de administrador.
     match /platformAdmins/{uid} {

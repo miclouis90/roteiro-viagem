@@ -31,6 +31,11 @@ function expectHome() {
   expect(container.querySelector(".trip-tabs")).toBeNull();
   expect(container.querySelector("main.home")?.textContent).toContain("Brasília da Mel");
 }
+async function agendaSelect(label: string, value: string) {
+  const select = container.querySelector<HTMLSelectElement>(`select[aria-label="${label}"]`)!;
+  expect(select).not.toBeNull();
+  await act(async () => { select.value = value; select.dispatchEvent(new Event("change", { bubbles: true })); });
+}
 beforeEach(() => {
   Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
   Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
@@ -75,6 +80,85 @@ describe("Home sem contexto de viagem", () => {
   });
 });
 
+describe("Agenda de viagens na Home", () => {
+  const past = { ...trip, id: "antiga", title: "Recife em 2020", destinationCity: "Recife", startDate: "2020-01-01", endDate: "2020-01-03", status: "concluída" as const };
+  const crossing = { ...trip, id: "virada", title: "Viagem de réveillon", startDate: "2026-12-29", endDate: "2027-01-03" };
+  const overlap = { ...trip, id: "outra", title: "Outro destino", startDate: "2026-12-31", endDate: "2027-01-01" };
+  it("mostra períodos passados/futuros, sobreposição e viagens do dia selecionado", async () => {
+    vi.mocked(watchTrips).mockImplementation((_admin, next) => { next([overlap, past, crossing]); return () => {}; });
+    await mount("/?view=agenda&agendaDay=2026-12-31");
+    expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe("Agenda");
+    expect([...container.querySelectorAll('.trip-agenda-day h3')].map(item => item.textContent)).toEqual([crossing.title, overlap.title]);
+    expect(container.querySelector('.agenda-date[data-date="2026-12-31"]')?.getAttribute("aria-label")).toContain("2 viagens");
+    await agendaSelect("Ano da agenda", "2020"); await agendaSelect("Mês da agenda", "01");
+    expect(container.querySelector('[data-period="antiga"]')).not.toBeNull();
+    await click(container.querySelector('[data-date="2020-01-02"]'));
+    expect(container.querySelector('.trip-agenda-day h3')?.textContent).toBe(past.title);
+    await click(container.querySelector('[data-date="2020-01-04"]'));
+    expect(container.querySelector('.agenda-empty')?.textContent).toContain("Nenhuma viagem nesta data");
+  });
+  it("seleciona partida e retorno e preserva o dia na mudança de mês/ano", async () => {
+    vi.mocked(watchTrips).mockImplementation((_admin, next) => { next([crossing]); return () => {}; });
+    await mount("/?view=agenda&agendaDay=2026-12-29");
+    expect(container.querySelector('.trip-agenda-day h3')?.textContent).toBe(crossing.title);
+    await click(container.querySelector('[aria-label="Próximo mês da agenda"]'));
+    expect(window.location.hash).toContain("agendaMonth=2027-01");
+    expect(container.querySelector('[data-date="2027-01-29"]')?.getAttribute("aria-pressed")).toBe("true");
+    await click(container.querySelector('[data-date="2027-01-03"]'));
+    expect(container.querySelector('.trip-agenda-day h3')?.textContent).toBe(crossing.title);
+    await click(container.querySelector('[data-date="2027-01-04"]'));
+    expect(container.querySelector('.agenda-empty')).not.toBeNull();
+  });
+  it("mantém busca/status e os cards atuais ao alternar Viagens e Agenda", async () => {
+    vi.mocked(watchTrips).mockImplementation((_admin, next) => { next([crossing, past]); return () => {}; });
+    await mount("/?agendaDay=2020-01-02");
+    const cardBefore = container.querySelector('.home-trip-list h3')?.textContent;
+    const input = container.querySelector<HTMLInputElement>('[aria-label="Buscar viagem"]')!;
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "recife"); input.dispatchEvent(new Event("input", { bubbles: true })); });
+    await click([...container.querySelectorAll('.home-status button')].find(button => button.textContent === "Concluídas")!);
+    await click(container.querySelector('#home-view-agenda'));
+    expect(container.querySelectorAll('[data-period="virada"]')).toHaveLength(0);
+    expect(container.querySelector('.trip-agenda-day h3')?.textContent).toBe(past.title);
+    await click(container.querySelector('#home-view-trips'));
+    expect(container.querySelector<HTMLInputElement>('[aria-label="Buscar viagem"]')?.value).toBe("recife");
+    expect(container.querySelector('.home-status [aria-pressed="true"]')?.textContent).toBe("Concluídas");
+    expect(container.querySelector('.home-trip-list h3')?.textContent).toBe(cardBefore);
+    await click(container.querySelector('#home-view-agenda'));
+    expect(container.querySelector('[data-date="2020-01-02"]')?.getAttribute("aria-pressed")).toBe("true");
+  });
+  it("abre viagem pela lista e pelo período e restaura mês/data ao voltar pelo navegador", async () => {
+    await mount("/?view=agenda&agendaDay=2026-10-30");
+    const agendaHash = window.location.hash;
+    await click(container.querySelector('.trip-agenda-day .home-trip-link'));
+    expect(window.location.hash).toBe(`#/viagem/${trip.id}`);
+    await act(async () => {
+      const returned = new Promise<void>(resolve => window.addEventListener("popstate", () => resolve(), { once: true }));
+      window.history.back(); await returned;
+    });
+    expect(window.location.hash).toBe(agendaHash);
+    expect(container.querySelector('[data-date="2026-10-30"]')?.getAttribute("aria-pressed")).toBe("true");
+    await click(container.querySelector(`[data-period="${trip.id}"]`));
+    expect(container.querySelector('.trip-page')).not.toBeNull();
+  });
+  it("mantém calendário disponível sem viagens e normaliza parâmetros inválidos", async () => {
+    vi.mocked(watchTrips).mockImplementation((_admin, next) => { next([]); return () => {}; });
+    await mount("/?view=agenda&agendaDay=2026-02-31&agendaMonth=invalido");
+    expect(container.querySelector('.period-calendar')).not.toBeNull();
+    expect(container.querySelectorAll('.agenda-date[aria-pressed="true"]')).toHaveLength(1);
+    expect(container.querySelector('.agenda-empty')).not.toBeNull();
+    await click(container.querySelector('#home-view-trips'));
+    expect(container.textContent).toContain("Sua próxima história começa aqui");
+  });
+  it("retorna a hoje e permite alternar visualizações pelo teclado", async () => {
+    await mount("/?view=agenda&agendaDay=2026-12-31");
+    await click([...container.querySelectorAll('.agenda-calendar-footer button')].find(button => button.textContent === "Hoje")!);
+    expect(container.querySelector('.agenda-date[aria-current="date"]')?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => container.querySelector('#home-view-agenda')!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true })));
+    expect(container.querySelector('#home-view-trips')?.getAttribute("aria-selected")).toBe("true");
+    expect(document.activeElement?.id).toBe("home-view-trips");
+  });
+});
+
 it("filtra a Home por busca e chips", async () => {
   await mount("/");
   const input = container.querySelector('input[aria-label="Buscar viagem"]')!;
@@ -90,10 +174,12 @@ it("preserva a criação na Home sem bottom navigation", async () => {
   Object.defineProperty(HTMLDialogElement.prototype, "showModal", { configurable: true, value() { this.setAttribute("open", ""); } });
   Object.defineProperty(HTMLDialogElement.prototype, "close", { configurable: true, value() { this.removeAttribute("open"); } });
   authState.admin = true;
+  authState.user = { uid: "test-admin", displayName: "Admin" };
   await mount("/");
   expect(container.querySelector(".trip-tabs")).toBeNull();
 
-  await click(container.querySelector('button[aria-label="Criar viagem"]'));
+  await click(container.querySelector('button[aria-label="Novo"]'));
+  await click([...container.querySelectorAll('.new-item-choice button')].find(button => button.querySelector('strong')?.textContent === "Viagem")!);
   expect(container.querySelector('dialog')?.textContent).toContain("Uma nova viagem");
 });
 it("mantém a confirmação de exclusão após fechar o menu da viagem", async () => {

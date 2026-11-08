@@ -8,3 +8,12 @@ export function filterHomeTrips(trips: readonly Trip[], query: string, status: T
   const ids = new Set(upcoming.map(t => t.id));
   return { upcoming, others: filtered.filter(t => !ids.has(t.id)).sort((a,b) => b.startDate.localeCompare(a.startDate)) };
 }
+export function groupTripHistory(trips: readonly Trip[]) {
+  const years = new Map<string, Trip[]>();
+  for (const trip of [...trips].sort((a, b) => b.startDate.localeCompare(a.startDate) || a.id.localeCompare(b.id))) {
+    const year = /^\d{4}-/.test(trip.startDate) ? trip.startDate.slice(0, 4) : "Sem ano";
+    const items = years.get(year) || [];
+    items.push(trip); years.set(year, items);
+  }
+  return [...years].sort(([a], [b]) => b.localeCompare(a)).map(([year, items]) => ({ year, trips: items }));
+}

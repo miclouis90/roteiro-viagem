@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   HashRouter,
   Navigate,
@@ -24,6 +24,9 @@ import { Home } from "./pages/Home";
 import { TripPage } from "./pages/TripPage";
 import { SeedMelPage } from "./pages/SeedMelPage";
 import { TripForm } from "./components/Forms";
+import { PersonalEvents } from "./pages/PersonalEvents";
+import { PersonalEventForm } from "./components/personal/PersonalEventForm";
+import { NewItemChoice } from "./components/personal/NewItemChoice";
 
 import { useTrip } from "./hooks/useTrip";
 import { tripTabFromSearch } from "./utils/tripView";
@@ -34,6 +37,10 @@ function Shell() {
   const toast = useToast();
   const navigate = useNavigate();
   const [create, setCreate] = useState(false);
+  const [newChoice, setNewChoice] = useState(false);
+  const [eventOwner, setEventOwner] = useState("");
+  const personalOwnerId = user?.uid || (demoMode && admin ? "demo-personal-user" : "");
+  useEffect(() => { setEventOwner(""); setNewChoice(false); }, [personalOwnerId]);
 
   const location = useLocation();
   const inTrip = /^\/viagem\/[^/]+$/.test(location.pathname);
@@ -50,17 +57,18 @@ function Shell() {
   const menu = useRef<HTMLDetailsElement>(null);
   const header = (
     <>
-      <header className={`site-header ${inItinerary ? "itinerary-header" : ""} ${location.pathname === "/" ? "home-header" : ""}`}>
+      <header className={`site-header ${inItinerary ? "itinerary-header" : ""} ${["/", "/eventos"].includes(location.pathname) ? "home-header" : ""}`}>
         <div className="header-inner">
           <Link className="brand" to="/" aria-label="Rumo, suas viagens">
             <Compass size={29} strokeWidth={1.7} />
             rumo<span>.</span>
           </Link>
           <div className="account">
-            {(inTrip ? canAdd : admin) && (
+            {(inTrip ? canAdd : !!personalOwnerId || admin) && (
               <button
                 className={`ghost new-trip ${inItinerary ? "itinerary-add" : ""}`}
-                aria-label={inTrip ? addLabel : "Criar viagem"}
+                aria-label={inTrip ? addLabel : "Novo"}
+                aria-haspopup={inTrip ? undefined : "dialog"}
                 onClick={async () => {
                   if (inTrip && !user && !demoMode) {
                     try {
@@ -74,11 +82,11 @@ function Shell() {
                     const next = new URLSearchParams(location.search);
                     next.set("action", "add");
                     navigate(`${location.pathname}?${next}`);
-                  } else setCreate(true);
+                  } else setNewChoice(true);
                 }}
               >
                 <Plus size={18} />
-                <span>{inTrip ? addLabel : "Nova viagem"}</span>
+                <span>{inTrip ? addLabel : "Novo"}</span>
               </button>
             )}
             {!loading &&
@@ -163,6 +171,7 @@ function Shell() {
       {!inTrip && header}
       <Routes>
         <Route path="/" element={<Home onCreate={() => setCreate(true)} />} />
+        <Route path="/eventos" element={<PersonalEvents />} />
         <Route path="/viagem/:id" element={<TripPage header={header} />} />
         <Route path="/admin/seed-mel" element={<SeedMelPage />} />
         <Route
@@ -175,6 +184,8 @@ function Shell() {
           }
         />
       </Routes>
+      {newChoice && personalOwnerId && <NewItemChoice canCreateTrip={admin} onClose={() => setNewChoice(false)} onTrip={() => { setNewChoice(false); setCreate(true); }} onEvent={() => { setNewChoice(false); setEventOwner(personalOwnerId); }} />}
+      {eventOwner && eventOwner === personalOwnerId && <PersonalEventForm key={eventOwner} ownerId={eventOwner} onClose={() => setEventOwner("")} onSaved={id => { setEventOwner(""); toast("Evento salvo."); navigate(`/eventos?event=${encodeURIComponent(id)}`); }} />}
       {create && admin && (
         <TripForm
           onClose={() => setCreate(false)}
